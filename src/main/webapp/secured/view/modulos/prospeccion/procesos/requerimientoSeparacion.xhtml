@@ -1,0 +1,481 @@
+<ui:composition  xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}" 
+	xmlns:f="http://java.sun.com/jsf/core">
+	<!-- 				<p:growl autoUpdate="true" id="growl1" showDetail="true" sticky="true" /> -->
+
+	<h:form id="form" enctype="multipart/form-data">
+		<h2 style="color: #007d4c;">PROSPECCIÓN > REQUERIMIENTO SEPARACIÓN</h2>  
+		
+		<p:tabView id="tabView">
+			<p:tab title="Lista de Req. de Separación">
+				<p:selectOneButton value="#{requerimientoSeparacionBean.estado}" unselectable="false">
+					<f:selectItem itemLabel="Pendientes" itemValue="Pendiente"/>
+					<f:selectItem itemLabel="Aprobado" itemValue="Aprobado"/>
+					<f:selectItem itemLabel="Rechazados" itemValue="Rechazado"/>
+					<f:selectItem itemLabel="Anulados" itemValue="Anulado"/>
+					
+					<p:ajax update=":form:tabView:idTableReqsep" />
+				</p:selectOneButton>
+				<p:dataTable var="req" id="idTableReqsep" value="#{requerimientoSeparacionBean.lstReqSepLazy}" rowIndexVar="row" paginator="true" rows="20" size="small" style="width: 120%"
+				emptyMessage="No se encontraron requerimientos de separación." paginatorPosition="bottom" rowKey="#{req.id}" selection="#{requerimientoSeparacionBean.requerimientoSeparacionSelected}" 
+				selectionMode="single"> 
+					
+					<p:ajax event="rowSelect" listener="#{requerimientoSeparacionBean.verVoucher()}"  update=":formPlantillaDialog :formRechaza" oncomplete="PF('plantillaNewDialog').show();" />
+					
+				
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Lista de Requerimientos de Separación</span>
+						</div>
+					</f:facet>
+		
+					<p:column style="width:42px;text-align: left">
+						<f:facet name="header">
+						N°
+						</f:facet>
+					</p:column>
+		
+					<p:column width="25px">
+		                   		#{row +1}
+		     		</p:column>
+		     		
+		     		<p:column headerText="Cliente" sortBy="#{req.person.surnames}" filterBy="#{req.person.surnames}" filterMatchMode="contains">
+						<h:outputText value="#{req.person.surnames} #{req.person.names}" />
+					</p:column>
+					
+					
+					 
+					<p:column headerText="Proyecto" style="text-align:center;">
+						<f:facet name="header">
+							Proyecto
+				        	<p:selectOneMenu value="#{requerimientoSeparacionBean.projectFilter}" converter="#{requerimientoSeparacionBean.conversorProject}" style="margin:5px; width:130px" >
+								<f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
+								<f:selectItems value="#{requerimientoSeparacionBean.lstProject}" var="project" itemLabel="#{project.name}" itemValue="#{project}"/>
+								<p:ajax update=":form:tabView:idTableReqsep" />
+							</p:selectOneMenu>
+						</f:facet>
+						
+						<h:outputText value="#{req.lote.project.name}" style="font-size: 14px;"/>
+					</p:column>
+					
+					<p:column headerText="Manzana" sortBy="#{req.lote.manzana.name}" filterBy="#{req.lote.manzana.name}" filterMatchMode="contains">
+						<h:outputText value="#{req.lote.manzana.name}" />
+					</p:column>
+					
+					<p:column headerText="Lote" sortBy="#{req.lote.numberLote}" filterBy="#{req.lote.numberLote}" filterMatchMode="contains">
+						<h:outputText value="#{req.lote.numberLote}" />
+					</p:column>
+					
+					<p:column headerText="Asesor" sortBy="#{req.personAsesor.surnames}" filterBy="#{req.personAsesor.surnames}" filterMatchMode="contains">
+						<h:outputText value="#{req.personAsesor.surnames} #{req.personAsesor.names}" />
+					</p:column>
+					
+					<p:column headerText="Supervisor" sortBy="#{req.personSupervisor.surnames}"	filterBy="#{req.personSupervisor.surnames}" filterMatchMode="contains">
+						<h:outputText value="#{req.personSupervisor.surnames} #{req.personSupervisor.names}" />
+					</p:column>
+					<p:column headerText="Fecha Separación" sortBy="#{req.fecha}" filterMatchMode="contains">
+						<h:outputText value="#{req.fecha}" > 
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Fecha Vencimiento" sortBy="#{req.fechaVencimiento}" style="font-weight:bold;" filterMatchMode="contains">
+						<h:outputText value="#{req.fechaVencimiento}" style="color: #{requerimientoSeparacionBean.detectarVencido(req.fechaVencimiento) ? 'red': 'black'}"> 
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Usuario Aprobación" sortBy="#{req.usuarioAprueba.username}" rendered="#{requerimientoSeparacionBean.estado eq 'Aprobado'}" filterMatchMode="contains">
+						<h:outputText value="#{req.usuarioAprueba.username}" />
+					</p:column>
+					
+					<p:column headerText="Fecha Aprobación" sortBy="#{req.fechaAprueba}" rendered="#{requerimientoSeparacionBean.estado eq 'Aprobado'}" filterMatchMode="contains">
+						<h:outputText value="#{requerimientoSeparacionBean.convertirHoraFull(req.fechaAprueba)}" />
+					</p:column>
+					
+					<p:column headerText="Usuario Rechaza" sortBy="#{req.usuarioRechaza.username}" rendered="#{requerimientoSeparacionBean.estado eq 'Rechazado'}" filterMatchMode="contains">
+						<h:outputText value="#{req.usuarioRechaza.username}" />
+					</p:column>
+					
+					<p:column headerText="Fecha Rechazado" sortBy="#{req.fechaRechaza}" rendered="#{requerimientoSeparacionBean.estado eq 'Rechazado'}" filterMatchMode="contains">
+						<h:outputText value="#{requerimientoSeparacionBean.convertirHoraFull(req.fechaRechaza)}" />
+					</p:column>
+					
+					<p:column headerText="¿Realizó boleta?" sortBy="#{req.generaDocumento} " filterMatchMode="contains">
+						<h:outputText value="#{req.generaDocumento ? 'SI':'NO'}" style="font-weight:bold;color:#{plantilla.realizoContrato ? 'blue':'black'}" />
+					</p:column>
+					<p:column headerText="Boleta/Factura" filterMatchMode="contains">
+						<h:outputText value="#{req.documentoVenta.serie}-#{req.documentoVenta.numero}" />
+					</p:column>
+					
+					<p:column headerText="Observación" filterMatchMode="contains" rendered="#{requerimientoSeparacionBean.estado eq 'Rechazado'}">
+						<h:outputText value="#{req.observacion} " />
+					</p:column>
+										
+				</p:dataTable>
+				
+				<p:contextMenu for="idTableReqsep">
+					<p:menuitem value="Cambiar Lote" update="formCambioLote" action="#{requerimientoSeparacionBean.iniciarVariablesCambioLote}" icon="pi pi-pencil" onclick="PF('cambiarLoteDialog').show();"/>
+		            <p:menuitem value="Anular" update="idTableReqsep" icon="pi pi-times" action="#{requerimientoSeparacionBean.validarAnulacion}"/>
+		        </p:contextMenu>
+				
+			</p:tab>
+			
+			<p:tab title="Nuevo Req. Separación" >
+				<h:panelGrid columns="4" id="idPanelPlantilla" >
+				
+					<h:outputLabel value="Cliente:" />
+					<p:autoComplete  scrollHeight="500" styleClass="ui-autocompV" value="#{requerimientoSeparacionBean.requerimientoSeparacionNew.person}" converter="#{requerimientoSeparacionBean.conversorPerson}" completeMethod="#{requerimientoSeparacionBean.completePerson}"  
+					     var="pros" itemLabel="#{pros.surnames.concat(' ')}#{pros.names}" itemValue="#{pros}" forceSelection="true" style="margin:5px; width:220px" >
+					<p:column width="400px">
+					   	<h:outputLabel value="#{pros.surnames} #{pros.names}" /> 
+					   </p:column>
+					   <p:column width="400px">
+					   	<h:outputLabel value="#{pros.dni}" /> 
+					   </p:column> 
+					</p:autoComplete>
+					
+					<h:outputLabel for="optionTeam" value="Equipo:" />
+	                <p:selectOneMenu id="optionTeam" value="#{requerimientoSeparacionBean.team}" converter="#{requerimientoSeparacionBean.conversorTeam}" style="margin:10px" >
+	             	   <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+	                   <f:selectItems value="#{requerimientoSeparacionBean.lstTeam}" var="prof" itemLabel="#{prof.name} / #{prof.personSupervisor.surnames} #{prof.personSupervisor.names}" itemValue="#{prof}"/>
+	                	<p:ajax listener="#{requerimientoSeparacionBean.listarAsesores}" update="acAsesor"/>
+	                </p:selectOneMenu> 
+	                
+	                <h:outputLabel value="Asesor:" />
+	                <p:autoComplete id="acAsesor"  scrollHeight="500" styleClass="ui-autocompV" value="#{requerimientoSeparacionBean.requerimientoSeparacionNew.personAsesor}" converter="#{requerimientoSeparacionBean.conversorPersonAsesor}" completeMethod="#{requerimientoSeparacionBean.completePersonAsesor}"  
+					     var="pros" itemLabel="#{pros.surnames.concat(' ')}#{pros.names}" itemValue="#{pros}" forceSelection="true" style="margin:5px; width:220px" >
+					<p:column width="400px">
+					   	<h:outputLabel value="#{pros.surnames} #{pros.names}" />  
+					   </p:column>
+					   <p:column width="400px">
+					   	<h:outputLabel value="#{pros.dni}" />  
+					   </p:column> 
+					</p:autoComplete>
+					
+					<h:outputLabel value="Monto:" />
+					<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{requerimientoSeparacionBean.requerimientoSeparacionNew.monto}"/>
+					 
+					 <h:outputLabel value="Proyecto:" />
+					 <p:selectOneMenu value="#{requerimientoSeparacionBean.proyectoReq}" converter="#{requerimientoSeparacionBean.conversorProject}" style="margin:5px; width:220px" > 
+						<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+						<f:selectItems value="#{requerimientoSeparacionBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+						<p:ajax update="form:tabView:manzana form:tabView:lote" listener="#{requerimientoSeparacionBean.listarManzanaPlantilla}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel id="idManzanaPlantilla" for="manzana" value="Manzana: " />
+					<p:selectOneMenu style="margin:5px; width:205px" id="manzana" value="#{requerimientoSeparacionBean.manzanaReq}" converter="#{requerimientoSeparacionBean.conversorManzanaPlantilla}" > 
+						<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+						<f:selectItems value="#{requerimientoSeparacionBean.lstManzanaReq}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+						<p:ajax update="form:tabView:lote" listener="#{requerimientoSeparacionBean.listarLotesPlantilla}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel id="idLotePlantilla" for="lote" value="Lote: " />
+					<p:selectOneMenu style="margin:5px; width:220px" id="lote" value="#{requerimientoSeparacionBean.requerimientoSeparacionNew.lote}" converter="#{requerimientoSeparacionBean.conversorLote}" > 
+						<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+						<f:selectItems value="#{requerimientoSeparacionBean.lstLoteReq}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Observación:"/>
+					<p:inputTextarea value="#{requerimientoSeparacionBean.requerimientoSeparacionNew.observacion}" rows="3" cols="30" counter="display" maxlength="200"
+	                         counterTemplate="{0} carateres restantes." autoResize="false"/>
+	        		<h:outputLabel value=""/><h:outputLabel value=""/><h:outputLabel value=""/>
+	        		<h:outputText id="display" class="block" />
+					
+				</h:panelGrid>
+				
+				<p:commandButton value="Guardar" action="#{requerimientoSeparacionBean.validaDatosRequerimiento()}" />
+				
+				<h:panelGrid columns="1" width="100%" id="pnlCond">
+					<p:fileUpload value="#{requerimientoSeparacionBean.file1}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>
+					<p:fileUpload value="#{requerimientoSeparacionBean.file2}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>
+					<p:fileUpload value="#{requerimientoSeparacionBean.file3}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>							
+					<p:fileUpload value="#{requerimientoSeparacionBean.file4}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>	
+					<p:fileUpload value="#{requerimientoSeparacionBean.file5}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>	
+					<p:fileUpload value="#{requerimientoSeparacionBean.file6}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>	
+					<p:fileUpload value="#{requerimientoSeparacionBean.file7}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>	
+					<p:fileUpload value="#{requerimientoSeparacionBean.file8}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>	
+					<p:fileUpload value="#{requerimientoSeparacionBean.file9}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>	
+					<p:fileUpload value="#{requerimientoSeparacionBean.file10}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>	
+				</h:panelGrid> 
+			</p:tab>
+		</p:tabView>
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogPlantilla" header="REQUERIMIENTO SEPARACIÓN" widgetVar="plantillaNewDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="50%" height="500px">
+		<h:form id="formPlantillaDialog">
+			<p:tabView id="tabPlantilla">
+				<p:tab title="Aprobación"> 
+					<p:commandButton value="APROBAR" actionListener="#{requerimientoSeparacionBean.aprobarRequerimiento}" rendered="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.estado eq 'Pendiente' and navegacionBean.usuarioLogin.aprobarRequerimientoSeparacion}" process="@this" update=":form:tabView:idTableReqsep" style="margin:10px" styleClass="ui-button-success"/>
+					<p:commandButton value="RECHAZAR" onclick="PF('rechazaPlantillaVenta').show();" rendered="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.estado eq 'Pendiente' and navegacionBean.usuarioLogin.aprobarRequerimientoSeparacion}" process="@this" update=":form:tabView:idTableReqsep" styleClass="ui-button-warning"/>
+					
+					<h:panelGrid id="idDatosPlantilla" columns="2" >  
+					
+						<h:outputLabel value="Cliente: " style="font-weight:bold"/>
+						<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.person.surnames} #{requerimientoSeparacionBean.requerimientoSeparacionSelected.person.names} / DNI: #{requerimientoSeparacionBean.requerimientoSeparacionSelected.person.dni}"/> 
+						
+						<h:outputLabel value="Proyecto: " style="font-weight:bold"/>
+						<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.project.name}"/> 
+						
+						<h:outputLabel value="Manzana: " style="font-weight:bold"/>
+						<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.manzana.name}"/> 
+						
+						<h:outputLabel value="Lote: " style="font-weight:bold"/>
+						<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.numberLote}"/> 
+					
+						<h:outputLabel value="Monto: " style="font-weight:bold"/>
+						<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.monto}"> 
+							<f:convertNumber type="currency" currencySymbol=""/>
+						</h:outputLabel>
+						
+						<p:outputLabel value="Fecha Separación: "/>
+		        		<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.fecha}"> 
+		        			<f:convertDateTime pattern="dd/MM/yyyy" />
+		        		</h:outputLabel>
+		        		<p:outputLabel value="Fecha Vencimiento: "/>
+		        		<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.fechaVencimiento}"> 
+		        			<f:convertDateTime pattern="dd/MM/yyyy" />
+		        		</h:outputLabel>
+		        		
+		        		<h:outputLabel value="Observación: " style="font-weight:bold"/>
+						<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.observacion}" style="font-weight:bold; color: green"/> 
+					</h:panelGrid>
+					<h:panelGrid columns="5" > 
+					
+						<p:commandButton value="IMAGEN 1" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen1 eq ''}" >
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen1}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+					
+						<p:commandButton value="IMAGEN 2" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen2 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen2}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+					
+						<p:commandButton value="IMAGEN 3" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen3 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen3}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+					
+						<p:commandButton value="IMAGEN 4" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen4 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen4}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+						
+						<p:commandButton value="IMAGEN 5" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen5 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen5}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+						
+						<p:commandButton value="IMAGEN 6" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen6 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen6}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+						
+						<p:commandButton value="IMAGEN 7" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen7 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen7}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+						
+						<p:commandButton value="IMAGEN 8" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen8 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen8}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+						
+						<p:commandButton value="IMAGEN 9" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen9 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen9}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+						
+						<p:commandButton value="IMAGEN 10" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen10 eq ''}">
+							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen10}" target="#{loadImageBean.nombreArchivo}"  />
+						</p:commandButton>
+			
+					</h:panelGrid>
+					
+					<p:graphicImage width="400"  value="#{loadImageBean.image}" id="imagenLoad" cache="false"/>
+					
+					<h:panelGrid columns="4" id="op">
+						<h:outputLabel  value="Cuenta Bancaria:" />
+						<p:selectOneMenu value="#{requerimientoSeparacionBean.cuentaBancariaSelected}" converter="#{requerimientoSeparacionBean.conversorCuentaBancaria}" >
+		                    <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+		                    <f:selectItems value="#{requerimientoSeparacionBean.lstCuentaBancaria}" var="cb" itemLabel="#{cb.banco.abreviatura} : #{cb.numero}  (#{cb.moneda eq 'D'?'Dól':'Sol'}) #{cb.sucursal.prenombre}" itemValue="#{cb}"/>
+		                </p:selectOneMenu>
+						
+						<h:outputLabel value="Monto:" />
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{requerimientoSeparacionBean.monto}" modifyValueOnWheel="false"/>
+						
+						<h:outputLabel value="Tipo de transacción: " />
+						<p:selectOneMenu id="tipo" value="#{requerimientoSeparacionBean.tipoTransaccion}" >
+							<f:selectItem itemLabel="[- Seleccionar -]" itemValue=""/>
+							<f:selectItem itemLabel="DEPOSITO EN EFECTIVO" itemValue="DEPOSITO EN EFECTIVO"/>
+							<f:selectItem itemLabel="TRANSFERENCIA BANCARIA" itemValue="TRANSFERENCIA BANCARIA"/>
+							<f:selectItem itemLabel="TRANSFERENCIA INTERBANCARIA" itemValue="TRANSFERENCIA INTERBANCARIA"/>
+							<f:selectItem itemLabel="POS" itemValue="POS"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Nro. transacción:" />
+						<p:inputText value="#{requerimientoSeparacionBean.numeroTransaccion}"/>
+						
+						<h:outputLabel value="Fecha Operación:" />
+						<p:datePicker value="#{requerimientoSeparacionBean.fechaOperacion}" timeInput="true" showTime="true" style="margin:5px" pattern="dd/MM/yyyy hh:mm:ss a" readonlyInput="true"/> 
+					
+						<p:commandButton value="Validar" actionListener="#{requerimientoSeparacionBean.validaVoucher}" update=":formPlantillaDialog:tabPlantilla:op"/>
+						<p:commandButton value="Agregar a Temporal" id="valida" update=":formPlantillaDialog:tabPlantilla:tableTemp" rendered="#{requerimientoSeparacionBean.valida}" actionListener="#{requerimientoSeparacionBean.saveVoucherTemp}" />
+						
+						
+					</h:panelGrid>
+				</p:tab>
+				
+				<p:tab title="Datos Temporales"> 
+					<p:dataTable var="temp" value="#{requerimientoSeparacionBean.lstVoucherTemporal}"  selectionMode="single" rowIndexVar="row"  
+						 rowKey="#{temp.id}" id="tableTemp" emptyMessage="No se encontraron resultados." size="small">
+	
+						<f:facet name="header">
+							<div class="p-d-flex p-ai-center p-jc-between">
+								<span>LISTA DE DATOS TEMPORALES</span>
+							</div>
+						</f:facet>   
+		
+						<p:column headerText="Cuenta Banc." filterMatchMode="contains" >
+							<h:outputText value="#{temp.cuentaBancaria.banco.abreviatura} : #{temp.cuentaBancaria.numero}  (#{temp.cuentaBancaria.moneda eq 'D'?'Dól':'Sol'}) #{temp.cuentaBancaria.sucursal.prenombre}"/>
+						</p:column>
+						
+						<p:column headerText="Monto" filterMatchMode="contains" >
+							<h:outputText  value="#{temp.monto}"> 
+								<f:convertNumber type="currency" currencySymbol=""/>
+							</h:outputText>
+						</p:column>
+						
+						<p:column headerText="Tipo Transacción" filterMatchMode="contains" >
+							<h:outputText  value="#{temp.tipoTransaccion}" />
+						</p:column>
+						
+						<p:column headerText="Nro. Operación" filterMatchMode="contains" >
+							<h:outputText  value="#{temp.numeroOperacion}" />
+						</p:column>
+						
+						<p:column headerText="Fecha Operación" filterMatchMode="contains" >
+							<h:outputText  value="#{requerimientoSeparacionBean.convertirHoraFull(temp.fechaOperacion)}" />
+						</p:column>
+						
+						<p:column width="10%" filterMatchMode="contains">
+							<p:commandButton   icon="pi pi-trash" styleClass="rounded-button ui-button-danger" action="#{requerimientoSeparacionBean.eliminarDatoTemporal(temp)}" 
+							update=":formPlantillaDialog:tabPlantilla:tableTemp"/>
+						</p:column>
+					</p:dataTable>
+				
+				</p:tab>
+			</p:tabView>
+			
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogCambiarLote" header="CAMBIAR LOTE" widgetVar="cambiarLoteDialog" resizable="false" closable="true"
+		appendTo="@(body)">
+		<h:form id="formCambioLote">
+			<p:panel header="LOTE ACTUAL" style="margin: 20px;">
+		        <h:panelGrid columns="2">
+		        	<p:outputLabel value="Proyecto: "/>
+					<p:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.project.name}"/>
+					
+					<p:outputLabel value="Manzana: "/>
+					<p:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.manzana.name}"/>
+					
+					<p:outputLabel value="Número del lote: "/>
+					<p:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.numberLote}"/>
+			
+		        </h:panelGrid>
+		    </p:panel>
+		    
+		    <p:panel header="CAMBIAR DE LOTE A:" style="margin: 20px;">
+		        <h:panelGrid columns="2">
+		        	
+					<h:outputLabel value="Proyecto:" />
+					 <p:selectOneMenu value="#{requerimientoSeparacionBean.proyectoCambio}" converter="#{requerimientoSeparacionBean.conversorProyectoCambio}" > 
+						<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+						<f:selectItems value="#{requerimientoSeparacionBean.lstProyectosCambio}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+						<p:ajax update=":formCambioLote:manzana :formCambioLote:lote" listener="#{requerimientoSeparacionBean.listarManzanas}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Manzana: " />
+					<p:selectOneMenu id="manzana" value="#{requerimientoSeparacionBean.manzanaCambio}" converter="#{requerimientoSeparacionBean.conversorManzanaCambio}" > 
+						<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+						<f:selectItems value="#{requerimientoSeparacionBean.lstManzanasCambio}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+						<p:ajax update=":formCambioLote:lote" listener="#{requerimientoSeparacionBean.listarLotes}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Lote: " />
+					<p:selectOneMenu id="lote" value="#{requerimientoSeparacionBean.loteCambio}" converter="#{requerimientoSeparacionBean.conversorLoteCambio}" > 
+						<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+						<f:selectItems value="#{requerimientoSeparacionBean.lstLotesCambio}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+					</p:selectOneMenu>
+					
+					<p:commandButton value="Guardar" action="#{requerimientoSeparacionBean.saveCambioLote}" update=":form:tabView:idTableReqsep"/>
+		        
+		        </h:panelGrid>
+		    </p:panel>
+		
+		</h:form>
+	</p:dialog>
+    
+    <p:confirmDialog id="rechazaConta" message="¿Está seguro de rechazar el requerimiento de separación?" header="Confirmación"
+                      severity="alert" widgetVar="rechazaConta" appendTo="@(body)">
+        <h:form >
+            <p:commandButton onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();PF('rechazaConta').hide()" value="SI" update=":form:tabView:idTableReqsep" action="#{requerimientoSeparacionBean.rechazarRequerimiento}"/>
+            <p:commandButton value="NO" oncomplete="PF('rechazaConta').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <pe:blockUI widgetVar="blockUIWidget">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    
+    
+    <pe:blockUI target="saveRequerimiento" widgetVar="blockUIWidgetSaveReq">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveRequerimiento" message="¿Está seguro de guardar el requerimiento de Separación?" header="Confirmación" severity="alert" widgetVar="saveRequerimiento" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetSaveReq').block();" oncomplete="PF('blockUIWidgetSaveReq').unblock();PF('saveRequerimiento').hide()"  action="#{requerimientoSeparacionBean.saveRequerimientoSeparacion()}" 
+            update=":form:tabView:idTableReqsep :form:tabView:idPanelPlantilla  :form:tabView:pnlCond"/>
+            <p:commandButton value="NO" oncomplete="PF('saveRequerimiento').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <pe:blockUI target="anularRequerimiento" widgetVar="blockUIWidgetAnular">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="anularRequerimiento" message="¿Está seguro de Anular el Requerimiento de Separación?" header="Confirmación" severity="alert" widgetVar="anularRequerimiento" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetAnular').block();" oncomplete="PF('blockUIWidgetAnular').unblock();PF('anularRequerimiento').hide()"  action="#{requerimientoSeparacionBean.anularRequerimiento()}" 
+            update=":form:tabView:idTableReqsep :form:tabView:idPanelPlantilla  :form:tabView:pnlCond"/>
+            <p:commandButton value="NO" oncomplete="PF('anularRequerimiento').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <pe:blockUI target="rechazaPlantillaVenta" widgetVar="blockUIWidgetRechazaPlantilla">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="rechazaPlantillaVenta" message="¿Está seguro de rechazar?" header="Confirmación" severity="alert" widgetVar="rechazaPlantillaVenta" appendTo="@(body)">
+        <h:form id="formRechaza">
+        	<h:panelGrid columns="2">
+        		<p:outputLabel value="Motivo:" />
+        		<p:inputText value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.observacion}" maxlength="200"></p:inputText>
+        		
+        		<p:commandButton value="SI" 
+        			onstart="PF('blockUIWidgetRechazaPlantilla').block();" 
+        			oncomplete="PF('blockUIWidgetRechazaPlantilla').unblock(); PF('rechazaPlantillaVenta').hide(); PF('plantillaNewDialog').hide()"  
+        			action="#{requerimientoSeparacionBean.rechazarRequerimiento}" 
+            		update=":form:tabView:idTableReqsep"/>
+            	
+            	<p:commandButton value="NO" oncomplete="PF('rechazaPlantillaVenta').hide()"/>
+        	</h:panelGrid>
+            
+        </h:form>
+    </p:confirmDialog>
+
+</ui:composition>

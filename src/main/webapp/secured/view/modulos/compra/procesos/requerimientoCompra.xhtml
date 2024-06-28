@@ -1,0 +1,297 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+ 
+	<h:form id="form" enctype="multipart/form-data">
+		<p:growl id="msgs" showDetail="true"/>
+		<h2 style="color: #007d4c;">COMPRAS > REQUERIMIENTOS DE COMPRAS</h2>
+		
+		<p:tabView id="tabView">  
+			<p:tab title="Lista de compras">
+			
+				<h:panelGrid columns="5" id="gridOpc" > 
+					<p:selectOneButton value="#{requerimientoCompraBean.estado}" unselectable="false">
+						<f:selectItem itemLabel="Pendientes" itemValue="Pendiente" />
+						<f:selectItem itemLabel="Aprobados" itemValue="Aprobado" />
+						<f:selectItem itemLabel="Rechazados" itemValue="Rechazado" />
+						<p:ajax update=":form:tabView:idTableCompra"  />
+					</p:selectOneButton> 
+					
+				</h:panelGrid> 
+			
+				<p:dataTable var="compra" id="idTableCompra" value="#{requerimientoCompraBean.lstRequerimientoCompraLazy}" widgetVar="compraTable" rowIndexVar="row" paginator="true" rows="15" size="small" style="width:auto"
+					emptyMessage="No se encontraron compras." paginatorPosition="bottom" rowKey="#{compra.id}" selection="#{requerimientoCompraBean.requerimientoCompraSelected}" selectionMode="single"
+					lazy="true">
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Lista de Compras</span>
+						</div>
+					</f:facet>
+					<p:ajax event="rowSelect" update="dialogOrdenCompra" listener="#{requerimientoCompraBean.listarListaDetalles()}" oncomplete="PF('ordenCompraDialog').show();" />
+		
+					<p:column width="25px">
+		                      #{row +1}
+		        	</p:column>
+		        	
+		        	<p:column headerText="Número"  filterMatchMode="contains">
+						<h:outputText value="#{compra.numero}" />
+					</p:column>
+		        	
+					<p:column headerText="Fecha Emision" filterMatchMode="contains">
+						<h:outputText value="#{compra.fechaEmision}" > 
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Usuario registro"  filterMatchMode="contains">
+						<h:outputText value="#{compra.usuario.username}" />
+					</p:column>
+					
+					<p:column headerText="Fecha Registro" filterMatchMode="contains">
+						<h:outputText value="#{compra.fechaRegistro}" > 
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Forma de Pago">
+		                <h:outputText value="#{compra.formaPago}" />
+		            </p:column>
+		            
+		            <p:column headerText="Observación">
+		                <h:outputText value="#{compra.observacion}" />
+		            </p:column>
+		            
+		            <p:column headerText="Usuario Aprueba"  filterMatchMode="contains" rendered="#{requerimientoCompraBean.estado eq 'Aprobado'}">
+						<h:outputText value="#{compra.usuarioAprueba.person.surnames} #{compra.usuarioAprueba.person.names}" />
+					</p:column>
+					
+					<p:column headerText="Fecha Aprueba" style="text-align:center" rendered="#{requerimientoCompraBean.estado eq 'Aprobado'}">
+						<h:outputText value="#{compra.fechaAprueba}" style="font-size: 14px;"> 
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Usuario Rechaza" filterMatchMode="contains" rendered="#{requerimientoCompraBean.estado eq 'Rechazado'}">
+						<h:outputText value="#{compra.usuarioRechaza.person.surnames} #{compra.usuarioRechaza.person.names}" />
+					</p:column>
+					
+					<p:column headerText="Fecha Rechaza" style="text-align:center" rendered="#{requerimientoCompraBean.estado eq 'Rechazado'}">
+						<h:outputText value="#{compra.fechaRechaza}" style="font-size: 14px;"> 
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+				
+					<p:column headerText="Total" filterMatchMode="contains">
+						<h:outputText value="#{compra.total}" >
+			                <f:convertNumber type="currency" currencySymbol=""/>
+			            </h:outputText>
+					</p:column>
+					
+				</p:dataTable>
+				
+			</p:tab>
+			
+			<p:tab title="Registrar nueva compra">
+			
+				<h:panelGrid columns="2" > 
+				
+					<h:outputLabel value="Forma de Pago: " />
+					<p:selectOneMenu id="formaPago" value="#{requerimientoCompraBean.formaPago}" >
+						<f:selectItem itemLabel="[- Seleccionar -]" itemValue=""/>
+						<f:selectItem itemLabel="Efectivo" itemValue="Efectivo"/>
+						<f:selectItem itemLabel="Tarjeta" itemValue="Tarjeta"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Observación:" />
+					<p:inputText id="observacion" value="#{requerimientoCompraBean.observacion}" style="margin:10px"/>
+					
+					<p:commandButton value="Guardar" actionListener="#{requerimientoCompraBean.saveRequerimientoCompra()}" update=":form:tabView:idTableCompra :form:tabView:idTableDetalle"/>
+				
+				</h:panelGrid>
+				
+				<p:dataTable id="idTableDetalle" var="detalle" value="#{requerimientoCompraBean.lstDetalleRequerimientoCompra}" style="width:auto" rowIndexVar="row" paginator="true" rows="15" size="small" 
+				emptyMessage="No se agregaron detalles." selection="#{requerimientoCompraBean.detalleRequerimientoCompraSelected}" paginatorPosition="bottom">
+					
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Lista de Detalles</span>
+						</div>
+					</f:facet>
+					<p:column style="width:42px;text-align: left">
+						<f:facet name="header">
+							<p:commandLink  update=":formDetalleDialog " oncomplete="PF('detalleDialog').show();"
+								title="NUEVO DETALLE">
+								<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+			
+							</p:commandLink>
+						</f:facet>
+					</p:column>
+				
+					<p:column headerText="Nro" width="25px">
+                      #{row +1}
+        			</p:column>
+        			
+		            <p:column headerText="Cantidad">
+		                <h:outputText value="#{detalle.cantidad}" />
+		            </p:column>
+		            
+		            <p:column headerText="Unidad">
+		                <h:outputText value="#{detalle.unidad.descripcion}" />
+		            </p:column>
+		            
+		            <p:column headerText="Descripcion Producto">
+		                <h:outputText value="#{detalle.descripcionProducto}" />
+		            </p:column>
+		            
+		            <p:column headerText="Precio">
+		                <h:outputText value="#{detalle.precio}" />
+		            </p:column>
+		            
+		            <p:column headerText="Total">
+		                <h:outputText value="#{detalle.total}" />
+		            </p:column>
+		            
+		            <p:column width="10%" filterMatchMode="contains">
+						<p:commandButton action="#{requerimientoCompraBean.deleteDetalle(detalle)}" icon="pi pi-trash" styleClass="rounded-button ui-button-danger" process="@this" update=":form:tabView:idTableDetalle"/>
+					</p:column>
+		
+		        </p:dataTable>
+			</p:tab>
+			
+		</p:tabView>
+		
+		
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogDetalle" header="DETALLE ORDEN COMPRA" widgetVar="detalleDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formDetalleDialog">
+		    
+			<h:panelGrid columns="2"> 
+					<h:outputLabel value="Cantidad: " />
+					<p:inputNumber decimalSeparator="." thousandSeparator=","  id="cantidad" value="#{requerimientoCompraBean.cantidad}" style="margin:10px"> 
+						<p:ajax update="cantidad precio total" listener="#{requerimientoCompraBean.calcularTotal()}"/>
+					</p:inputNumber> 
+					
+					<p:outputLabel for="unidad" value="Unidad: " />
+					<p:selectOneMenu id="unidad" value="#{requerimientoCompraBean.unidadFilter}" converter="#{requerimientoCompraBean.conversorUnidad}" >
+						<f:selectItem itemLabel="[--Seleccionar--]" itemValue="#{null}"/>
+						<f:selectItems value="#{requerimientoCompraBean.lstUnidad}" var="unidad" itemLabel="#{unidad.descripcion}" itemValue="#{unidad}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Descripción Producto:" />
+					<p:inputText id="descripProd" value="#{requerimientoCompraBean.descripcionProducto}" style="margin:10px"/>
+					
+					<h:outputLabel value="Precio: " />
+					<p:inputNumber decimalSeparator="." thousandSeparator=","  id="precio" value="#{requerimientoCompraBean.precio}" style="margin:10px"> 
+						<p:ajax update="cantidad precio total" listener="#{requerimientoCompraBean.calcularTotal()}"/>
+					</p:inputNumber>  
+					
+					<h:outputLabel value="Total: " />
+					<p:inputNumber decimalSeparator="." thousandSeparator=","  id="total" value="#{requerimientoCompraBean.total}" style="margin:10px"/> 
+					
+					<p:commandButton value="Agregar Item" actionListener="#{requerimientoCompraBean.agregarItem()}" update=":form:tabView:idTableDetalle cantidad unidad descripProd precio total"/>
+				
+				</h:panelGrid>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogOrdenCompra" header="REQUERIMIENTO DE COMPRA" widgetVar="ordenCompraDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="50%" height="500px">
+		<h:form id="formOrdenCompraDialog">
+					
+			<p:commandButton value="APROBAR" onclick="PF('apruebaOrdenCompra').show();" rendered="#{requerimientoCompraBean.requerimientoCompraSelected.estado eq 'Pendiente' and navegacionBean.usuarioLogin.aprobarOrdenCompra}" process="@this" update=":form:tabView:idTableCompra " styleClass="ui-button-success" style="margin:10px"/>
+			
+			<p:commandButton value="RECHAZAR" onclick="PF('rechazaOrdenCompra').show();" rendered="#{requerimientoCompraBean.requerimientoCompraSelected.estado eq 'Pendiente' and navegacionBean.usuarioLogin.aprobarOrdenCompra}" process="@this" update=":form:tabView:idTableCompra " styleClass="ui-button-warning"/>
+			
+			<h:panelGrid columns="2"> 
+				 <p:outputLabel style="font-size: 13px;font-weight: bold;color: #036fab;" value="USUARIO REGISTRO :"/>
+	             <p:outputLabel style="font-size: 17px;font-weight: bold;color: black;" value="#{requerimientoCompraBean.requerimientoCompraSelected.usuario.person.surnames}  #{requerimientoCompraBean.requerimientoCompraSelected.usuario.person.names}"/>
+	             <p:outputLabel style="font-size: 13px;font-weight: bold;color: #036fab;" value="FECHA REGISTRO :"/>
+	             <p:outputLabel style="font-size: 17px;font-weight: bold;color: black;" value="#{requerimientoCompraBean.requerimientoCompraSelected.fechaRegistro}" />
+			</h:panelGrid>	
+						
+			<p:dataTable id="idTableDetalle" var="detalle" value="#{requerimientoCompraBean.lstDetalleRequerimientoCompra}" paginatorPosition="bottom" style="width:auto" rowIndexVar="row" paginator="true" rows="15" size="small" 
+				emptyMessage="No se agregaron detalles." >
+				
+					<p:column headerText="Nro" width="25px">
+                      #{row +1}
+        			</p:column>
+        			
+		            <p:column headerText="Cantidad">
+		                <h:outputText value="#{detalle.cantidad}" />
+		            </p:column>
+		            
+		            <p:column headerText="Unidad">
+		                <h:outputText value="#{detalle.unidad.descripcion}" />
+		            </p:column>
+		            
+		            <p:column headerText="Descripcion Producto">
+		                <h:outputText value="#{detalle.descripcionProducto}" />
+		            </p:column>
+		            
+		            <p:column headerText="Precio">
+		                <h:outputText value="#{detalle.precio}" />
+		            </p:column>
+		            
+		            <p:column headerText="Total">
+		                <h:outputText value="#{detalle.total}" />
+		            </p:column>
+		            
+		            <p:column width="10%" filterMatchMode="contains">
+						<p:commandButton action="#{requerimientoCompraBean.deleteDetalle(detalle)}" icon="pi pi-trash" styleClass="rounded-button ui-button-danger" process="@this" update=":form:tabView:idTableDetalle"/>
+					</p:column>
+		
+		        </p:dataTable>
+		</h:form>
+	</p:dialog>
+	
+	<pe:blockUI target="rechazaOrdenCompra" widgetVar="blockUIWidgetRechazaOrdenCompra">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="rechazaOrdenCompra" message="¿Está seguro de rechazar?" header="Confirmación" severity="alert" widgetVar="rechazaOrdenCompra" appendTo="@(body)">
+        <h:form id="formRechaza">
+        	<h:panelGrid columns="2">
+        		
+        		<p:commandButton value="SI" 
+        			onstart="PF('blockUIWidgetRechazaOrdenCompra').block();" 
+        			oncomplete="PF('blockUIWidgetRechazaOrdenCompra').unblock(); PF('rechazaOrdenCompra').hide(); PF('ordenCompraDialog').hide()"  
+        			action="#{requerimientoCompraBean.rechazarOrdenCompra()}" 
+            		update=":form:tabView:idTableCompra dialogOrdenCompra"/>
+            	
+            	<p:commandButton value="NO" oncomplete="PF('rechazaOrdenCompra').hide()"/>
+        	</h:panelGrid>
+            
+        </h:form>
+    </p:confirmDialog>
+    
+    
+    <pe:blockUI target="apruebaOrdenCompra" widgetVar="blockUIWidgetApruebaOrdenCompra">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="apruebaOrdenCompra" message="¿Está seguro de aprobar?" header="Confirmación" severity="alert" widgetVar="apruebaOrdenCompra" appendTo="@(body)">
+        <h:form id="formAprueba">
+        	<h:panelGrid columns="2">
+        		
+        		<p:commandButton value="SI" 
+        			onstart="PF('blockUIWidgetApruebaOrdenCompra').block();" 
+        			oncomplete="PF('blockUIWidgetApruebaOrdenCompra').unblock(); PF('apruebaOrdenCompra').hide(); PF('ordenCompraDialog').hide()"  
+        			action="#{requerimientoCompraBean.aprobarOrdenCompra()}" 
+            		update=":form:tabView:idTableCompra dialogOrdenCompra"/>
+            	
+            	<p:commandButton value="NO" oncomplete="PF('apruebaOrdenCompra').hide()"/>
+        	</h:panelGrid>
+            
+        </h:form>
+    </p:confirmDialog>
+	
+</ui:composition>

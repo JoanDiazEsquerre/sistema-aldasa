@@ -1,0 +1,290 @@
+	<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">ALMACÉN > INVENTARIO</h2>
+		<p:tabView id="tabView">
+			<p:tab title="Almacén" >
+				<p:selectOneButton value="#{inventarioBean.estado}" unselectable="false">
+					<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+					<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+					<p:ajax update=":form:tabView:idTableInventario" />
+				</p:selectOneButton>
+		
+				<p:dataTable var="inventario" id="idTableInventario" value="#{inventarioBean.lstInventarioLazy}" widgetVar="inventarioTable" rowIndexVar="row" style="width:100%" paginator="true" rows="15" size="small" 
+					emptyMessage="No se encontraron Inventarios." paginatorPosition="bottom" rowKey="#{inventario.id}" selection="#{inventarioBean.inventarioSelected}" selectionMode="single"
+					lazy="true">
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Lista del almacén</span>
+						</div>
+					</f:facet>
+					<p:ajax event="rowSelect" update=":formDialog :dialogInventario" listener="#{inventarioBean.updateInventario()}" oncomplete="PF('inventarioNewDialog').show();" />
+		
+					<p:column style="width:42px;text-align: left">
+						<f:facet name="header">
+							<p:commandLink action="#{inventarioBean.newInventario()}"
+								update=":formDialog :dialogInventario"
+								oncomplete="PF('inventarioNewDialog').show();" title="NUEVO INVENTARIO">
+								<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+		
+							</p:commandLink>
+						</f:facet>
+					</p:column>
+		
+					<p:column width="25px">
+		                      #{row +1}
+		        	</p:column>
+		        	
+					<p:column headerText="Nombre" filterMatchMode="contains">
+						<h:outputText value="#{inventario.nombre}" />
+					</p:column>
+					
+					<p:column headerText="Modelo" filterMatchMode="contains">
+						<h:outputText value="#{inventario.modelo}" />
+					</p:column>
+					
+					<p:column headerText="Marca" filterMatchMode="contains">
+						<h:outputText value="#{inventario.marca}" />
+					</p:column>
+					
+					<p:column headerText="Cantidad" filterMatchMode="contains">
+						<h:outputText value="#{inventario.cantidad}" />
+					</p:column>
+					
+				</p:dataTable>
+				
+				<p:contextMenu id="menuTableDistribucion" for="idTableInventario" >
+		        	<p:menuitem value="Distribución" icon="pi pi-search-plus" action="#{inventarioBean.verDetallesDistribucion()}" oncomplete="PF('distribucionDialog').show();" update="dialogDistribucion"/>		        
+		        </p:contextMenu>
+			
+			</p:tab>
+
+			<p:tab title="Inventario">
+				<h:panelGrid columns="2">
+					Estado:
+					<p:selectOneMenu value="#{inventarioBean.estadoInventarioBienes}" unselectable="false"> 
+						<f:selectItem itemLabel="[--TODOS--]" itemValue="" />
+						<f:selectItem itemLabel="Nuevos" itemValue="N" />
+						<f:selectItem itemLabel="Reparados" itemValue="R" />
+						<f:selectItem itemLabel="Malogrados" itemValue="M" />
+						<f:selectItem itemLabel="Inactivos" itemValue="I" />
+						<p:ajax update=":form:tabView:idTableInventarioBienes" />
+					</p:selectOneMenu>
+				</h:panelGrid>
+		
+				<p:dataTable var="inventario" id="idTableInventarioBienes" value="#{inventarioBean.lstInventarioBienesLazy}" widgetVar="inventarioTable" rowIndexVar="row" style="width:100%" paginator="true" rows="15" size="small" 
+					emptyMessage="No se encontraron Inventarios." paginatorPosition="bottom" rowKey="#{inventario.id}" selection="#{inventarioBean.inventarioBienesSelected}" selectionMode="single"
+					lazy="true">
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Lista del Inventario</span>
+						</div>
+					</f:facet>
+					<p:ajax event="rowSelect" update=":dialogInventarioBienes" listener="#{inventarioBean.updateInventarioBienes()}" oncomplete="PF('inventarioBienesNewDialog').show();" />
+		
+					<p:column style="width:42px;text-align: left">
+						<f:facet name="header">
+							<p:commandLink action="#{inventarioBean.newInventarioBienes()}"
+								update=":dialogInventarioBienes"
+								oncomplete="PF('inventarioBienesNewDialog').show();" title="NUEVO INVENTARIO">
+								<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+		
+							</p:commandLink>
+						</f:facet>
+					</p:column>
+		
+					<p:column width="25px">
+		                      #{row +1}
+		        	</p:column>
+		        	
+					<p:column headerText="Código" filterMatchMode="contains">
+						<h:outputText value="#{inventario.codigo}" />
+					</p:column>
+					
+					<p:column headerText="Área" filterMatchMode="contains">
+						<h:outputText value="#{inventario.area}" />
+					</p:column>
+					
+					<p:column headerText="Ubicación" filterMatchMode="contains">
+						<h:outputText value="#{inventario.ubicacion}" />
+					</p:column>
+					
+					<p:column headerText="Modelo" filterMatchMode="contains">
+						<h:outputText value="#{inventario.modelo}" />
+					</p:column>
+					
+					<p:column headerText="Marca" filterMatchMode="contains">
+						<h:outputText value="#{inventario.marca}" />
+					</p:column>
+					
+					<p:column headerText="Serie" filterMatchMode="contains">
+						<h:outputText value="#{inventario.serie}" />
+					</p:column>
+					
+					<p:column headerText="Descripción" filterMatchMode="contains">
+						<h:outputText value="#{inventario.descripcion}" />
+					</p:column>
+					
+					<p:column headerText="Fecha" filterMatchMode="contains">
+						<h:outputText value="#{inventario.fechaInventario}" />
+					</p:column>
+					
+				</p:dataTable>
+				
+			</p:tab>
+		</p:tabView>
+			
+			
+			
+		
+		        
+		        
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogInventario" header="#{inventarioBean.tituloDialog}" widgetVar="inventarioNewDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formDialog">
+			<h:panelGrid id="grid" columns="4">
+				<h:outputLabel for="nombre" value="Nombre:" />
+				<p:inputText id="nombre" value="#{inventarioBean.inventarioSelected.nombre}" style="margin:10px" maxlength="45" />
+
+				<h:outputLabel for="modelo" value="Modelo:" />
+				<p:inputText id="modelo" value="#{inventarioBean.inventarioSelected.modelo}" style="margin:10px" maxlength="45" />
+
+				<h:outputLabel for="marca" value="Marca:" />
+				<p:inputText id="marca" value="#{inventarioBean.inventarioSelected.marca}" style="margin:10px" maxlength="45" />
+				
+				<h:outputLabel for="cantidad" value="Cantidad:" />
+				<p:inputText id="cantidad" value="#{inventarioBean.inventarioSelected.cantidad}" style="margin:10px" maxlength="45" />
+				
+				<h:outputLabel for="option" value="Estado:" />
+				<p:selectOneMenu id="option" value="#{inventarioBean.inventarioSelected.estado}" style="margin:5px">
+					<f:selectItem itemLabel="ACTIVO" itemValue="#{true}" />
+					<f:selectItem itemLabel="INACTIVO" itemValue="#{false}" />
+				</p:selectOneMenu>	
+
+			</h:panelGrid>
+			<p:commandButton value="Guardar" actionListener="#{inventarioBean.saveInventario()}" update=":form:tabView:idTableInventario :formDialog" />
+
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" height="600px" dynamic="true" closeOnEscape="true" id="dialogDistribucion" header="DISTRIBUCIÓN" widgetVar="distribucionDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="50%">
+		<h:form id="formDistribucionDialog">
+			<h:panelGrid id="grid" columns="2"> 
+			
+					
+				<h:outputLabel for="optionArea" value="Área:" />
+               	<p:selectOneMenu id="optionArea" value="#{inventarioBean.distribucionSelected.area}" converter="#{inventarioBean.conversorArea}" style="margin:10px" >
+                   <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+                   <f:selectItems value="#{inventarioBean.lstArea}" var="area" itemLabel="#{area.nombre}" itemValue="#{area}"/>
+               	</p:selectOneMenu>
+	               
+	            <h:outputLabel value="Cantidad: " for="cantidad" />	               	
+				<p:inputNumber decimalSeparator="." thousandSeparator=","  id="cantidad" value="#{inventarioBean.distribucionSelected.cantidad}" style="margin:10px" modifyValueOnWheel="false"/>
+				
+			</h:panelGrid>
+			<p:commandButton value="Guardar" action="#{inventarioBean.saveDistribucion()}" update=":formDistribucionDialog:tableDistribucion"/>
+			
+			<p:dataTable id="tableDistribucion" var="distribucion" value="#{inventarioBean.lstDistribucion}" rows="24" paginator="true" selectionMode="single" rowIndexVar="row"  
+				paginatorPosition="bottom"  rowKey="#{distribucion.id}" emptyMessage="No se encontraron detalles de distribución." size="small" editable="true">
+
+				<f:facet name="header">
+					<div class="p-d-flex p-ai-center p-jc-between">
+						<span>DETALLE DE LA DISTRIBUCION</span>
+					</div>
+				</f:facet>   
+				
+				<p:ajax event="rowEdit" listener="#{inventarioBean.editarDistribucion(distribucion)}" update="formDistribucionDialog:tableDistribucion"/>
+           		<p:ajax event="rowEditCancel" />
+				
+				
+				<p:column headerText="Nro" filterMatchMode="contains" width="50px">
+                      #{row +1}
+      			</p:column>
+      			
+      			<p:column headerText="Área" filterMatchMode="contains">
+	                <p:cellEditor>
+	                    <f:facet name="output">
+	                    	<h:outputText value="#{distribucion.area.nombre}" />
+	                    </f:facet>
+	                    <f:facet name="input">
+	                        <p:selectOneMenu value="#{distribucion.area}" converter="#{inventarioBean.conversorArea}" style="margin:10px" >
+			                   <f:selectItems value="#{inventarioBean.lstArea}" var="area" itemLabel="#{area.nombre}" itemValue="#{area}"/>
+			               </p:selectOneMenu>
+	                    </f:facet>
+	                </p:cellEditor>
+            	</p:column>
+				
+				<p:column headerText="Cantidad" filterMatchMode="contains">
+	                <p:cellEditor>
+	                    <f:facet name="output">
+	                        <h:outputText value="#{distribucion.cantidad}">
+	                            <f:convertNumber type="currency" currencySymbol=""/>
+	                        </h:outputText>
+	                    </f:facet>
+	                    <f:facet name="input">
+	                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{distribucion.cantidad}" style="width:100%" label="Price" symbol=""/>
+	                    </f:facet>
+	                </p:cellEditor>
+	            </p:column>
+				
+				<p:column style="width:6rem">
+	                <p:rowEditor editTitle="Edit Row" cancelTitle="Cancel Edit" saveTitle="Save Row"/>
+	            </p:column>
+				
+			</p:dataTable>
+			
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogInventarioBienes" header="#{inventarioBean.tituloDialogInventario}" widgetVar="inventarioBienesNewDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formDialogInventario">
+			<h:panelGrid columns="4"> 
+			
+				<h:outputLabel value="Código: "  />	               	
+				<p:inputText value="#{inventarioBean.inventarioBienesSelected.codigo}" style="margin:10px" modifyValueOnWheel="false"/>
+				
+				<h:outputLabel  value="Área:" />
+               	<p:selectOneMenu  value="#{inventarioBean.inventarioBienesSelected.area}" converter="#{inventarioBean.conversorArea}" >
+                   <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+                   <f:selectItems value="#{inventarioBean.lstArea}" var="area" itemLabel="#{area.nombre}" itemValue="#{area}"/>
+               	</p:selectOneMenu>
+               	
+               	<h:outputLabel value="Ubicación: "  />	               	
+				<p:inputText value="#{inventarioBean.inventarioBienesSelected.ubicacion}" style="margin:10px" modifyValueOnWheel="false" maxlength="100"/>
+				
+				<h:outputLabel value="Modelo: "  />	               	
+				<p:inputText value="#{inventarioBean.inventarioBienesSelected.modelo}" style="margin:10px" modifyValueOnWheel="false" maxlength="100"/>
+				
+				<h:outputLabel value="Marca: "  />	               	
+				<p:inputText value="#{inventarioBean.inventarioBienesSelected.marca}" style="margin:10px" modifyValueOnWheel="false" maxlength="100"/>
+				
+				<h:outputLabel value="Serie: "  />	               	
+				<p:inputText value="#{inventarioBean.inventarioBienesSelected.serie}" style="margin:10px" modifyValueOnWheel="false" maxlength="100"/>
+				
+				<h:outputLabel value="Estado: "  />	               	
+				<p:inputText value="#{inventarioBean.inventarioBienesSelected.ubicacion}" style="margin:10px" modifyValueOnWheel="false" maxlength="100"/>
+				
+				<h:outputLabel value="Descripcion: "  />	               	
+				<p:inputText value="#{inventarioBean.inventarioBienesSelected.ubicacion}" style="margin:10px" modifyValueOnWheel="false" maxlength="100"/>
+				
+				<h:outputLabel value="Fecha: "  />	               	
+				<p:inputText value="#{inventarioBean.inventarioBienesSelected.ubicacion}" style="margin:10px" modifyValueOnWheel="false" maxlength="100"/>
+				
+			</h:panelGrid>
+			
+			<p:commandButton value="Guardar" />
+			
+		</h:form>
+	</p:dialog>
+</ui:composition>

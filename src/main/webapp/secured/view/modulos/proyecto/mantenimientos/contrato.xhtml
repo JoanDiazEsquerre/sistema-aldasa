@@ -1,0 +1,1124 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form" style="font-size: 11px;">  
+		<h2 style="color: #007d4c;">PROYECTOS > CONTRATOS</h2>
+		<p:tabView id="tabView" style="font-size: 14px;">
+			<p:tab title="Lista de Contratos" style="font-size: 11px;">
+				<p:selectOneButton value="#{contratoBean.estado}" unselectable="false">
+					<f:selectItem itemLabel="Activos" itemValue="Activo" />
+					<f:selectItem itemLabel="Terminados" itemValue="Terminado" />
+					<f:selectItem itemLabel="Resueltos" itemValue="Resuelto" />
+					<f:selectItem itemLabel="Anulados" itemValue="Anulado" />
+					<p:ajax  update="idTableContrato, idTotalEspecial" listener="#{contratoBean.sumarCuotasEspeciales}"/>
+				</p:selectOneButton>
+				
+				<p:commandButton value="ACTUALIZAR" style="display:none;" onclick="PrimeFaces.monitorDownload(start, stop);" id="btnAct" styleClass="ui-button-success" icon="pi pi-check"> 
+                	<p:fileDownload value="#{contratoBean.fileDes}"/> 
+                </p:commandButton>
+                
+                <p:outputLabel value="Contratos con cuota especial: " style="font-size: 20px;font-weight: bold;"/>
+                <p:outputLabel value="#{contratoBean.totalCuotaEspecial}" id="idTotalEspecial" style="font-size: 20px; color:green; font-weight: bold;"/>
+                <p:selectBooleanCheckbox value="#{contratoBean.cuotaEspecialFilter}" title="BUSCAR CUOTAS ESPECIALES" style="margin-left:20px"> 
+                	<p:ajax  update="idTableContrato" />
+                </p:selectBooleanCheckbox>
+                
+                <p:commandButton value="Descargar" rendered="#{navegacionBean.usuarioLogin.profile.id eq 1}" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{contratoBean.procesarExcel}" icon="pi pi-file-excel" styleClass="ui-button-success" style="margin-left:20px">
+		           <p:fileDownload value="#{contratoBean.fileDes}"/> 
+		      	</p:commandButton>
+				
+				<p:dataTable var="contrato" id="idTableContrato" value="#{contratoBean.lstContratoLazy}" widgetVar="contratoTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+					emptyMessage="No se encontraron contratos." style="width: 200%"	paginatorPosition="bottom" rowKey="#{contrato.id}"  selectionMode="single" 
+					selection="#{contratoBean.contratoSelected}" editable="true" editMode="cell">
+					
+					<p:ajax event="rowSelect" listener="#{contratoBean.verCronogramaPago()}" update="dialogCronogramaPago" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();PF('cronogramaPagoDialog').show();" />
+				
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Lista de Contratos</span>
+							<p:commandButton style="margin-left: 20px" actionListener="#{contratoBean.actualizarCuotasAtrasadas}" icon="pi pi-refresh" title="ACTUALIZAR CUOTAS ATRASADAS" update="idTableContrato" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+						</div>
+					</f:facet>
+		
+					<p:column width="25px">
+			                      #{row +1}
+			        </p:column>
+			        
+					<p:column headerText="Proyecto" style="text-align:center; width:150px">
+						<f:facet name="header">
+							Proyecto
+				        	<p:selectOneMenu value="#{contratoBean.projectFilter}" converter="#{contratoBean.conversorProject}" style="margin:5px; width:100%" >
+								<f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
+								<f:selectItems value="#{contratoBean.lstProject}" var="project" itemLabel="#{project.name}" itemValue="#{project}"/>
+								<p:ajax update="idTableContrato" />
+							</p:selectOneMenu>
+						</f:facet>
+						
+						<h:outputText value="#{contrato.lote.project.name}"/>
+					</p:column>
+					
+					<p:column headerText="Manzana" filterMatchMode="contains" width="70px" style="text-align:center" sortBy="#{contrato.lote.manzana.name}" filterBy="#{contrato.lote.manzana.name}">
+						<h:outputText value="#{contrato.lote.manzana.name}"/>
+					</p:column>
+					
+					<p:column headerText="Num. Lote" filterMatchMode="contains" width="70px" style="text-align:center" sortBy="#{contrato.lote.numberLote}" filterBy="#{contrato.lote.numberLote}">
+						<h:outputText value="#{contrato.lote.numberLote}"/>
+					</p:column>
+			        
+			        <p:column headerText="Fecha Venta" filterMatchMode="contains" sortBy="#{contrato.fechaVenta}" width="100px">
+						<h:outputText value="#{contrato.fechaVenta}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+			        
+					<p:column headerText="Monto Venta" filterMatchMode="contains" width="90px">
+						<h:outputText value="#{contrato.montoVenta}"> 
+							<f:convertNumber type="currency" currencySymbol="S/"/>
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Tipo Pago" sortBy="#{contrato.tipoPago}" filterMatchMode="contains" width="70px">
+						<h:outputText value="#{contrato.tipoPago}"/>
+					</p:column>
+					
+					<p:column headerText="Monto Inicial" filterMatchMode="contains" width="90px" sortBy="#{contrato.montoInicial}">
+						<h:outputText value="#{contrato.montoInicial}"> 
+							<f:convertNumber type="currency" currencySymbol="S/"/>
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Número Cuotas" filterMatchMode="contains" width="70px" sortBy="#{contrato.numeroCuota}">
+						<h:outputText value="#{contrato.numeroCuota}"/>
+					</p:column>
+					
+					<p:column headerText="Cuotas Atrasadas" filterMatchMode="contains" width="70px" sortBy="#{contrato.cuotasAtrasadas}">
+						<h:outputText value="#{contrato.cuotasAtrasadas}"/>
+					</p:column>
+					
+					<p:column headerText="Interés Original" filterMatchMode="contains" width="70px">
+						<h:outputText value="#{contrato.interesOriginal}#{contrato.interesOriginal eq null?'':'%'}">  
+							<f:convertNumber type="currency" currencySymbol=""/>
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Interés Actual" filterMatchMode="contains" width="70px">
+						<h:outputText value="#{contrato.interes}#{contrato.interes eq null?'':'%'}">  
+							<f:convertNumber type="currency" currencySymbol=""/>
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Fecha 1ra Cuota" filterMatchMode="contains" width="100px">
+						<h:outputText value="#{contrato.fechaPrimeraCuota}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Persona Venta 1" filterMatchMode="contains" width="200px" sortBy="#{contrato.personVenta.surnames}" filterBy="#{contrato.personVenta.surnames}">
+						<h:outputText value="#{contrato.personVenta.surnames} #{contrato.personVenta.names}"/>
+					</p:column>
+					
+					<p:column headerText="Persona Venta 2" filterMatchMode="contains" width="200px">
+						<h:outputText  value="#{contrato.personVenta2.surnames} #{contrato.personVenta2.names}"/>
+					</p:column>
+					
+					<p:column headerText="Persona Venta 3" filterMatchMode="contains" width="200px">
+						<h:outputText  value="#{contrato.personVenta3.surnames} #{contrato.personVenta3.names}"/>
+					</p:column>
+					
+					<p:column headerText="Persona Venta 4" filterMatchMode="contains" width="200px">
+						<h:outputText  value="#{contrato.personVenta4.surnames} #{contrato.personVenta4.names}"/>
+					</p:column>
+					
+					<p:column headerText="Persona Venta 5" filterMatchMode="contains" width="200px">
+						<h:outputText  value="#{contrato.personVenta5.surnames} #{contrato.personVenta5.names}"/>
+					</p:column>
+					
+					<p:column width="100px" headerText="Firma" sortBy="#{contrato.firma}" filterMatchMode="contains">
+						<p:commandButton id="botonFirma" value="#{contrato.firma eq true?'FIRMADO':'NO FIRMADO'}" onclick="PF('saveConfirmaFirma').show()"  styleClass="#{contrato.firma eq true? 'ui-button-success' : 'ui-button-warning'}"> 
+							<f:setPropertyActionListener value="#{contrato}" target="#{contratoBean.contratoSelected}"  />
+						</p:commandButton>
+					</p:column>
+					
+					<p:column width="70px" headerText="Pagó Independización?" sortBy="#{contrato.firma}" filterMatchMode="contains">
+						<p:commandButton id="botonInd" value="#{contrato.pagoIndependizacion eq true?'SI':'NO'}" onclick="PF('saveConfirmaPago').show()" styleClass="#{contrato.pagoIndependizacion eq true? 'ui-button-success' : 'ui-button-warning'}"> 
+							<f:setPropertyActionListener value="#{contrato}" target="#{contratoBean.contratoSelected}"  />
+						</p:commandButton>
+					</p:column>
+					
+					<p:column headerText="Asesor Cobranza" width="100px">
+		                <p:cellEditor>
+		                    <f:facet name="output">
+		                        <h:outputText value="#{contrato.usuarioCobranza.username}"/>
+		                    </f:facet>
+		                    <f:facet name="input">    
+		                        <h:selectOneMenu value="#{contrato.usuarioCobranza}" converter="#{contratoBean.conversorUsuario}">
+									<f:selectItem itemLabel="[-Ninguno-]" itemValue="#{null}"></f:selectItem>
+									<f:selectItems value="#{contratoBean.lstUsuarioCobranza}" var="usu" itemLabel="#{usu.username}" itemValue="#{usu}"/> 
+									<p:ajax listener="#{contratoBean.actualizarUsuarioCobranza(contrato)}" update="idTableContrato" />
+								</h:selectOneMenu>
+		                    </f:facet>
+		                </p:cellEditor>
+		            </p:column>
+		            
+		            <p:column width="70px" headerText="Minuta Leg." sortBy="#{contrato.minutaLegalizada}" filterMatchMode="contains">
+						<p:commandButton value="#{contrato.firma eq true?'SI':'NO'}" onclick="PF('saveConfirmaML').show()"  styleClass="#{contrato.minutaLegalizada eq true? 'ui-button-success' : 'ui-button-warning'}"> 
+							<f:setPropertyActionListener value="#{contrato}" target="#{contratoBean.contratoSelected}"  />
+						</p:commandButton>
+					</p:column>
+					<p:column width="70px" headerText="Minuta Aut." sortBy="#{contrato.minutaAutorizada}" filterMatchMode="contains">
+						<p:commandButton  value="#{contrato.minutaAutorizada eq true?'SI':'NO'}" onclick="PF('saveConfirmaMA').show()"  styleClass="#{contrato.minutaAutorizada eq true? 'ui-button-success' : 'ui-button-warning'}"> 
+							<f:setPropertyActionListener value="#{contrato}" target="#{contratoBean.contratoSelected}"  />
+						</p:commandButton>
+					</p:column>
+					<p:column width="70px" headerText="Escritura." sortBy="#{contrato.escritura}" filterMatchMode="contains">
+						<p:commandButton  value="#{contrato.escritura eq true?'SI':'NO'}" onclick="PF('saveConfirmaEsc').show()"  styleClass="#{contrato.escritura eq true? 'ui-button-success' : 'ui-button-warning'}"> 
+							<f:setPropertyActionListener value="#{contrato}" target="#{contratoBean.contratoSelected}"  />
+						</p:commandButton>
+					</p:column>
+					<p:column width="70px" headerText="Indep." sortBy="#{contrato.independizacion}" filterMatchMode="contains">
+						<p:commandButton value="#{contrato.independizacion eq true?'SI':'NO'}" onclick="PF('saveConfirmaInd').show()"  styleClass="#{contrato.independizacion eq true? 'ui-button-success' : 'ui-button-warning'}"> 
+							<f:setPropertyActionListener value="#{contrato}" target="#{contratoBean.contratoSelected}"  />
+						</p:commandButton>
+					</p:column>
+					
+					<p:column width="70px" headerText="Cuota Especial" sortBy="#{contrato.cuotaEspecial}" filterMatchMode="contains">
+						<p:outputLabel value="#{contrato.cuotaEspecial eq true?'SI':'NO'}"/>
+					</p:column>
+					
+					<p:column width="70px" headerText="Compromiso Pago" >
+						<f:facet name="header">
+							Compromiso Pago
+							<p:selectOneMenu id="option" value="#{contratoBean.compromisoPagoFilter}"> 
+								<f:selectItem itemLabel="[-TODOS-]" itemValue="%%"/>
+			                    <f:selectItem itemLabel="NO" itemValue="%NO%"/>
+			                    <f:selectItem itemLabel="SI" itemValue="%SI%"/>
+								<p:ajax update="idTableContrato" />
+			                </p:selectOneMenu>
+						</f:facet>
+						<h:outputText value="#{contrato.compromisoPago}" />
+					</p:column>
+					
+					<p:column width="90px" headerText="Fecha Vencimiento" filterMatchMode="contains" sortBy="#{contrato.fechaVenta}" >
+						<h:outputText value="#{contrato.fechaVencimientoComp}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					
+				</p:dataTable>
+				
+				<p:contextMenu id="menuTableReq" for="idTableContrato" >
+		            <p:menuitem value="Descargar Contrato" icon="pi pi-check" action="#{contratoBean.generarExcel}" oncomplete="hacerClick('#{p:resolveFirstComponentWithId('btnAct', view).clientId}');"  />
+		        	<p:menuitem value="Ver Vouchers de Pago" icon="pi pi-search-plus" action="#{contratoBean.verVouchersPago}" update="dialogVoucher"  />		        
+		        	<p:menuitem value="Añadir Observación" icon="pi pi-comments" action="#{contratoBean.cargarListaObservacion()}" oncomplete="PF('añadirObservacionDialog').show();" update="dialogAñadirObservacion"  />	
+		        	<p:menuitem value="Subir Archivo" icon="pi pi-cloud-upload" action="#{contratoBean.listarArchivosContrato}" oncomplete="PF('archivoDialog').show();" update="dialogArchivo"  />	
+		       		<p:menuitem value="Pasar a Terminado" icon="pi pi-check-circle" oncomplete="PF('terminarContra').show()"  />	
+		       		<p:menuitem value="Pasar a Resuelto" icon="pi pi-arrow-circle-down" oncomplete="PF('resolverContra').show()"  />	
+		       		<p:menuitem value="Cambiar Titular" rendered="#{navegacionBean.usuarioLogin.id eq 1}" icon="pi pi-users" oncomplete="PF('cambiarTitularDialog').show()"  />	
+		       		<p:menuitem value="Anular" icon="pi pi-trash" oncomplete="PF('anulaContra').show()"  />		        
+		        </p:contextMenu>
+		        
+		        <p:panel header="OBSERVACIONES" style="margin: 20px; width: 40%">
+			        <h:panelGrid columns="5">
+			        	
+						<h:outputLabel value="Fecha Inicio:" />
+						<p:datePicker value="#{contratoBean.fechaIniObs}" />
+						
+						<h:outputLabel value="Fecha Fin:" />
+						<p:datePicker value="#{contratoBean.fechaFinObs}" />
+						
+						<p:commandButton  value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop); PF('blockUIWidgetGeneral').block();" actionListener="#{contratoBean.procesarExcelObsContrato}" oncomplete="PF('blockUIWidgetGeneral').unblock();" icon="pi pi-file-excel" styleClass="mr-2">
+				           <p:fileDownload value="#{contratoBean.fileDes}"/> 
+				      	</p:commandButton>
+			        
+			        </h:panelGrid>
+			    </p:panel>
+			    
+			    <p:panel header="RESUMEN BÁSICO DE LOTES VENDIDOS" style="margin: 20px; width: 40%">
+			        <h:panelGrid columns="5">
+			        	
+						<p:outputLabel value="Año:" style="margin-left: 20px;"/>
+						<p:selectOneMenu value="#{contratoBean.year}">
+							<f:selectItem itemLabel="[-TODOS-]" itemValue="#{0}" />
+							<f:selectItem itemLabel="2019" itemValue="#{2019}" />
+							<f:selectItem itemLabel="2020" itemValue="#{2020}" />
+							<f:selectItem itemLabel="2021" itemValue="#{2021}" />
+							<f:selectItem itemLabel="2022" itemValue="#{2022}" />
+							<f:selectItem itemLabel="2023" itemValue="#{2023}" />
+							<f:selectItem itemLabel="2024" itemValue="#{2024}" />
+							<f:selectItem itemLabel="2025" itemValue="#{2025}" />
+							<f:selectItem itemLabel="2026" itemValue="#{2026}" />
+							<f:selectItem itemLabel="2027" itemValue="#{2027}" />
+							<f:selectItem itemLabel="2028" itemValue="#{2028}" />
+						</p:selectOneMenu>
+						
+						<p:outputLabel value="Mes:" style="margin-left: 20px;"/>
+						<p:selectOneMenu value="#{contratoBean.month}">
+							<f:selectItem itemLabel="[-TODOS-]" itemValue="#{0}" />
+							<f:selectItem itemLabel="Enero" itemValue="#{1}" />
+							<f:selectItem itemLabel="Febrero" itemValue="#{2}" />
+							<f:selectItem itemLabel="Marzo" itemValue="#{3}" />
+							<f:selectItem itemLabel="Abril" itemValue="#{4}" />
+							<f:selectItem itemLabel="Mayo" itemValue="#{5}" />
+							<f:selectItem itemLabel="Junio" itemValue="#{6}" />
+							<f:selectItem itemLabel="Julio" itemValue="#{7}" />
+							<f:selectItem itemLabel="Agosto" itemValue="#{8}" />
+							<f:selectItem itemLabel="Setiembre" itemValue="#{9}" />
+							<f:selectItem itemLabel="Octubre" itemValue="#{10}" />
+							<f:selectItem itemLabel="Noviembre" itemValue="#{11}" />
+							<f:selectItem itemLabel="Diciembre" itemValue="#{12}" />
+						</p:selectOneMenu>
+						
+						<p:commandButton  value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop); PF('blockUIWidgetGeneral').block();" actionListener="#{contratoBean.procesarResumenContrato}" oncomplete="PF('blockUIWidgetGeneral').unblock();" icon="pi pi-file-excel" styleClass="mr-2">
+				           <p:fileDownload value="#{contratoBean.fileResumen}"/> 
+				      	</p:commandButton>
+			        
+			        </h:panelGrid>
+			    </p:panel>
+			</p:tab>
+			<p:tab title="Nuevo Contrato"  style="font-size: 11px;">
+			
+				<h:panelGrid columns="5" id="gridNomLote"> 
+					<p:commandButton id="movieBtn" style="font-size: 14px;" value="Importar Lote" icon="pi pi-search" update=":form:tabView:tableLote"/>
+					<p:overlayPanel for="movieBtn" dynamic="true" style="width:600px" widgetVar="moviePicker">
+						<p:dataTable var="lote" value="#{contratoBean.lstLotesSinContratoLazy}" rows="5" paginator="true" selectionMode="single" rowIndexVar="row" paginatorPosition="bottom" 
+							selection="#{contratoBean.loteSelected}" rowKey="#{lote.id}" id="tableLote" emptyMessage="No se encontraron resultados" size="small">
+							<p:ajax event="rowSelect" listener="#{contratoBean.seleccionarLote()}" oncomplete="PF('moviePicker').hide()" update=":form:tabView:gridNomLote :form:tabView:grid  "/>
+	
+							<p:column headerText="Proyecto" style="text-align:center; width:150px">
+								<f:facet name="header">
+									Proyecto
+						        	<p:selectOneMenu value="#{contratoBean.projectFilterLote}" converter="#{contratoBean.conversorProject}" style="margin:5px; width:100%" >
+										<f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
+										<f:selectItems value="#{contratoBean.lstProject}" var="project" itemLabel="#{project.name}" itemValue="#{project}"/>
+										<p:ajax update=":form:tabView:tableLote" />
+									</p:selectOneMenu>
+								</f:facet>
+								
+								<h:outputText value="#{lote.project.name}"/>
+							</p:column>
+							
+							<p:column headerText="Manza" style="text-align:center" filterBy="#{lote.manzana.name}">
+								<h:outputText value="#{lote.manzana.name}" style="font-size: 14px;"/>
+							</p:column>
+	 
+							<p:column headerText="Nro. Lote" style="text-align:center" filterBy="#{lote.numberLote}">
+								<h:outputText value="#{lote.numberLote}" style="font-size: 14px;"/>
+							</p:column>
+							
+							<p:column headerText="Tipo Pago" style="text-align:center">
+								<h:outputText value="#{lote.tipoPago}" style="font-size: 14px;"/>
+							</p:column>
+							<p:column headerText="Fecha Venta" style="text-align:center">
+								<h:outputText value="#{lote.fechaVendido}" style="font-size: 14px;"> 
+									<f:convertDateTime pattern="dd/MM/yyyy" />
+								</h:outputText>
+							</p:column>
+							
+						</p:dataTable>
+					</p:overlayPanel>
+				
+				
+					<h:outputText value="Lote: " style="font-size: 20px;font-weight: bolder;" rendered="#{contratoBean.loteSelected ne null}"/>
+					<h:outputText value="#{contratoBean.nombreLoteSelected}" style="font-size: 20px;color:#007d4c;font-weight: bolder;" rendered="#{contratoBean.loteSelected ne null}"/>
+					
+					<p:commandLink actionListener="#{contratoBean.eliminarLoteSelected}" update=":form:tabView:gridNomLote :form:tabView:grid" title="ELIMINAR" >
+                        <p:graphicImage value="/recursos/images/eliminar.gif" rendered="#{contratoBean.loteSelected ne null}" />
+                    </p:commandLink>
+				</h:panelGrid>
+				
+				<h:panelGrid id="grid" columns="4" > 				
+					
+					<h:outputLabel  value="Fecha de venta: " />
+					<p:datePicker  value="#{contratoBean.fechaVenta}" style="margin:5px; width:220px" />
+					
+					<h:outputLabel  value="Monto de venta: " />
+					<p:inputNumber decimalSeparator="." thousandSeparator=","   value="#{contratoBean.montoVenta}" style="margin:5px; width:220px" />
+					
+					<h:outputLabel value="Tipo de Pago:"  />
+					<p:selectOneMenu  value="#{contratoBean.tipoPago}" style="margin:5px; width:220px" >
+						<f:selectItem itemLabel="Contado" itemValue="Contado" />
+						<f:selectItem itemLabel="Crédito" itemValue="Crédito"/>
+						<p:ajax listener="#{contratoBean.cambiarTipoPago}" update=":form:tabView:grid" />
+					</p:selectOneMenu>
+										
+					<h:outputLabel value="Monto Inicial: " id="lblMontoInicial" rendered="#{contratoBean.tipoPago eq 'Crédito'}" />
+					<p:inputNumber decimalSeparator="." thousandSeparator=","  id="nbrMontoInicial" value="#{contratoBean.montoInicial}" style="margin:5px; width:220px" modifyValueOnWheel="false" rendered="#{contratoBean.tipoPago eq 'Crédito'}"/> 
+										
+					<h:outputLabel value="Nro. de Cuotas: " id="lblNroCuota"  rendered="#{contratoBean.tipoPago eq 'Crédito'}"/>
+					<p:inputNumber decimalSeparator="." thousandSeparator=","   value="#{contratoBean.nroCuotas}" style="margin:5px; width:220px"  decimalPlaces="0" rendered="#{contratoBean.tipoPago eq 'Crédito'}"/> 
+				
+					<h:outputLabel value="Interés:" id="lblInteres"  rendered="#{contratoBean.tipoPago eq 'Crédito'}"/>
+					<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{contratoBean.interes}" style="margin:5px; width:220px" rendered="#{contratoBean.tipoPago eq 'Crédito'}"/>
+					
+					<h:outputLabel value="Fecha de 1ra Cuota: " rendered="#{contratoBean.tipoPago eq 'Crédito'}"/>
+					<p:datePicker value="#{contratoBean.fechaPrimeraCuota}" style="margin:5px; width:220px" rendered="#{contratoBean.tipoPago eq 'Crédito'}"/>
+					
+					<h:outputLabel value="Persona de venta 1: " />
+					<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.persona1}" converter="#{contratoBean.conversorPersonSurnames}"  
+					completeMethod="#{contratoBean.completePersonSurnames}"  var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+						<p:column width="400px">
+								<h:outputLabel value="#{per.surnames} #{per.names}" />
+							</p:column>
+							<p:column width="400px">
+								<h:outputLabel value="#{per.dni}" />
+							</p:column>
+					
+					</p:autoComplete>
+		             
+					<h:outputLabel value="Persona de venta 2: " />
+					<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.persona2}" converter="#{contratoBean.conversorPersonSurnames}"  
+					completeMethod="#{contratoBean.completePersonSurnames}"  var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+						<p:column width="400px">
+								<h:outputLabel value="#{per.surnames} #{per.names}" />
+							</p:column>
+							<p:column width="400px">
+								<h:outputLabel value="#{per.dni}" />
+							</p:column>
+					
+					</p:autoComplete>
+		                
+		            <h:outputLabel  value="Persona de venta 3: " />
+					<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.persona3}" converter="#{contratoBean.conversorPersonSurnames}" 
+					completeMethod="#{contratoBean.completePersonSurnames}" var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px" > 
+						<p:column width="400px">
+								<h:outputLabel value="#{per.surnames} #{per.names}" />
+							</p:column>
+							<p:column width="400px">
+								<h:outputLabel value="#{per.dni}" />
+							</p:column>
+					
+					</p:autoComplete>
+		                
+					<h:outputLabel  value="Persona de venta 4: " />
+					<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.persona4}" converter="#{contratoBean.conversorPersonSurnames}" 
+					completeMethod="#{contratoBean.completePersonSurnames}" var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+						<p:column width="400px">
+								<h:outputLabel value="#{per.surnames} #{per.names}" />
+							</p:column>
+							<p:column width="400px">
+								<h:outputLabel value="#{per.dni}" />
+							</p:column>
+					
+					</p:autoComplete>
+					
+					<h:outputLabel  value="Persona de venta 5: " />
+					<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.persona5}" converter="#{contratoBean.conversorPersonSurnames}" 
+					completeMethod="#{contratoBean.completePersonSurnames}" var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+						<p:column width="400px">
+								<h:outputLabel value="#{per.surnames} #{per.names}" />
+							</p:column>
+							<p:column width="400px">
+								<h:outputLabel value="#{per.dni}" />
+							</p:column>
+					
+					</p:autoComplete>
+					
+					<p:selectBooleanCheckbox value="#{contratoBean.cuotaEspecial}" itemLabel="Cuota Especial"/>
+
+
+					<p:commandButton value="Guardar" oncomplete="PF('saveContra').show()"  style="margin-right:10px"/> 
+					<p:commandButton id="btnCuotas" value="Ver Cuotas"   actionListener="#{contratoBean.botonVerCuota(false,null)}" oncomplete="mostrarSimulacion(xhr, status, args)"  update="dialogSimulador" rendered="#{contratoBean.tipoPago eq 'Crédito' and contratoBean.loteSelected ne null}"/> 
+					
+
+				</h:panelGrid>
+				
+				<p:panel header="CUOTAS ESPECIALES" style="margin: 20px; width: 40%" id="idPnlEspecial" >
+			        <h:panelGrid columns="2">
+			        	<h:outputLabel value="Monto: " />
+			        	<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{contratoBean.montoCuotaEspecial}" />
+			        	
+						<h:outputLabel value="Duración cuota especial(meses): " />
+			        	<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{contratoBean.hastaCuotaEspecial}" decimalPlaces="0"/>
+			        </h:panelGrid>
+			    </p:panel>
+				
+				
+			</p:tab>
+		</p:tabView>
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="cambiarTitularDialog" header="CAMBIAR TITULAR" widgetVar="cambiarTitularDialog" resizable="false" closable="true"
+		appendTo="@(body)">
+		<h:form id="formTitularDialog">
+			<h:panelGrid columns="2">
+			
+				<h:outputLabel value="Persona de venta 1: " />
+				<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.contratoSelected.personVenta}" converter="#{contratoBean.conversorPersonSurnames}"  
+				completeMethod="#{contratoBean.completePersonSurnames}"  var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+					<p:column width="400px">
+							<h:outputLabel value="#{per.surnames} #{per.names}" />
+						</p:column>
+						<p:column width="400px">
+							<h:outputLabel value="#{per.dni}" />
+						</p:column>
+				
+				</p:autoComplete>
+				
+				<h:outputLabel value="Persona de venta 2: " />
+				<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.contratoSelected.personVenta2}" converter="#{contratoBean.conversorPersonSurnames}"  
+				completeMethod="#{contratoBean.completePersonSurnames}"  var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+					<p:column width="400px">
+							<h:outputLabel value="#{per.surnames} #{per.names}" />
+						</p:column>
+						<p:column width="400px">
+							<h:outputLabel value="#{per.dni}" />
+						</p:column>
+				
+				</p:autoComplete>
+				
+				<h:outputLabel value="Persona de venta 3: " />
+				<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.contratoSelected.personVenta3}" converter="#{contratoBean.conversorPersonSurnames}"  
+				completeMethod="#{contratoBean.completePersonSurnames}"  var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+					<p:column width="400px">
+							<h:outputLabel value="#{per.surnames} #{per.names}" />
+						</p:column>
+						<p:column width="400px">
+							<h:outputLabel value="#{per.dni}" />
+						</p:column>
+				
+				</p:autoComplete>
+				
+				<h:outputLabel value="Persona de venta 4: " />
+				<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.contratoSelected.personVenta4}" converter="#{contratoBean.conversorPersonSurnames}"  
+				completeMethod="#{contratoBean.completePersonSurnames}"  var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+					<p:column width="400px">
+							<h:outputLabel value="#{per.surnames} #{per.names}" />
+						</p:column>
+						<p:column width="400px">
+							<h:outputLabel value="#{per.dni}" />
+						</p:column>
+				
+				</p:autoComplete>
+				
+				<h:outputLabel value="Persona de venta 5: " />
+				<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{contratoBean.contratoSelected.personVenta5}" converter="#{contratoBean.conversorPersonSurnames}"  
+				completeMethod="#{contratoBean.completePersonSurnames}"  var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:5px; width:220px"  > 
+					<p:column width="400px">
+							<h:outputLabel value="#{per.surnames} #{per.names}" />
+						</p:column>
+						<p:column width="400px">
+							<h:outputLabel value="#{per.dni}" />
+						</p:column>
+				
+				</p:autoComplete>
+				
+				<p:commandButton value="GUARDAR" action="#{contratoBean.actualizarPersonaContrato}" update=":form:tabView:idTableContrato"/>
+			</h:panelGrid>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" height="600px" dynamic="true" closeOnEscape="true" id="dialogVoucher" header="Vouchers de Pagos" widgetVar="voucherDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="100%">
+		<h:form id="formVoucherDialog">
+				<p:commandButton value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{contratoBean.procesarExcelVoucher}" icon="pi pi-file-excel" styleClass="ui-button-success" style="margin-left:20px">
+		           <p:fileDownload value="#{contratoBean.fileDesVoucher}"/> 
+		      	</p:commandButton>			<p:dataTable var="dv" value="#{contratoBean.lstImagenVoucher}" paginator="true" selectionMode="single" rowIndexVar="row" paginatorPosition="bottom" 
+				 emptyMessage="No se encontraron resultados" size="small" rowKey="#{dv.id}">
+
+				<p:column headerText="N° Cuenta" style="text-align:center">
+					<h:outputText value="#{dv.cuentaBancaria.numero}"/>
+				</p:column>
+
+				<p:column headerText="Monto" style="text-align:center">
+					<h:outputText value="#{dv.monto}" style="font-size: 14px;"/>
+				</p:column>
+				
+				<p:column headerText="Banco" style="text-align:center">
+					<h:outputText value="#{dv.cuentaBancaria.banco.nombre}"/>
+				</p:column>
+				
+				<p:column headerText="Fecha" style="text-align:center">
+					 <p:outputLabel value="#{contratoBean.convertirHoraFull(dv.fecha)}"/>
+				</p:column>
+				
+				<p:column headerText="N° Operacion" style="text-align:center">
+					<h:outputText value="#{dv.numeroOperacion}"/>
+				</p:column>
+				
+				<p:column headerText="Documento Venta" style="text-align:center">
+					<h:outputText value="#{dv.documentoVenta.serie}-#{dv.documentoVenta.numero}"/>
+				</p:column>
+				
+				<p:column headerText="Detalle Documento" width="30%">
+					<h:outputText value="#{contratoBean.obtenerDetalleBoleta(dv.documentoVenta)}" rendered="#{dv.documentoVenta ne null}"/>					
+				</p:column>
+				
+				<p:column headerText="Comentario">
+					<h:outputText value="#{dv.comentario}"/>
+				</p:column>
+				
+				<p:column>
+					<p:commandButton id="botton" value="VER" update="imagenLoad" process="@this">
+						<f:setPropertyActionListener value="#{dv.nombre}" target="#{loadImageDocumentoBean.nombreArchivo}"  />
+					</p:commandButton>
+					<p:overlayPanel for="botton" dismissable="false" showCloseIcon="true" style="width:550px">
+			        	<p:graphicImage width="500px"  value="#{loadImageDocumentoBean.image}" style="float: left;" id="imagenLoad" cache="false"/>
+			        </p:overlayPanel>
+				</p:column>
+			
+									
+			</p:dataTable>
+				
+			
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" height="600px" dynamic="true" closeOnEscape="true" id="dialogSimulador" header="Cronograma de pagos" widgetVar="cronogramaDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="50%">
+		<h:form id="formCronogramaDialog">
+			<p:dataTable var="cuota" value="#{contratoBean.lstSimuladorPrevio}"  paginator="true" selectionMode="single" rowIndexVar="row" paginatorPosition="bottom" 
+				 emptyMessage="No se encontraron resultados" size="small" rowKey="#{cuota.nroCuota}">
+
+				<p:column headerText="Nro Cuota" style="text-align:center">
+					<h:outputText value="#{cuota.nroCuota}" style="font-size: 14px;"/>
+				</p:column>
+
+				<p:column headerText="Periodo" style="text-align:center">
+					<h:outputText value="#{cuota.fechaPago}" style="font-size: 14px;"> 
+						<f:convertDateTime pattern="dd/MM/yyyy" />
+					</h:outputText>
+				</p:column>
+				
+				<p:column  headerText="Cuota Inicial" >
+				S/
+					<h:outputText   value="#{cuota.inicial}" style="font-size: 14px;"> 
+						<f:convertNumber type="currency" currencySymbol=""  />
+					</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Cuota SI" style="text-align:center">
+				S/
+					<h:outputText value="#{cuota.cuotaSI}" style="font-size: 14px;"> 
+						<f:convertNumber type="currency" currencySymbol=""/>
+					</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Interés" style="text-align:center">
+				S/
+					<h:outputText value="#{cuota.interes}" style="font-size: 14px;"> 
+						<f:convertNumber type="currency" currencySymbol=""/>
+					</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Cuota Total" style="text-align:center">
+				S/
+					<h:outputText value="#{cuota.cuotaTotal}" style="font-size: 14px;"> 
+						<f:convertNumber type="currency" currencySymbol=""/>
+					</h:outputText>
+				</p:column>
+			</p:dataTable>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" height="600px" dynamic="true" closeOnEscape="true" id="dialogCronogramaPago" header="Cronograma de pagos" widgetVar="cronogramaPagoDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="50%">
+		<h:form id="formCronogramaPagoDialog">
+			
+			<h:panelGrid columns="2"> 
+				<h:outputText value="Total Cuota S.I.:" style="font-weight: bold;"/> 
+				<h:outputText value="#{contratoBean.sumaCuotaSI}"> 
+					<f:convertNumber type="currency" currencySymbol=""/>
+				</h:outputText> 
+				
+				<h:outputText value="Total Interés:" style="font-weight: bold;"/> 
+				<h:outputText value="#{contratoBean.sumaInteres}"> 
+					<f:convertNumber type="currency" currencySymbol=""/>
+				</h:outputText>
+				
+				<h:outputText value="Total Cuota Total:" style="font-weight: bold;"/> 
+				<h:outputText value="#{contratoBean.sumaCuotaTotal}"> 
+					<f:convertNumber type="currency" currencySymbol=""/>
+				</h:outputText> 
+			</h:panelGrid>
+							
+					 
+			<p:commandButton value="Descargar" icon="pi pi-file-pdf" action="#{contratoBean.generarPdfCronograma()}" ajax="false" /> 
+	
+			<pe:remoteCommand update="tableCuotaContrato" name="updateTableCuotaContrato" />
+	
+			<p:dataTable var="cuotaContrato" value="#{contratoBean.lstCuotaVista}" rows="24" paginator="true" rowIndexVar="row"  
+					paginatorPosition="bottom"  rowKey="#{cuotaContrato.id}" id="tableCuotaContrato" editable="true" editMode="cell"
+					emptyMessage="No se encontraron cronograma de deudas." size="small">
+					
+					<p:ajax event="cellEdit" listener="#{contratoBean.onCellEdit}" oncomplete="updateTableCuotaContrato()" update=":formCronogramaPagoDialog:tableCuotaContrato:input"/>
+
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>CRONOGRAMA DE LA DEUDA</span>
+						</div>
+					</f:facet>   
+	
+					<p:column headerText="Nro Cuota" filterMatchMode="contains" >
+						<h:outputText  value="#{cuotaContrato.prepago eq true ? 'Prepago' : cuotaContrato.nroCuota}" style="font-weight: bold;color:#{cuotaContrato.prepago eq true ?'green':'black'}"/>
+					</p:column>
+					
+					<p:column id="idPeriodo"  headerText="Periodo" filterMatchMode="contains">
+		                <p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{cuotaContrato.fechaPago}" style="font-weight: bold;color:#{cuotaContrato.prepago eq true ?'green':'black'}"> 
+				        			<f:convertDateTime pattern="dd/MM/yyyy" />
+				        		</h:outputText>
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:datePicker id="dateFecha" value="#{cuotaContrato.fechaPago}" rendered="#{navegacionBean.usuarioLogin.modificarCronograma eq true}"> 
+		                        	<p:ajax event="dateSelect" listener="#{contratoBean.editarFecha(cuotaContrato)}" update=":formCronogramaPagoDialog:tableCuotaContrato"/>
+		                        </p:datePicker>
+		                    </f:facet>
+		                </p:cellEditor>
+	                </p:column>
+				
+					<p:column id="idCuotaSI" headerText="Cuota SI" filterMatchMode="contains" >
+						 <p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText  value="#{cuotaContrato.cuotaSI}" style="font-weight: bold;color:#{cuotaContrato.prepago eq true ?'green':'black'}"> 
+									<f:convertNumber type="currency" currencySymbol=""/>
+								</h:outputText>
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  id="input" value="#{cuotaContrato.cuotaSI}" modifyValueOnWheel="false" rendered="#{navegacionBean.usuarioLogin.modificarCronograma eq true}"/>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="Interés" id="idInteres" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText  value="#{cuotaContrato.interes}" style="font-weight: bold;color:#{cuotaContrato.prepago eq true ?'green':'black'}"> 
+									<f:convertNumber type="currency" currencySymbol=""/>
+								</h:outputText>
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  id="intCuota" value="#{cuotaContrato.interes}" modifyValueOnWheel="false" rendered="#{navegacionBean.usuarioLogin.modificarCronograma eq true}"> 
+		                        	<p:ajax listener="#{contratoBean.editarInteres(cuotaContrato)}" update=":formCronogramaPagoDialog:tableCuotaContrato:intCuota"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="Adelanto" id="idAdelanto" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText  value="#{cuotaContrato.adelanto}" style="font-weight: bold;color:#{cuotaContrato.prepago eq true ?'green':'black'}"> 
+									<f:convertNumber type="currency" currencySymbol=""/>
+								</h:outputText>
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  id="adeCuota" value="#{cuotaContrato.adelanto}" modifyValueOnWheel="false" rendered="#{navegacionBean.usuarioLogin.modificarCronograma eq true}"> 
+		                        	<p:ajax listener="#{contratoBean.editarAdelanto(cuotaContrato)}" update=":formCronogramaPagoDialog:tableCuotaContrato:adeCuota"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="Cuota Total" id="idCuotaTotal" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{cuotaContrato.cuotaTotal}" style="font-weight: bold;color:#{cuotaContrato.prepago eq true ?'green':'black'}"> 
+									<f:convertNumber type="currency" currencySymbol=""/>
+								</h:outputText>
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  id="totCuota" value="#{cuotaContrato.cuotaTotal}" modifyValueOnWheel="false" rendered="#{navegacionBean.usuarioLogin.modificarCronograma eq true}"> 
+		                        	<p:ajax listener="#{contratoBean.editarTotalCuota(cuotaContrato)}" update=":formCronogramaPagoDialog:tableCuotaContrato:totCuota"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="Estado de Pago" filterMatchMode="contains" >
+						<h:outputText value="#{cuotaContrato.prepago eq true ? 'PREPAGO' : cuotaContrato.pagoTotal eq 'S'?'PAGADO':'PENDIENTE'}"  style="font-weight: bold;color:#{cuotaContrato.prepago eq true ?'green':cuotaContrato.pagoTotal eq 'S'?'blue':cuotaContrato.pagoTotal eq 'N'?'red':'black'}"/>
+					</p:column>
+					
+					<p:column headerText="PAGÓ?" style="text-align:center">
+						<p:commandButton update="formCronogramaPagoDialog" value="#{cuotaContrato.pagoTotal eq 'S'?'SI':'NO'}" action="#{contratoBean.cambiarPagoTotalCuota(cuotaContrato)}" styleClass="#{cuotaContrato.pagoTotal eq 'S'? 'ui-button-success' : 'ui-button-warning'}"/>
+					</p:column>
+	
+				</p:dataTable>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" height="600px" dynamic="true" closeOnEscape="true" id="dialogAñadirObservacion" header="Observaciones del Contrato" widgetVar="añadirObservacionDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="50%">
+		<h:form id="formAñadirObservacionDialog">
+			<h:panelGrid id="idPanelObs" columns="1" width="100%">
+				<p:inputTextarea value="#{contratoBean.observacion}" style="width:100%" rows="2" cols="30" counter="display" maxlength="500"
+	                         counterTemplate="{0} caracteres restantes." autoResize="false"/>
+	        	<h:outputText id="display" class="block" />
+	        	
+	        	<p:commandButton value="Añadir" action="#{contratoBean.anadirObsContrato()}" update="idObsContrato idPanelObs" />
+        	</h:panelGrid>
+        	
+        	<p:dataTable var="observacion" id="idObsContrato" value="#{contratoBean.lstObservacionContrato}"  rowIndexVar="row" paginator="true" rows="5" 
+				size="small" emptyMessage="No se encontratos resultados." paginatorPosition="bottom" rowKey="#{observacion.id}" selectionMode="single">
+				
+				<p:column width="25px">
+	                      #{row +1}
+	        	</p:column>
+	        	
+				<p:column headerText="Observación" >
+					<h:outputText value="#{observacion.observacion}" />
+				</p:column>
+				
+				<p:column headerText="Usuario" filterMatchMode="contains" style="text-align: center; width:50px">
+					<h:outputText value="#{observacion.usuario.username}" />
+				</p:column>
+				
+				<p:column headerText="Fecha Registro" filterMatchMode="contains" sortBy="#{observacion.fechaRegistro}" style="text-align: center; width:80px">
+					<h:outputText value="#{observacion.fechaRegistro}">
+						<f:convertDateTime pattern="dd/MM/yyyy" />
+					</h:outputText>
+				</p:column>
+				
+				<p:column width="10%" filterMatchMode="contains">
+					<p:commandButton icon="pi pi-trash" styleClass="rounded-button ui-button-danger" process="@this" oncomplete="PF('deleteObsDialog').show()" >
+						<f:setPropertyActionListener value="#{observacion}" target="#{contratoBean.obsSelected}"  />
+					</p:commandButton>
+				</p:column>
+				
+			</p:dataTable>
+			
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" height="600px" dynamic="true" closeOnEscape="true" id="dialogArchivo" header="Subir Archivos" widgetVar="archivoDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="50%">
+		<h:form id="formArchivo" enctype="multipart/form-data">
+			<p:fileUpload value="#{contratoBean.file}" id="uploader3" mode="simple" skinSimple="true" styleClass="block mb-5" title="Seleccionar un archivo"/> 
+			<h:panelGrid id="gridArchivo" columns="2">
+			
+				<p:outputLabel value="Compromiso de Pago: "/>
+				<p:selectOneMenu id="option" value="#{contratoBean.compromisoPago}">
+                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
+                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
+                    <p:ajax update="gridArchivo"/>
+                </p:selectOneMenu>
+				
+				<p:outputLabel value="Nombre de Archivo: "/>
+				<p:inputText value="#{contratoBean.nombreArchivoUpload}" maxlength="95" id="idNombreUpload"/>
+				
+                <p:outputLabel value="Fecha Compromiso: " id="txtFechaCompromiso" rendered="#{contratoBean.compromisoPago}"/>
+                <p:datePicker  value="#{contratoBean.fechaCompromiso}" id="dateCompromiso" rendered="#{contratoBean.compromisoPago}"/>
+                
+				
+				<p:commandButton value="GUARDAR" update="idTableArchivo, idNombreUpload, uploader3, form:tabView:idTableContrato" action="#{contratoBean.subirImagenes}"/>
+        	</h:panelGrid>
+        	
+        	<p:dataTable var="archivo" id="idTableArchivo" value="#{contratoBean.lstContratoArchivoSelected}"  rowIndexVar="row" paginator="true" rows="10" 
+				size="small" emptyMessage="No se encontratos resultados." paginatorPosition="bottom" rowKey="#{archivo.id}" selectionMode="single">
+				
+				<p:column width="25px">
+	                      #{row +1}
+	        	</p:column>
+	        	
+				<p:column headerText="Nombre archivo" >
+					<h:outputText value="#{archivo.nombreArchivo}" />
+				</p:column>
+				
+				<p:column headerText="Compromiso Pago" >
+					<h:outputText value="#{archivo.compromisoPago ? 'SI': 'NO'}" />
+				</p:column>
+				
+				<p:column headerText="Fecha Vencimiento" filterMatchMode="contains" sortBy="#{contrato.fechaVenta}" >
+					<h:outputText value="#{archivo.fechaVencimiento}">
+						<f:convertDateTime pattern="dd/MM/yyyy" />
+					</h:outputText>
+				</p:column>
+				
+				<p:column filterMatchMode="contains" width="20%">
+						
+					<h:commandLink value="Descargar Archivo" action="#{fileDownloadBean.downloadFile(navegacionBean.sucursalLogin.empresa.rutaArchivoContrato.concat(archivo.nombreArchivo))}" style="font-size: 10px;color: #3399ff;" />
+					
+					<p:commandButton action="#{contratoBean.eliminarArchivo}" icon="pi pi-trash" styleClass="rounded-button ui-button-danger" process="@this" style="margin-left: 10px" update=":formArchivo:idTableArchivo :form:tabView:idTableContrato" >
+						<f:setPropertyActionListener value="#{archivo}" target="#{contratoBean.archivoSelected}"  />
+					</p:commandButton>
+				</p:column>
+				
+			</p:dataTable>
+			
+		</h:form>
+	</p:dialog>
+	
+	<pe:blockUI target="anulaContra" widgetVar="blockUIWidgetAnularContrato">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+	<p:confirmDialog id="anulaContra" message="¿Está seguro de anular el cotrato?" header="Confirmación"
+                      severity="alert" widgetVar="anulaContra" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetAnularContrato').block();" oncomplete="PF('blockUIWidgetAnularContrato').unblock();PF('anulaContra').hide()"  action="#{contratoBean.anularContrato}" update=":form:tabView:idTableContrato"/>
+            <p:commandButton value="NO" oncomplete="PF('anulaContra').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <pe:blockUI target="terminarContra" widgetVar="blockUIWidgetTerminarContrato">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+	<p:confirmDialog id="terminarContra" message="¿Está seguro de Terminar el cotrato?" header="Confirmación"
+                      severity="alert" widgetVar="terminarContra" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetTerminarContrato').block();" oncomplete="PF('blockUIWidgetTerminarContrato').unblock();PF('terminarContra').hide()"  action="#{contratoBean.terminarContrato}" update=":form:tabView:idTableContrato"/>
+            <p:commandButton value="NO" oncomplete="PF('terminarContra').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <pe:blockUI target="resolverContra" widgetVar="blockUIWidgetResolverContrato">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+	<p:confirmDialog id="resolverContra" message="¿Está seguro de Resolver el cotrato?" header="Confirmación"
+                      severity="alert" widgetVar="resolverContra" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetResolverContrato').block();" oncomplete="PF('blockUIWidgetResolverContrato').unblock();PF('resolverContra').hide()"  action="#{contratoBean.resolverContrato}" update=":form:tabView:idTableContrato"/>
+            <p:commandButton value="NO" oncomplete="PF('resolverContra').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <pe:blockUI target="saveContra" widgetVar="blockUIWidgetSaveContrato">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveContra" message="¿Está seguro de guardar el cotrato?" header="Confirmación"
+                      severity="alert" widgetVar="saveContra" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetSaveContrato').block();" oncomplete="PF('blockUIWidgetSaveContrato').unblock();PF('saveContra').hide()"  actionListener="#{contratoBean.saveContrato()}" update=":form:tabView:gridNomLote :form:tabView:grid :form:tabView:idTableContrato" />
+            <p:commandButton value="NO" oncomplete="PF('saveContra').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+     <pe:blockUI target="idDeleteObsDialog" widgetVar="blockUIWidgetDeleteObs">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="idDeleteObsDialog" widgetVar="deleteObsDialog" showEffect="fade" width="300" message="¿Deseas eliminar la observación del contrato?" header="Confirmación" severity="warn" appendTo="@(body)">
+        <p:commandButton value="Si" onstart="PF('blockUIWidgetDeleteObs').block();" oncomplete="PF('blockUIWidgetDeleteObs').unblock();PF('deleteObsDialog').hide()" icon="pi pi-check" process="@this" update=":formAñadirObservacionDialog:idObsContrato" actionListener="#{contratoBean.deleteObs()}" />
+        <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times" onclick="PF('deleteObsDialog').hide()" />
+    </p:confirmDialog>
+	
+	<pe:blockUI target="saveConfirmaFirma" widgetVar="blockUIWidgetFirma">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveConfirmaFirma" message="¿Está seguro que firmó el cotrato?" header="Confirmación"
+                      severity="alert" widgetVar="saveConfirmaFirma" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetFirma').block();" oncomplete="PF('blockUIWidgetFirma').unblock();PF('saveConfirmaFirma').hide()" actionListener="#{contratoBean.cambiarEstadoFirma(contratoBean.contratoSelected)}" update=":form:tabView:idTableContrato" />
+            <p:commandButton value="NO" oncomplete="PF('saveConfirmaFirma').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    
+    <pe:blockUI target="saveConfirmaPago" widgetVar="blockUIWidgetPago">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveConfirmaPago" message="¿Está seguro que pagó independización?" header="Confirmación"
+                      severity="alert" widgetVar="saveConfirmaPago" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetPago').block();" oncomplete="PF('blockUIWidgetPago').unblock();PF('saveConfirmaPago').hide()" actionListener="#{contratoBean.cambiarEstadoPagoIndependizacion(contratoBean.contratoSelected)}" update=":form:tabView:idTableContrato" />
+            <p:commandButton value="NO" oncomplete="PF('saveConfirmaPago').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    
+    
+    
+    
+    
+    <pe:blockUI target="saveConfirmaML" widgetVar="blockUIWidgetML">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveConfirmaML" message="¿Está seguro que tiene minuta legalizada?" header="Confirmación"
+                      severity="alert" widgetVar="saveConfirmaML" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetML').block();" oncomplete="PF('blockUIWidgetML').unblock();PF('saveConfirmaML').hide()" actionListener="#{contratoBean.cambiarEstadoMinutaLegalizada(contratoBean.contratoSelected)}" update=":form:tabView:idTableContrato" />
+            <p:commandButton value="NO" oncomplete="PF('saveConfirmaML').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    
+    
+    <pe:blockUI target="saveConfirmaMA" widgetVar="blockUIWidgetMA">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveConfirmaMA" message="¿Está seguro que firmó el cotrato?" header="Confirmación"
+                      severity="alert" widgetVar="saveConfirmaMA" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetMA').block();" oncomplete="PF('blockUIWidgetMA').unblock();PF('saveConfirmaMA').hide()" actionListener="#{contratoBean.cambiarEstadoMinutaAutorizada(contratoBean.contratoSelected)}" update=":form:tabView:idTableContrato" />
+            <p:commandButton value="NO" oncomplete="PF('saveConfirmaMA').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    
+    
+    <pe:blockUI target="saveConfirmaEsc" widgetVar="blockUIWidgetEsc">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveConfirmaEsc" message="¿Está seguro que firmó el cotrato?" header="Confirmación"
+                      severity="alert" widgetVar="saveConfirmaEsc" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetEsc').block();" oncomplete="PF('blockUIWidgetEsc').unblock();PF('saveConfirmaEsc').hide()" actionListener="#{contratoBean.cambiarEstadoEscritura(contratoBean.contratoSelected)}" update=":form:tabView:idTableContrato" />
+            <p:commandButton value="NO" oncomplete="PF('saveConfirmaEsc').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    
+    
+    <pe:blockUI target="saveConfirmaInd" widgetVar="blockUIWidgetInd">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveConfirmaInd" message="¿Está seguro que firmó el cotrato?" header="Confirmación"
+                      severity="alert" widgetVar="saveConfirmaInd" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetInd').block();" oncomplete="PF('blockUIWidgetInd').unblock();PF('saveConfirmaInd').hide()" actionListener="#{contratoBean.cambiarEstadoIndependizacion(contratoBean.contratoSelected)}" update=":form:tabView:idTableContrato" />
+            <p:commandButton value="NO" oncomplete="PF('saveConfirmaInd').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <pe:blockUI widgetVar="blockUIWidgetGeneral">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    
+	
+	<script type="text/javascript">
+        
+        function hacerClick(elementName) {
+            element = document.getElementById(elementName);
+            element.click();
+        }
+        
+        function mostrarSimulacion(xhr, status, args) {
+            if (args.noEsValido) {
+            	 PF('cronogramaDialog').show();
+            }
+        }
+        
+        function mostrarCronograma(xhr, status, args) {
+            if (args.noEsValido) {
+            	 PF('cronogramaPagoDialog').show();
+            }
+        }
+        
+        function descargarArchivo() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'C:\ARCHIVO-CONTRATO\doc.pdf', true);
+            xhr.responseType = 'blob';
+
+            xhr.onload = function (e) {
+                if (this.status === 200) {
+                    var blob = this.response;
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'archivo.txt';
+                    link.click();
+                }
+            };
+
+            xhr.send();
+        }
+
+    </script>
+    
+    <script>
+	    PrimeFaces.locales['es'] = {
+	        monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+	        monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+	        dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+	        dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+	        dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+	        weekHeader: 'Semana',
+	        firstDay: 1,
+	        isRTL: false,
+	        showMonthAfterYear: false,
+	        yearSuffix: '',
+	        timeOnlyTitle: 'Sólo hora',
+	        timeText: 'Tiempo',
+	        hourText: 'Hora',
+	        minuteText: 'Minuto',
+	        secondText: 'Segundo',
+	        millisecondText: 'Milisegundo',
+	        ampm: false,
+	        month: 'Mes',
+	        week: 'Semana',
+	        day: 'Día',
+	        allDayText: 'Todo el día',
+	        today: 'Hoy',
+	        now: 'Ahora',
+	        clear: 'Limpiar',
+	        aria: {
+	           close: 'Cerrar',
+	           previous: 'Anterior',
+	           next: 'Siguiente',
+	       }
+	    };
+	    PrimeFaces.locales ['de'] = {
+	        monthNames: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+	        monthNamesShort: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+	        dayNames: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+	        dayNamesShort: ['Son', 'Mon', 'Die', 'Mit', 'Don', 'Fre', 'Sam'],
+	        dayNamesMin: ['S', 'M', 'D', 'M ', 'D', 'F ', 'S'],
+	        weekHeader: 'Woche',
+	        firstDay: 1,
+	        isRTL: false,
+	        showMonthAfterYear: false,
+	        yearSuffix: '',
+	        timeOnlyTitle: 'Nur Zeit',
+	        timeText: 'Zeit',
+	        hourText: 'Stunde',
+	        minuteText: 'Minute',
+	        secondText: 'Sekunde',
+	        today: 'Aktuelles Datum',
+	        now: 'Jetzt',
+	        ampm: false,
+	        month: 'Monat',
+	        week: 'Woche',
+	        day: 'Tag',
+	        allDayText: 'Ganzer Tag',
+	        aria: {
+	           close: 'Schließen',
+	           previous: 'Zurück',
+	           next: 'Weiter',
+	       }
+	    };
+	</script>
+	
+			<script>
+	    //<![CDATA[
+	    function dateTemplateFunc(date) {
+	        return '<span style="background-color:' + ((date.day < 21 && date.day > 10) ? '#81C784' : 'inherit') + ';border-radius:50%;width: 2.5rem;height: 2.5rem;line-height: 2.5rem;display: flex;align-items: center;justify-content: center;">' + date.day + '</span>';
+	    }
+	
+	    //]]>
+	</script>
+	
+			<style>
+	.value {
+		font-weight: bold;
+	}
+	</style>
+
+
+</ui:composition>

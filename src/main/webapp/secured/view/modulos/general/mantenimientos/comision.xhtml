@@ -1,0 +1,340 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">MANTENIMIENTOS > CONFIGURACIÓN COMISIÓN</h2>
+		<h:panelGrid id="grid" columns="2">
+
+			<h:outputLabel for="años" value="Año:" />
+			<p:selectOneMenu id="años" value="#{comisionBean.anio}" style="margin:10px">
+				<f:selectItem itemLabel="2021" itemValue="2021" />
+				<f:selectItem itemLabel="2022" itemValue="2022" />
+				<f:selectItem itemLabel="2023" itemValue="2023" />
+				<f:selectItem itemLabel="2024" itemValue="2024" />
+				<f:selectItem itemLabel="2025" itemValue="2025" />
+				<f:selectItem itemLabel="2026" itemValue="2026" />
+				<f:selectItem itemLabel="2027" itemValue="2027" />
+				<f:selectItem itemLabel="2028" itemValue="2028" />
+				<f:selectItem itemLabel="2029" itemValue="2029" />
+				<f:selectItem itemLabel="2030" itemValue="2030" />
+				<p:ajax update=":form:idTableComision" listener="#{comisionBean.getListaLazyComision}" />
+			</p:selectOneMenu>
+			
+		</h:panelGrid>
+		
+		<p:dataTable reflow="true" var="comision" id="idTableComision" value="#{comisionBean.lstComisionLazy}" widgetVar="comisionTable"
+			rowIndexVar="row" style="width:40%"  paginator="true" rows="15" size="small" emptyMessage="No se encontraron comisiones."
+			paginatorPosition="bottom" rowKey="#{comision.id}" selection="#{comisionBean.comisionSelected}" selectionMode="single">
+			<f:facet name="header">
+				<div class="p-d-flex p-ai-center p-jc-between">
+					<span>Lista de comisiones</span>
+				</div>
+			</f:facet>
+			<p:ajax event="rowSelect" update="dialogComision" listener="#{comisionBean.modifyComision()}" oncomplete="PF('comisionDialog').show();" />
+
+			<p:column style="width:42px;text-align: left">
+				<f:facet name="header">
+					<p:commandLink action="#{comisionBean.newComision()}" update="dialogComision" oncomplete="PF('comisionDialog').show();" title="NUEVA COMISIÓN">
+						<p:graphicImage width="50"  value="/recursos/images/anadir.png" />
+
+					</p:commandLink>
+				</f:facet>
+			</p:column>
+
+			<p:column width="25px">
+                      #{row +1}
+       		</p:column>
+       		
+       		<p:column headerText="Codigo" filterMatchMode="contains">
+				<h:outputText value="#{comision.codigo}"/> 
+			</p:column>
+
+			<p:column headerText="Fecha Inicio" filterMatchMode="contains">
+				<h:outputText value="#{comision.fechaInicio}">
+					<f:convertDateTime pattern="dd/MM/yyyy" />
+				</h:outputText>
+			</p:column>
+
+			<p:column headerText="Fecha Fin" filterMatchMode="contains">
+				<h:outputText value="#{comision.fechaFin}">
+					<f:convertDateTime pattern="dd/MM/yyyy" />
+				</h:outputText>
+			</p:column>
+			
+			
+		</p:dataTable>
+		
+		<p:contextMenu for="idTableComision">
+            <p:menuitem value="Meta Supervisor" update="dialogComision2" icon="pi pi-search" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('comisionDialog2').show(); PF('blockUIWidgetGeneral').unblock();" actionListener="#{comisionBean.cargarTeam()}"/>
+        	<p:menuitem value="Comisión por Proyecto" update="dialogProyecto" onstart="PF('blockUIWidgetGeneral').block();" icon="pi pi-search" oncomplete="PF('dialogProyecto').show(); PF('blockUIWidgetGeneral').unblock();" actionListener="#{comisionBean.listarComisionProyecto()}"/>
+        	
+        </p:contextMenu>
+
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogComision" header="#{comisionBean.tituloDialog}" widgetVar="comisionDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formComisionDialog">
+			<p:tabView id="tabOpciones">
+				<p:tab title="General" >
+					<h:panelGrid columns="4" width="100%"> 
+						<h:outputLabel value="Fecha inicio:" style="text-align:right"/>
+						<p:datePicker value="#{comisionBean.comisionSelected.fechaInicio}" readonlyInput="true" /> 
+					
+						<h:outputLabel value="Fecha cierre:" style="text-align:right"/>
+						<p:datePicker value="#{comisionBean.comisionSelected.fechaFin}" readonlyInput="true"> 
+						</p:datePicker> 					
+					</h:panelGrid>
+				</p:tab> 
+				<p:tab title="Asesores Planilla" > 
+					<h:panelGrid columns="4" > 
+						<h:outputLabel value="Comisión Contado: " />  
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionContado}" symbol="%" symbolPosition="s" emptyValue="always"/> 
+				
+						<h:outputLabel value="Comisión Crédito: " />
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionCredito}" symbol="%"  symbolPosition="s" emptyValue="always"/>  
+					</h:panelGrid>
+					
+					<h:panelGrid columns="4"> 
+						<h:outputLabel value="- A partir de "/>
+						<p:spinner value="#{comisionBean.comisionSelected.ventasMetaContado}" min="0" />
+						
+						<h:outputLabel value=" ventas al contado equivalente al "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionContadoMeta}" symbol="%"  symbolPosition="s" emptyValue="always" />
+					</h:panelGrid>
+					
+					<h:panelGrid columns="7"> 
+						<h:outputLabel value="- JUNIOR de "/>
+						<p:spinner value="#{comisionBean.comisionSelected.minimoVentaJunior}" min="0" />
+						<h:outputLabel value=" a "/>
+						<p:spinner value="#{comisionBean.comisionSelected.maximoVentaJunior}" min="0" />
+						<h:outputLabel value=" ventas, bono de "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoJunior}" />
+						<h:outputLabel value=" soles."/>
+						
+						<h:outputLabel value="- SENIOR de "/>
+						<p:spinner value="#{comisionBean.comisionSelected.minimoVentaSenior}" min="0" />						
+						<h:outputLabel value=" a "/>
+						<p:spinner value="#{comisionBean.comisionSelected.maximoVentaSenior}" min="0" />
+						<h:outputLabel value=" ventas, bono de "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoSenior}"/>
+						<h:outputLabel value=" soles."/>
+						
+						<h:outputLabel value="- MÁSTER de "/>
+						<p:spinner value="#{comisionBean.comisionSelected.minimoVentaMaster}" min="0" />
+						<h:outputLabel value=" a "/>
+						<p:spinner value="#{comisionBean.comisionSelected.maximoVentaMaster}" min="0" />
+						<h:outputLabel value=" ventas, bono de "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoMaster}" />
+						<h:outputLabel value=" soles."/>
+					</h:panelGrid>
+			    </p:tab>
+			    <p:tab title="Asesores Externos" > 
+			    	<h:panelGrid columns="4" > 
+						<h:outputLabel value="Comisión Contado: " />  
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionContadoExt}" symbol="%" symbolPosition="s" emptyValue="always"/> 
+				
+						<h:outputLabel value="Comisión Crédito: " />
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionCreditoExt}" symbol="%"  symbolPosition="s" emptyValue="always"/>  
+					</h:panelGrid>
+					
+					<h:panelGrid columns="5"> 
+						<h:outputLabel value="- A partir de "/>
+						<p:spinner value="#{comisionBean.comisionSelected.minimoVentasExt}" min="0" style="text-align: center;" />
+						<h:outputLabel value=" ventas al contado y/o crédito, bono de "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoVentaExt}" />
+						<h:outputLabel value=" soles."/>
+						
+						<h:outputLabel value="- A partir de "/>
+						<p:spinner value="#{comisionBean.comisionSelected.ventasMetaContadoExt}" min="0" />
+						<h:outputLabel value=" ventas al contado, equivalente al "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionContadoMetaExt}" symbol="%"  symbolPosition="s" emptyValue="always" />
+					</h:panelGrid>
+				</p:tab>
+				
+			    <p:tab title="Trabajadores Empresa" > 
+			    	<h:panelGrid columns="4" > 
+						<h:outputLabel for="comCont" value="Comisión Contado: " />  
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionContadoEmp}" symbol="%" symbolPosition="s" emptyValue="always"/> 
+				
+						<h:outputLabel value="Comisión Crédito: " />
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionCreditoEmp}" symbol="%"  symbolPosition="s" emptyValue="always"/>  
+					</h:panelGrid>
+					
+					<h:panelGrid columns="5"> 
+						<h:outputLabel value="- A partir de "/>
+						<p:spinner value="#{comisionBean.comisionSelected.minimoVentasEmp}" min="0" style="text-align: center;" />
+						<h:outputLabel value=" ventas al contado y/o crédito, bono de "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoVentaEmp}" />
+						<h:outputLabel value=" soles."/>
+						
+						<h:outputLabel value="- A partir de "/>
+						<p:spinner value="#{comisionBean.comisionSelected.ventasMetaContadoEmp}" min="0" />
+						<h:outputLabel value=" ventas al contado, equivalente al "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionContadoMetaEmp}" symbol="%"  symbolPosition="s" emptyValue="always" />
+					</h:panelGrid>
+			    </p:tab>
+			    
+			    <p:tab title="Supervisores" >
+			    	<h:panelGrid columns="3" >
+						<h:outputLabel value="- Si llega a la meta, bono de"/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoSupervisor}"/>
+						<h:outputLabel value=" soles."/>
+						
+						<h:outputLabel value="- Comisión por venta del "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionSupervisor}" symbol="%"  symbolPosition="s" emptyValue="always"/>
+	
+					</h:panelGrid>
+			    </p:tab>
+			    
+			    <p:tab title="Jefe de Ventas" >
+			    	<h:panelGrid columns="2" >
+						<h:outputLabel value="- Comisión por venta del "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionJefeVenta}" symbol="%"  symbolPosition="s" emptyValue="always"/>
+					</h:panelGrid>
+					
+					<h:panelGrid columns="2" >
+						<h:outputLabel value="- Bono Inicial de "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoJefeVentaObligatorio}" emptyValue="always"/>
+					</h:panelGrid>
+					
+					<h:panelGrid columns="5" >
+						<h:outputLabel value="- Si llega al "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.porcentajeBono}" symbol="%"  symbolPosition="s" emptyValue="always"/>
+						<h:outputLabel value=" , bono de "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoJefeVenta}"/>
+						<h:outputLabel value=" soles."/>
+					</h:panelGrid>
+					
+					<h:panelGrid columns="3" >
+						<h:outputLabel value="- Si supera el 100% de la meta general, equivalente al "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionJefeVentaMeta}" symbol="%"  symbolPosition="s" emptyValue="always"/>
+						<h:outputLabel value=" por venta sin derecho a bonos."/>
+					</h:panelGrid>
+			    </p:tab>
+			    
+			    <p:tab title="Coordinador" >
+			    	<h:panelGrid columns="3" >
+						<h:outputLabel value="- Si llega a su meta, bono de "/>
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.bonoCoordinador}" />
+						<h:outputLabel value=" soles."/>
+					</h:panelGrid>
+			    </p:tab>
+			    
+			    <p:tab title="Subgerente" > 
+			    	<h:panelGrid columns="4" >
+						<h:outputLabel value="- Comisión Subgerente: " />
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{comisionBean.comisionSelected.comisionSubgerente}" symbol="%" symbolPosition="s" emptyValue="always"/> 
+						<h:outputLabel value=" del total de todas las ventas. " />
+					</h:panelGrid>
+			    </p:tab>
+			</p:tabView>
+			<p:commandButton value="Guardar" action="#{comisionBean.saveComision()}" update=":form:idTableComision" />
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogComision2" header="Meta Supervisor" widgetVar="comisionDialog2" resizable="false" closable="true"
+		appendTo="@(body)" width="50%">
+		<h:form id="formComisionDialog2">
+	        <h:panelGrid id="grid" columns="2" width="50%">
+						
+				<h:outputLabel for="optionTeam" value="Equipo:"  />						
+				<p:selectOneMenu id="optionTeam" value="#{comisionBean.teamSelected}" converter="#{comisionBean.conversorTeam}" style="margin:5px; width:220px">
+					<f:selectItem itemLabel="[-- Seleccionar --]" itemValue="#{null}" />
+					<f:selectItems value="#{comisionBean.lstTeam}" var="prof" itemLabel="#{prof.name} / #{prof.personSupervisor.surnames} #{prof.personSupervisor.names}" itemValue="#{prof}" />
+				</p:selectOneMenu>
+				
+				<p:outputLabel for="met" value="Meta:"/>
+                <p:inputNumber decimalSeparator="." thousandSeparator=","  id="met" value="#{comisionBean.meta}" minValue="0" decimalPlaces="0" > 
+                </p:inputNumber>
+                
+                <p:commandButton value="Guardar" action="#{comisionBean.saveMetaSupervisor()}" update="idMetaTable" />
+						   	
+			</h:panelGrid>
+			
+			<p:dataTable var="meta" id="idMetaTable" value="#{comisionBean.lstMetaSupervisor}" widgetVar="idTeamTable" rowIndexVar="row" paginator="true" rows="4" 
+				size="small" emptyMessage="No se encontratos resultados." paginatorPosition="bottom" rowKey="#{meta.id}" selection="#{comisionBean.metaSupervisorSelected}" selectionMode="single">
+				
+				<p:column width="25px">
+	                      #{row +1}
+	        	</p:column>
+	        	
+				<p:column headerText="Supervisor" sortBy="#{meta.personSupervisor.surnames}"  filterMatchMode="contains" >
+					<h:outputText value="#{meta.personSupervisor.surnames} #{meta.personSupervisor.names}"  />
+				</p:column>
+				
+				<p:column headerText="Meta" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{meta.meta}" />
+				</p:column>
+				
+			</p:dataTable>
+			
+			<p:contextMenu for="idMetaTable" >
+	            <p:menuitem value="Eliminar" update="idMetaTable" icon="pi pi-times" action="#{comisionBean.eliminarMetaSupervisor()}" />
+       		</p:contextMenu>
+			
+	    </h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogProyecto" header="Comision por Proyecto" widgetVar="dialogProyecto" resizable="false" closable="true"
+		appendTo="@(body)" width="50%">
+		<h:form id="formComisionProyecto">    
+	        <h:panelGrid id="gridProy" columns="2" width="50%">
+				<h:outputLabel for="optionProy" value="Proyecto:"  />						
+				<p:selectOneMenu id="optionProy" value="#{comisionBean.comisionProyectoNew.proyecto}" converter="#{comisionBean.conversorProyecto}" style="margin:5px; width:220px">
+					<f:selectItem itemLabel="[-- Seleccionar --]" itemValue="#{null}" />
+					<f:selectItems value="#{comisionBean.lstProyecto}" var="prof" itemLabel="#{prof.name}" itemValue="#{prof}" />
+				</p:selectOneMenu>
+				
+				<p:outputLabel for="cont" value="Interes Contado: "/>
+                <p:inputNumber decimalSeparator="." thousandSeparator=","  id="cont" value="#{comisionBean.comisionProyectoNew.interesContado}" minValue="1" decimalPlaces="0" /> 
+                
+                <p:outputLabel for="cred" value="Interes Crédito: "/>
+                <p:inputNumber decimalSeparator="." thousandSeparator=","  id="cred" value="#{comisionBean.comisionProyectoNew.interesCredito}" minValue="1" decimalPlaces="0" /> 
+                
+                <p:commandButton value="Guardar" action="#{comisionBean.saveComisionProyecto()}" update="idTableProyecto, gridProy" />
+						   	
+			</h:panelGrid>
+			
+			<p:dataTable var="cp" id="idTableProyecto" value="#{comisionBean.lstComisionProyecto}" rowIndexVar="row" paginator="true" rows="8" 
+				size="small" emptyMessage="No se encontratos resultados." paginatorPosition="bottom" rowKey="#{cp.id}" selection="#{comisionBean.comisionProyectoSelected}" selectionMode="single">
+				
+				<p:column width="25px">
+	                      #{row +1}
+	        	</p:column>
+	        	
+				<p:column headerText="Proyecto" sortBy="#{cp.proyecto.name}"  filterMatchMode="contains" >
+					<h:outputText value="#{cp.proyecto.name}"  />
+				</p:column>
+				
+				<p:column headerText="Interés Contado" sortBy="#{cp.interesContado}"  filterMatchMode="contains" >
+					<h:outputText value="#{cp.interesContado}"  />
+				</p:column>
+				
+				<p:column headerText="Interés Crédito" sortBy="#{cp.interesCredito}"  filterMatchMode="contains" >
+					<h:outputText value="#{cp.interesCredito}"  />
+				</p:column>
+				
+				<p:column headerText=""  filterMatchMode="contains" >
+					<p:commandButton icon="pi pi-trash" styleClass="rounded-button ui-button-danger" process="@this" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();" actionListener="#{comisionBean.eliminarComisionProyecto(cp)}" update="idTableProyecto"/>
+				</p:column>
+				
+				
+				
+			</p:dataTable>
+			
+	    </h:form>
+	</p:dialog>
+	
+	<pe:blockUI widgetVar="blockUIWidgetGeneral">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+	     
+</ui:composition>

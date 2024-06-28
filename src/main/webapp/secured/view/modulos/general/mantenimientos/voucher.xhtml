@@ -1,0 +1,502 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+	<h:form id="form" >
+		<h2 style="color: #007d4c;">MANTENIMIENTOS > VOUCHER</h2>
+		<h:panelGrid columns="9">
+			<p:selectOneButton value="#{voucherBean.estado}" unselectable="false">
+				<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+				<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+				<p:ajax update="idTable" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+			</p:selectOneButton>
+			
+			<p:outputLabel value="Sucursal:" style="margin-left: 10px; float: right"/>
+			<p:selectOneMenu id="sucursal" value="#{voucherBean.sucursal}" style="margin:5px;width:250px" converter="#{voucherBean.conversorSucursal}">
+				<f:selectItem itemLabel="[-TODOS-]" itemValue="#{null}"></f:selectItem>
+				<f:selectItems value="#{voucherBean.lstSucursal}" var="suc" itemLabel="#{suc.razonSocial}" itemValue="#{suc}"/> 
+				<p:ajax update="idTable, ctaBancFilter" listener="#{voucherBean.listarCuentaBancariaFilter}" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+			</p:selectOneMenu>
+			
+			<h:outputLabel value="Cuenta Banc:" style="float: right"/>
+			<p:selectOneMenu value="#{voucherBean.ctaBanFilter}" id="ctaBancFilter" converter="#{voucherBean.conversorCuentaBancariaFilter}" >
+                <f:selectItem itemLabel="[-Ninguno-]" itemValue="#{null}"/>
+                <f:selectItems value="#{voucherBean.lstCuentaBancariaFilter}" var="cb" itemLabel="#{cb.banco.abreviatura} : #{cb.numero}  (#{cb.moneda eq 'D'?'Dólares':'Soles'})" itemValue="#{cb}"/>
+         		<p:ajax update="idTable" listener="#{voucherBean.listarCuentaBancariaFilter}" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+            	
+            </p:selectOneMenu>
+			
+			<h:outputLabel value="Fecha inicio:" style="text-align:right"/>
+			<p:datePicker value="#{voucherBean.fechaIni}" readonlyInput="true" monthNavigator="true" yearNavigator="true" >
+				<p:ajax update="idTable" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();" />
+			</p:datePicker>
+			
+			<h:outputLabel value="Fecha fin:" style="text-align:right"/>
+			<p:datePicker value="#{voucherBean.fechaFin}" readonlyInput="true" monthNavigator="true" yearNavigator="true" >
+				<p:ajax update="idTable" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();" />
+			</p:datePicker>
+		
+			<h:outputLabel value="Por Regularizar:" style="float: right"/>
+			<p:selectOneMenu value="#{voucherBean.porRegularizar}">
+				<f:selectItem itemLabel="[-TODOS-]" itemValue="%%"/>
+				<f:selectItem itemLabel="SI" itemValue="%SI%"/>
+				<f:selectItem itemLabel="NO" itemValue="%NO%"/>
+				<p:ajax update="idTable" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+			</p:selectOneMenu>
+	        
+	        
+	        <p:selectBooleanCheckbox value="#{voucherBean.busquedaSinFecha}" style="margin-left: 30px" itemLabel="Buscar Sin Fecha">
+	            <p:ajax update="idTable"/>
+	        </p:selectBooleanCheckbox>
+	       
+			
+			<p:commandButton value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop); PF('blockUIWidgetGeneral').block();" actionListener="#{voucherBean.procesarExcel}" oncomplete="PF('blockUIWidgetGeneral').unblock();" icon="pi pi-file-excel" styleClass="mr-2">
+	           <p:fileDownload value="#{voucherBean.fileDes}"/> 
+	      	</p:commandButton>
+			
+		</h:panelGrid>
+		
+		<p:dataTable var="imagen" id="idTable" value="#{voucherBean.lstImagenLazy}" widgetVar="imagenTable" rowIndexVar="row" paginator="true" rows="15" size="small" style="width: 150%"
+			emptyMessage="No se encontraron resultados." paginatorPosition="bottom" rowKey="#{imagen.id}" selection="#{voucherBean.imagenSelected}" selectionMode="single"
+			rowStyleClass="#{imagen.documentoVenta eq null ? null : imagen.cuentaBancaria.sucursal.id ne imagen.documentoVenta.sucursal.id? 'old' : null}">
+			<f:facet name="header">
+				<div class="p-d-flex p-ai-center p-jc-between">
+					<span>Lista de Vouchers</span>
+				</div>
+			</f:facet>
+			<p:ajax event="rowSelect" listener="#{voucherBean.modifyVoucher()}" update=":dialogImagen :formTeamDialog"  />
+	
+			<p:column style="width:15px;text-align: left">
+				<f:facet name="header">
+					<p:commandLink action="#{voucherBean.newImagen()}" rendered="#{!navegacionBean.usuarioLogin.modoLecturaMantVoucher}"
+						update=":dialogImagen :formTeamDialog"
+						title="NUEVO VOUCHER">
+						<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+	
+					</p:commandLink>
+				</f:facet>
+			</p:column>
+	
+			<p:column width="15px" style="text-align: center">
+	                      #{row +1}
+	        </p:column>
+	        
+			<p:column headerText="Fecha y Hora" sortBy="#{imagen.fecha}" width="110px" filterMatchMode="contains">
+				<h:outputText value="#{voucherBean.convertirHora(imagen.fecha)}"/>
+			</p:column>
+			<p:column headerText="Monto" sortBy="#{imagen.monto}" width="100px" filterBy="#{imagen.monto}" style="text-align: center" filterMatchMode="contains">
+				<h:outputText value="#{imagen.monto}" />
+			</p:column>
+			<p:column headerText="Número Operación" sortBy="#{imagen.numeroOperacion}" filterBy="#{imagen.numeroOperacion}" width="80px" style="text-align: center" filterMatchMode="contains">
+				<h:outputText value="#{imagen.numeroOperacion}" />
+			</p:column>
+			<p:column headerText="Cuenta Bancaria" sortBy="#{imagen.cuentaBancaria.numero}" width="100px" filterBy="#{imagen.cuentaBancaria.numero}" filterMatchMode="contains">
+				<h:outputText value="#{imagen.cuentaBancaria.banco.nombre} : #{imagen.cuentaBancaria.numero} (#{imagen.cuentaBancaria.moneda eq 'S'? 'SOLES': 'DÓLARES'}) / #{imagen.cuentaBancaria.sucursal.prenombre}" />
+			</p:column>
+			
+			<p:column headerText="Tipo de Transacción" sortBy="#{imagen.tipoTransaccion}" width="100px" filterBy="#{imagen.tipoTransaccion}" filterMatchMode="contains">
+				<h:outputText value="#{imagen.tipoTransaccion}" />
+			</p:column>
+			
+			<p:column headerText="Resuelto" sortBy="#{imagen.tipoTransaccion}" width="50px" style="text-align: center" filterMatchMode="contains">
+				<h:outputText value="#{imagen.resuelto?'SI':'NO'}" />
+			</p:column>
+			
+			<p:column headerText="Boleta/Factura" sortBy="#{imagen.documentoVenta.numero}" width="100px" style="text-align: center" filterMatchMode="contains">
+				<h:outputText value="#{imagen.documentoVenta.serie}-#{imagen.documentoVenta.numero}" />
+			</p:column>
+			
+			<p:column headerText="Descripción Bol/Fac" width="500px" filterMatchMode="contains">
+				<h:outputText value="#{voucherBean.obtenerDetalleBoleta(imagen.documentoVenta)}" rendered="#{imagen.documentoVenta ne null}" style="font-size: x-small" />
+				
+			</p:column>
+			
+			<p:column headerText="Proy - Mz - Lt" style="text-align: center" width="400px" filterMatchMode="contains">
+				<h:outputText value="#{voucherBean.obtenerDetalleLote(imagen)}" />
+			</p:column>
+			
+			<p:column headerText="Comentario" sortBy="#{imagen.comentario}" filterBy="#{imagen.comentario}" width="500px" filterMatchMode="contains">
+				<h:outputText value="#{imagen.comentario}" />
+			</p:column>
+			<p:column headerText="Usuario" sortBy="#{imagen.usuario.username}" width="100px" style="text-align: center" filterMatchMode="contains">
+				<h:outputText value="#{imagen.usuario.username}" />
+			</p:column>
+			<p:column headerText="Sucursal" sortBy="#{imagen.cuentaBancaria.sucursal.razonSocial}" width="100px" style="text-align: center" filterMatchMode="contains">
+				<h:outputText value="#{imagen.cuentaBancaria.sucursal.razonSocial}" />
+			</p:column>
+		</p:dataTable>
+		<p:contextMenu for="idTable" >
+	    	<p:menuitem value="Eliminar" update="idTable" icon="pi pi-times" action="#{voucherBean.anularVoucher}" rendered="#{!navegacionBean.usuarioLogin.modoLecturaMantVoucher}" />
+       	</p:contextMenu>
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogImagen" header="#{voucherBean.tituloDialog}" widgetVar="imagenDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto" height="800px">
+		<h:form id="formTeamDialog" enctype="multipart/form-data">
+			<h:panelGrid columns="2">
+				<h:panelGrid id="grid" columns="2">
+					<h:outputLabel value="Fecha y Hora:" /> 
+					<p:datePicker value="#{voucherBean.imagenSelected.fecha}" timeInput="true" pattern="dd/MM/yyyy HH:mm:ss a" showTime="true" monthNavigator="true" yearNavigator="true" showWeek="true" />
+					
+					<h:outputLabel  value="Monto: " />
+					<p:inputNumber decimalSeparator="." thousandSeparator="," value="#{voucherBean.imagenSelected.monto}"/>
+					
+					<h:outputLabel value="Nro. de Operación:" />
+					<p:inputText  value="#{voucherBean.imagenSelected.numeroOperacion}" />
+					
+					<p:outputLabel value="Sucursal:" style="margin-left: 10px"/>
+					<p:selectOneMenu id="sucursal" value="#{voucherBean.sucursalDialog}" converter="#{voucherBean.conversorSucursal}" >
+						<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"></f:selectItem>
+						<f:selectItems value="#{voucherBean.lstSucursal}" var="suc" itemLabel="#{suc.razonSocial}" itemValue="#{suc}"/> 
+						<p:ajax listener="#{voucherBean.listarCuentaBancaria}" update=":formTeamDialog:ctaBanc" />
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Cuenta Banc:" />
+					<p:selectOneMenu value="#{voucherBean.imagenSelected.cuentaBancaria}" id="ctaBanc" converter="#{voucherBean.conversorCuentaBancaria}" >
+	                    <f:selectItems value="#{voucherBean.lstCuentaBancaria}" var="cb" itemLabel="#{cb.banco.abreviatura} : #{cb.numero}  (#{cb.moneda eq 'D'?'Dólares':'Soles'})" itemValue="#{cb}"/>
+	                </p:selectOneMenu>
+					
+					<h:outputLabel value="Tipo de Operación:"/>
+					<p:selectOneMenu  value="#{voucherBean.imagenSelected.tipoTransaccion}" >
+						<f:selectItem itemLabel="DEPOSITO EN EFECTIVO" itemValue="DEPOSITO EN EFECTIVO"/>
+						<f:selectItem itemLabel="TRANSFERENCIA BANCARIA" itemValue="TRANSFERENCIA BANCARIA"/>
+						<f:selectItem itemLabel="TRANSFERENCIA INTERBANCARIA" itemValue="TRANSFERENCIA INTERBANCARIA"/>
+						<f:selectItem itemLabel="POS" itemValue="POS"/>
+					</p:selectOneMenu>	
+					
+					<h:outputLabel value="Comentario:"/>
+					<p:inputTextarea value="#{voucherBean.imagenSelected.comentario}" rows="3" cols="30" counter="display" maxlength="500"
+	                         counterTemplate="{0} carateres restantes." autoResize="false"/>
+	        		<h:outputLabel value=""/>
+	        		<h:outputText id="display" class="block" />
+	        		
+	        		<h:outputLabel value="Resuelto: " />
+					<p:selectOneMenu value="#{voucherBean.imagenSelected.resuelto}" > 
+						<f:selectItem itemLabel="NO" itemValue="#{false}"/>
+						<f:selectItem itemLabel="SI" itemValue="#{true}"/>
+					</p:selectOneMenu>
+					
+				</h:panelGrid>
+				
+				
+				<p:panel header="ASIGNAR PROYECTOS" rendered="#{voucherBean.imagenSelected.documentoVenta eq null}">
+			        <h:panelGrid columns="6">
+			        	<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto1}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana1 :formTeamDialog:lote1" listener="#{voucherBean.listarManzanas(1)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana1" value="#{voucherBean.manzana1}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana1)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana1}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote1" listener="#{voucherBean.listarLotes(1)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote1" value="#{voucherBean.lote1}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote1)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote1}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto2}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana2 :formTeamDialog:lote2" listener="#{voucherBean.listarManzanas(2)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana2" value="#{voucherBean.manzana2}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana2)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana2}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote2" listener="#{voucherBean.listarLotes(2)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote2" value="#{voucherBean.lote2}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote2)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote2}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto3}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana3 :formTeamDialog:lote3" listener="#{voucherBean.listarManzanas(3)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana3" value="#{voucherBean.manzana3}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana3)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana3}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote3" listener="#{voucherBean.listarLotes(3)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote3" value="#{voucherBean.lote3}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote3)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote3}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto4}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana4 :formTeamDialog:lote4" listener="#{voucherBean.listarManzanas(4)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana4" value="#{voucherBean.manzana4}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana4)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana4}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote4" listener="#{voucherBean.listarLotes(4)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote4" value="#{voucherBean.lote4}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote4)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote4}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto5}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana5 :formTeamDialog:lote5" listener="#{voucherBean.listarManzanas(5)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana5" value="#{voucherBean.manzana5}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana5)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana5}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote5" listener="#{voucherBean.listarLotes(5)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote5" value="#{voucherBean.lote5}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote5)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote5}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto6}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana6 :formTeamDialog:lote6" listener="#{voucherBean.listarManzanas(6)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana6" value="#{voucherBean.manzana6}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana6)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana6}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote6" listener="#{voucherBean.listarLotes(6)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote6" value="#{voucherBean.lote6}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote6)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote6}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto7}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana7 :formTeamDialog:lote7" listener="#{voucherBean.listarManzanas(7)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana7" value="#{voucherBean.manzana7}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana7)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana7}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote7" listener="#{voucherBean.listarLotes(7)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote7" value="#{voucherBean.lote7}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote7)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote7}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto8}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana8 :formTeamDialog:lote8" listener="#{voucherBean.listarManzanas(8)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana8" value="#{voucherBean.manzana8}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana8)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana8}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote8" listener="#{voucherBean.listarLotes(8)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote8" value="#{voucherBean.lote8}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote8)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote8}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto9}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana9 :formTeamDialog:lote9" listener="#{voucherBean.listarManzanas(9)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana9" value="#{voucherBean.manzana9}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana9)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana9}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote9" listener="#{voucherBean.listarLotes(9)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote9" value="#{voucherBean.lote9}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote9)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote9}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Proyecto:" />
+						<p:selectOneMenu value="#{voucherBean.proyecto10}" converter="#{voucherBean.conversorProject}" >  
+							<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+							<f:selectItems value="#{voucherBean.lstProject}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+							<p:ajax update=":formTeamDialog:manzana10 :formTeamDialog:lote10" listener="#{voucherBean.listarManzanas(10)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Manzana: " />
+						<p:selectOneMenu id="manzana10" value="#{voucherBean.manzana10}" converter="#{voucherBean.getConversorManzana(voucherBean.lstManzana10)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstManzana10}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+							<p:ajax update=":formTeamDialog:lote10" listener="#{voucherBean.listarLotes(10)}"/>
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Lote: " />
+						<p:selectOneMenu id="lote10" value="#{voucherBean.lote10}" converter="#{voucherBean.getConversorLote(voucherBean.lstLote10)}"> 
+							<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+							<f:selectItems value="#{voucherBean.lstLote10}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+						</p:selectOneMenu>
+			        </h:panelGrid>
+			    </p:panel>
+			    
+			    
+				
+			
+			</h:panelGrid>
+			
+			<h:panelGrid columns="1">
+				<p:fileUpload value="#{voucherBean.file}" disabled="#{voucherBean.validarExistenciaImagen}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>
+				<p:commandButton value="Guardar" action="#{voucherBean.saveVoucher()}"  update=":form:idTable" rendered="#{!navegacionBean.usuarioLogin.modoLecturaMantVoucher}"/>
+				<p:graphicImage width="500px"  value="#{loadImageDocumentoBean.image}" rendered="#{voucherBean.validarExistenciaImagen}" id="imagenLoad" cache="false"/>
+				<p:commandButton action="#{voucherBean.eliminarArchivo}" icon="pi pi-trash" value="ELIMINAR IMAGEN" styleClass="rounded-button ui-button-danger" rendered="#{voucherBean.validarExistenciaImagen and !navegacionBean.usuarioLogin.modoLecturaMantVoucher}"
+					process="@this" style="margin-left: 10px" update=":formTeamDialog"  />
+		    
+			</h:panelGrid>
+			
+			
+			
+		</h:form>
+	</p:dialog>
+		
+	
+	<pe:blockUI widgetVar="blockUIWidgetGeneral">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    
+    
+    
+    <style type="text/css">
+        .old {
+            background-color: #0cf0f3 !important;
+            background-image: none !important;
+            color: #000000 !important;
+        }
+    </style>
+    
+    <script>
+    PrimeFaces.locales['es'] = {
+        closeText: 'Cerrar',
+        prevText: 'Anterior',
+        nextText: 'Siguiente',
+        monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+        monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+        dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+        dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+        weekHeader: 'Semana',
+        firstDay: 1,
+        isRTL: false,
+        showMonthAfterYear: false,
+        yearSuffix: '',
+        timeOnlyTitle: 'Sólo hora',
+        timeText: 'Tiempo',
+        hourText: 'Hora',
+        minuteText: 'Minuto',
+        secondText: 'Segundo',
+        millisecondText: 'Milisegundo',
+        currentText: 'Fecha actual',
+        ampm: false,
+        month: 'Mes',
+        week: 'Semana',
+        day: 'Día',
+        allDayText: 'Todo el día',
+        today: 'Hoy',
+        clear: 'Claro'
+    };
+    PrimeFaces.locales ['de'] = {
+        closeText: 'Schließen',
+        prevText: 'Zurück',
+        nextText: 'Weiter',
+        monthNames: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+        monthNamesShort: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+        dayNames: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+        dayNamesShort: ['Son', 'Mon', 'Die', 'Mit', 'Don', 'Fre', 'Sam'],
+        dayNamesMin: ['S', 'M', 'D', 'M ', 'D', 'F ', 'S'],
+        weekHeader: 'Woche',
+        firstDay: 1,
+        isRTL: false,
+        showMonthAfterYear: false,
+        yearSuffix: '',
+        timeOnlyTitle: 'Nur Zeit',
+        timeText: 'Zeit',
+        hourText: 'Stunde',
+        minuteText: 'Minute',
+        secondText: 'Sekunde',
+        millisecondText: 'Millisekunde',
+        currentText: 'Aktuelles Datum',
+        ampm: false,
+        month: 'Monat',
+        week: 'Woche',
+        day: 'Tag',
+        allDayText: 'Ganzer Tag',
+        today: 'Heute',
+        clear: 'Löschen'
+    };
+</script>
+
+		<script>
+    //<![CDATA[
+    function dateTemplateFunc(date) {
+        return '<span style="background-color:' + ((date.day < 21 && date.day > 10) ? '#81C784' : 'inherit') + ';border-radius:50%;width: 2.5rem;height: 2.5rem;line-height: 2.5rem;display: flex;align-items: center;justify-content: center;">' + date.day + '</span>';
+    }
+
+    //]]>
+</script>
+
+		<style>
+.value {
+	font-weight: bold;
+}
+</style>
+	
+</ui:composition>

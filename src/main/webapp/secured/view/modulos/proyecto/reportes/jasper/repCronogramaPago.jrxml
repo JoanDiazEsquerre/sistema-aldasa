@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="repDocumentoFacturaElectronica" language="groovy" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="511" leftMargin="42" rightMargin="42" topMargin="42" bottomMargin="42" uuid="f7cc8725-31db-46d6-9e69-d3629a2409fe">
+	<property name="ireport.zoom" value="1.9965000000000666"/>
+	<property name="ireport.x" value="5"/>
+	<property name="ireport.y" value="48"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#999999"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#999999"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#E6F3FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#999999"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#999999"/>
+		</box>
+	</style>
+	<parameter name="RUTAIMAGEN" class="java.lang.Object"/>
+	<parameter name="PATTERN" class="java.lang.Object"/>
+	<parameter name="P_IDVENTA" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[new Integer(1)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_CODIGO" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="MZ-LT" class="java.lang.String"/>
+	<parameter name="PROYECTO" class="java.lang.String"/>
+	<field name="INTERES" class="java.lang.String"/>
+	<field name="NRO_CUOTA" class="java.lang.String"/>
+	<field name="PERIODO" class="java.lang.String"/>
+	<field name="CUOTASI" class="java.lang.String"/>
+	<field name="CUOTATOTAL" class="java.lang.String"/>
+	<field name="ESTADOPAGO" class="java.lang.String"/>
+	<title>
+		<band height="154">
+			<image isUsingCache="true">
+				<reportElement uuid="5daf851d-66f4-45a0-aa3d-a24c5d8c5297" x="302" y="5" width="188" height="50"/>
+				<imageExpression><![CDATA[$P{RUTAIMAGEN}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement uuid="572950cc-3f50-4d5e-b2df-0ec8017621f6" x="0" y="17" width="118" height="19"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Av. Santa Victoria 719:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a5a8f8d0-5696-4983-b6d9-78ff7f7739c9" x="1" y="95" width="58" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[MZ-LT :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e5bc3441-b6eb-4cc9-ab96-1dacc15bf72a" x="1" y="110" width="58" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[PROYECTO :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ccd0144e-f9b7-497f-9553-fc5a7d6042cf" x="1" y="0" width="121" height="17"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ALDASA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5414e976-3461-465f-82bb-5e7c8a39416c" x="0" y="36" width="118" height="19"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[TLF.: (074)601831 / 980 988 565]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4a5aba38-608a-4eb8-b04c-308924c10d49" x="0" y="55" width="143" height="19"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[E-mail: aldasa.contabilidad@gmail.com]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="b146f0ae-c139-4816-84a0-d64f3f2c0a4f" x="61" y="95" width="100" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{MZ-LT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="69f2acc8-db89-4d11-9dec-4980c7612790" x="61" y="110" width="100" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{PROYECTO}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="15">
+			<staticText>
+				<reportElement uuid="11f34c07-ff9f-4e0c-a290-ccb2abd180c4" style="table_TH" x="0" y="0" width="59" height="15" backcolor="#CCCCCC"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[NRO CUOTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="07bc9d32-067f-434f-b776-1a50e86a5137" style="table_TH" x="62" y="0" width="95" height="15" backcolor="#CCCCCC"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[PERIODO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4939c2e6-f949-433a-ac4e-cb6c141c1e01" style="table_TH" x="342" y="0" width="82" height="15" backcolor="#CCCCCC"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[CUOTA TOTAL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="11a66413-5a2e-4757-bc75-b988d2bbd662" style="table_TH" x="257" y="0" width="82" height="15" backcolor="#CCCCCC"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[INTERÉS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8420ab9e-bd91-47e3-bae3-2f632f4e9f05" style="table_TH" x="428" y="0" width="83" height="15" backcolor="#CCCCCC"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[ESTADO DE PAGO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="056a518a-6540-4c6d-be76-5b1b94e8e688" style="table_TH" x="161" y="0" width="93" height="15" backcolor="#CCCCCC"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[CUOTA SI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="336ab21c-c969-46b4-bc35-1069e0c14c32" style="table_TH" x="0" y="-15" width="511" height="15" backcolor="#CCCCCC"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[CRONOGRAMA DE PAGO]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<textField>
+				<reportElement uuid="c0d47160-d57f-4052-b1cc-c705b7d36a19" x="62" y="0" width="95" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PERIODO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="d9aac0b1-bc23-48aa-9c09-5cfe4b127ada" x="161" y="0" width="93" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CUOTASI}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="906eba5b-9f98-4be7-9c63-4f03b7f3908f" x="0" y="0" width="59" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NRO_CUOTA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="6a35816f-0397-4588-abe7-8470ca33821b" x="257" y="0" width="82" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{INTERES}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="63d08405-9e81-4b38-9a20-386e131b416b" x="342" y="0" width="82" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CUOTATOTAL}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="485095cc-79bb-47f7-88cf-c019182b3eba" x="428" y="0" width="83" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ESTADOPAGO}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="226"/>
+	</columnFooter>
+</jasperReport>

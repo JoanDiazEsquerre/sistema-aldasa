@@ -1,0 +1,362 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">CONTABILIDAD > MOVIMIENTOS BANCARIOS</h2>
+		<p:selectOneButton value="#{movimientoBancarioBean.estado}" unselectable="false">
+			<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+			<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+			<p:ajax update=":form:idTableMovBanc" />
+		</p:selectOneButton>  
+		    
+		<p:dataTable var="mov" id="idTableMovBanc" value="#{movimientoBancarioBean.lstMovimientoBancLazy}" widgetVar="movimientoTable" rowIndexVar="row" paginator="true" rows="30" size="small"
+			emptyMessage="No se encontraron Movimiento Bancarios."	paginatorPosition="bottom" rowKey="#{mov.id}" selection="#{movimientoBancarioBean.movimientoBancarioSelected}" selectionMode="single">
+			
+			<p:ajax event="rowSelect" listener="#{movimientoBancarioBean.modificarMovimientoBancario}" update=":dialogMovimiento" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock(); PF('movimientoDialog').show();" />
+			
+			
+			<f:facet name="header">
+				<div class="p-d-flex p-ai-center p-jc-between">
+					<span>Lista de Movimientos Bancarios</span>
+				</div>
+			</f:facet>
+	
+			<p:column style="width:42px;text-align: left">
+				<f:facet name="header">
+					<p:commandLink action="#{movimientoBancarioBean.nuevoMovimientoBancario()}"
+						update=":dialogMovimiento"
+						oncomplete="PF('movimientoDialog').show();"
+						title="NUEVO MOVIMIENTO">
+						<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+	
+					</p:commandLink>
+				</f:facet>
+			</p:column>
+	
+			<p:column width="25px">
+	                      #{row +1}
+	        </p:column>
+	        
+			<p:column headerText="Mes" sortBy="#{mov.mes}" filterBy="#{mov.mes}" filterMatchMode="contains">
+				<h:outputText value="#{mov.mes}" />
+			</p:column>
+			<p:column headerText="Año" sortBy="#{mov.anio}" filterBy="#{mov.anio}" filterMatchMode="contains">
+				<h:outputText value="#{mov.anio}" />
+			</p:column>
+			<p:column headerText="Banco" sortBy="#{mov.cuentaBancaria.banco.nombre}" filterMatchMode="contains">
+				<h:outputText value="#{mov.cuentaBancaria.banco.nombre}" />
+			</p:column>
+			<p:column headerText="Nro. Cuenta" sortBy="#{mov.cuentaBancaria.numero}" filterMatchMode="contains">
+				<h:outputText value="#{mov.cuentaBancaria.numero}" />
+			</p:column>
+			<p:column headerText="Saldo Inicial" sortBy="#{mov.saldoInicial}" filterMatchMode="contains">
+				<h:outputText value="#{mov.saldoInicial}" />
+			</p:column>
+			<p:column headerText="Tipo Moneda" sortBy="#{mov.cuentaBancaria.moneda}" filterMatchMode="contains">
+				<h:outputText value="#{mov.cuentaBancaria.moneda eq 'D' ? 'Dólares' : 'Soles'}" />
+			</p:column>
+			<p:column headerText="Sucursal" sortBy="#{mov.cuentaBancaria.numero}" filterMatchMode="contains">
+				<h:outputText value="#{mov.cuentaBancaria.sucursal.razonSocial}" />
+			</p:column>
+		</p:dataTable>
+		
+		<p:contextMenu id="menuTableDoc" for="idTableMovBanc" >
+            <p:menuitem value="Ver Detalles" icon="pi pi-book" action="#{movimientoBancarioBean.verDetalles}"  update="detalleMovimientoDialog" oncomplete="PF('detalleMovimientoDialog').show()"/>	
+            <p:menuitem value="Importar Movimientos" action="#{movimientoBancarioBean.limpiarListaImportacion()}" icon="pi pi-plus-circle" update="importarMovimientoDialog" oncomplete="PF('importarMovimientoDialog').show()"/>	
+       		<p:menuitem value="Anular" icon="pi pi-trash" oncomplete="PF('anulaMovimiento').show()"  />
+  
+        </p:contextMenu>
+
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogMovimiento" header="#{movimientoBancarioBean.tituloDialog}" widgetVar="movimientoDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formMovDialog">
+		   
+			<h:panelGrid id="grid" columns="2">
+				<h:outputLabel value="Mes: " />
+				<p:selectOneMenu value="#{movimientoBancarioBean.movimientoBancarioSelected.mes}" style="margin:5px">
+					<f:selectItem itemLabel="ENERO" itemValue="ENERO" />
+					<f:selectItem itemLabel="FEBRERO" itemValue="FEBRERO" />
+					<f:selectItem itemLabel="MARZO" itemValue="MARZO" />
+					<f:selectItem itemLabel="ABRIL" itemValue="ABRIL" />
+					<f:selectItem itemLabel="MAYO" itemValue="MAYO" />
+					<f:selectItem itemLabel="JUNIO" itemValue="JUNIO" />
+					<f:selectItem itemLabel="JULIO" itemValue="JULIO" />
+					<f:selectItem itemLabel="AGOSTO" itemValue="AGOSTO" />
+					<f:selectItem itemLabel="SEPTIEMBRE" itemValue="SEPTIEMBRE" />
+					<f:selectItem itemLabel="OCTUBRE" itemValue="OCTUBRE" />
+					<f:selectItem itemLabel="NOVIEMBRE" itemValue="NOVIEMBRE" />
+					<f:selectItem itemLabel="DICIEMBRE" itemValue="DICIEMBRE" />
+				</p:selectOneMenu>	
+				
+				<h:outputLabel value="Año: " /> 
+				<p:selectOneMenu value="#{movimientoBancarioBean.movimientoBancarioSelected.anio}" style="margin:5px">
+					<f:selectItem itemLabel="2021" itemValue="2021" />
+					<f:selectItem itemLabel="2022" itemValue="2022" />
+					<f:selectItem itemLabel="2023" itemValue="2023" />
+					<f:selectItem itemLabel="2024" itemValue="2024" />
+					<f:selectItem itemLabel="2025" itemValue="2025" />
+					<f:selectItem itemLabel="2026" itemValue="2026" />
+					<f:selectItem itemLabel="2027" itemValue="2027" />
+					<f:selectItem itemLabel="2028" itemValue="2028" />
+					<f:selectItem itemLabel="2029" itemValue="2029" />
+					<f:selectItem itemLabel="2030" itemValue="2030" />
+					<f:selectItem itemLabel="2031" itemValue="2031" />
+				</p:selectOneMenu>
+				
+				<h:outputLabel value="Cuenta Bancaria: " /> 
+				<p:selectOneMenu value="#{movimientoBancarioBean.movimientoBancarioSelected.cuentaBancaria}" converter="#{movimientoBancarioBean.conversorCuentaBancaria}" >
+                    <f:selectItems value="#{movimientoBancarioBean.lstCuentaBancaria}" var="cb" itemLabel="#{cb.banco.abreviatura} : #{cb.numero}  (#{cb.moneda eq 'D'?'Dól':'Sol'}) #{cb.sucursal.prenombre}" itemValue="#{cb}"/>
+                </p:selectOneMenu>
+				
+				<h:outputLabel value="Saldo Inicial: " /> 
+				<p:inputNumber decimalSeparator="." thousandSeparator=","   value="#{movimientoBancarioBean.movimientoBancarioSelected.saldoInicial}" />
+				
+				<p:commandButton value="Guardar" action="#{movimientoBancarioBean.saveMovimientoBancario}" update=":form:idTableMovBanc :formMovDialog"/>
+			</h:panelGrid>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="detalleMovimientoDialog" 
+	header="DETALLES - #{movimientoBancarioBean.movimientoBancarioSelected.cuentaBancaria.banco.nombre} : #{movimientoBancarioBean.movimientoBancarioSelected.cuentaBancaria.numero} / #{movimientoBancarioBean.movimientoBancarioSelected.mes} - #{movimientoBancarioBean.movimientoBancarioSelected.anio} " 
+	widgetVar="detalleMovimientoDialog" resizable="false" closable="true" appendTo="@(body)" style="width:auto" height="800px">
+		<h:form id="formDetalleMov">
+		   	<h:outputLabel value="Saldo Inicial: " style="font-weight:bold; font-size: 25px;"/> 
+			<h:outputText  value="#{movimientoBancarioBean.movimientoBancarioSelected.saldoInicial}" style="font-weight:bold; font-size: 25px; color: green" >
+			    <f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
+			</h:outputText>
+			
+			<h:outputLabel value="Saldo Final: " style="font-weight:bold; font-size: 25px; margin-left: 40px"/> 
+			<h:outputText  value="#{movimientoBancarioBean.saldoFinalMovimiento}" style="font-weight:bold; font-size: 25px; color: green" >
+			    <f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
+			</h:outputText>
+			
+			<p:dataTable var="detalle" id="idTableDetalle" value="#{movimientoBancarioBean.lstDetalleMovimientoBancLazy}" widgetVar="detalleTable" rowIndexVar="row" paginator="true" rows="25" size="small"
+					emptyMessage="No se encontraron detalles." editable="true" editMode="cell" paginatorPosition="bottom" rowKey="#{detalle.id}" 
+					selection="#{movimientoBancarioBean.detalleMovimientoSelected}" selectionMode="single">
+			
+						
+				<f:facet name="header">
+					<div class="p-d-flex p-ai-center p-jc-between">
+						<span>LISTA DE MOVIMIENTOS BANCARIOS</span>
+					</div>
+				</f:facet>   
+				
+				
+										
+		        <p:column headerText="Nro"  width="25px" filterMatchMode="contains">
+					#{row +1}
+				</p:column>
+				
+				<p:column headerText="Fecha Operación" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.fechaOperacion}"> 
+	        			<f:convertDateTime pattern="dd/MM/yyyy" />
+	        		</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Fecha Proceso" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.fechaProceso}" > 
+	        			<f:convertDateTime pattern="dd/MM/yyyy" />
+	        		</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Hora" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.hora}" />
+				</p:column>
+				
+				<p:column headerText="Nro. Operación" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.numeroOperacion}" />
+				</p:column>
+				
+				<p:column headerText="Descripcion / Referencia" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.descripcion}" />
+				</p:column>
+				
+				<p:column headerText="Tipo Movimiento" filterMatchMode="contains" >
+					<p:cellEditor>
+	                    <f:facet name="output">
+	                        <h:outputText value="#{detalle.tipoMovimiento eq null ? '[-Ninguno-]': detalle.tipoMovimiento.nombre}" />
+	                    </f:facet>
+	                    <f:facet name="input">
+	                        <p:selectOneMenu value="#{detalle.tipoMovimiento}" converter="#{movimientoBancarioBean.getConversorTipoMovimiento(detalle)}" style="margin:5px; width:130px" >
+	                        	<f:selectItem itemLabel="[-Ninguno-]" itemValue="#{null}"/>
+	                        	<f:selectItems value="#{movimientoBancarioBean.listarTipoMovimiento(detalle)}" var="cb" itemLabel="#{cb.nombre}" itemValue="#{cb}"/>
+	                        	<p:ajax update="idTableDetalle" listener="#{movimientoBancarioBean.actualizarDetalleMovimiento(detalle)}"></p:ajax>
+							</p:selectOneMenu>
+	                    </f:facet>	
+	                </p:cellEditor>
+					
+				</p:column>
+				
+				<p:column headerText="Cargo" filterMatchMode="contains">
+					<h:outputText value="#{detalle.importe}" rendered="#{detalle.importe lt 0}" />
+				</p:column>
+				
+				<p:column headerText="Abono" filterMatchMode="contains">
+					<h:outputText value="#{detalle.importe}" rendered="#{detalle.importe gt 0}" />
+				</p:column>
+				
+				<p:column headerText="Observacion" filterMatchMode="contains" style="width:500px">
+					<p:cellEditor>
+	                    <f:facet name="output">
+	                        <h:outputText value="#{detalle.observacion}"/>
+	                    </f:facet>
+	                    <f:facet name="input">
+	                        <p:inputText value="#{detalle.observacion}" maxlength="200" style="width:90%" > 
+	                        	<p:ajax event="blur" update="idTableDetalle" listener="#{movimientoBancarioBean.actualizarDetalleMovimiento(detalle)}"/>
+	                        </p:inputText>
+	                    </f:facet>	
+	                </p:cellEditor>
+				</p:column>
+				
+				<p:column headerText="PROY-MZ-LT" filterMatchMode="contains">
+					<h:outputText value="#{detalle.lote.project.name} - #{detalle.lote.manzana.name} - #{detalle.lote.numberLote}" />
+				</p:column>
+				
+				<p:column filterMatchMode="contains">
+					<p:commandButton title="ASIGNAR LOTE" icon="pi pi-search-plus" action="#{movimientoBancarioBean.modificarLoteDetalle}" update=":formLote" styleClass="rounded-button ui-button-success"  oncomplete="PF('loteDialog').show()" >
+						<f:setPropertyActionListener value="#{detalle}" target="#{movimientoBancarioBean.detalleMovimientoSelected}" />
+					</p:commandButton>
+				</p:column>
+						
+			</p:dataTable>
+			
+		</h:form>
+	</p:dialog>
+	
+	
+	<pe:blockUI target="importarMovimientoDialog" widgetVar="blockUIWidgetDialogImportar">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="importarMovimientoDialog" header="IMPORTAR - #{movimientoBancarioBean.movimientoBancarioSelected.cuentaBancaria.banco.nombre} : #{movimientoBancarioBean.movimientoBancarioSelected.cuentaBancaria.numero} / #{movimientoBancarioBean.movimientoBancarioSelected.mes} - #{movimientoBancarioBean.movimientoBancarioSelected.anio} " widgetVar="importarMovimientoDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto" height="800px">
+		<h:form id="formImportarMov" enctype="multipart/form-data">
+		   <p:fileUpload value="#{movimientoBancarioBean.file}" mode="simple" skinSimple="true" accept=".xls,.xlsx"/>
+		   <p:commandButton value="VER" icon="pi pi-search" onstart="PF('blockUIWidgetDialogImportar').block();" oncomplete="PF('blockUIWidgetDialogImportar').unblock();" action="#{movimientoBancarioBean.handleFileUpload}" update="formImportarMov" style="margin-left: 10px"/>
+		   <p:commandButton value="GUARDAR" icon="pi pi-save" action="#{movimientoBancarioBean.importarDetallesMovimientos}" style="margin-left: 10px" onstart="PF('blockUIWidgetDialogImportar').block();" oncomplete="PF('blockUIWidgetDialogImportar').unblock();" update="idTableDetalleMigracion"/>
+           <p:commandButton value="LIMPIAR" icon="pi pi-trash" onstart="PF('blockUIWidgetDialogImportar').block();" oncomplete="PF('blockUIWidgetDialogImportar').unblock();" action="#{movimientoBancarioBean.limpiarListaImportacion}" style="margin-left: 10px" update="formImportarMov"/>
+           <p:commandButton  value="DESCARGAR" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop); PF('blockUIWidgetGeneral').block();" actionListener="#{movimientoBancarioBean.procesarExcelFormato}" icon="pi pi-file-excel" styleClass="mr-2" style="margin-left: 10px">
+	           <p:fileDownload value="#{movimientoBancarioBean.fileFormato}"/> 
+	      	</p:commandButton>
+	      	
+	      	<h:panelGrid columns="4">
+	      		<h:outputLabel value="Saldo Actual: " style="font-weight:bold; font-size: 25px;"/> 
+				<p:outputLabel value="#{movimientoBancarioBean.dineroActualCuenta}" style="font-weight:bold; font-size: 25px; color: green" >
+				    <f:convertNumber pattern="#,##0.00"/>
+				</p:outputLabel>
+								
+				<h:outputLabel value="Saldo Proyectado: " style="font-weight:bold; font-size: 25px; margin-left: 40px"/> 
+				<p:outputLabel  value="#{movimientoBancarioBean.dineroTemporalCuenta}" style="font-weight:bold; font-size: 25px; color: green" >
+				    <f:convertNumber pattern="#,##0.00"/>
+				</p:outputLabel>
+			</h:panelGrid>
+                  
+           <p:dataTable var="detalle" id="idTableDetalleMigracion" value="#{movimientoBancarioBean.lstDetalleImportar}" widgetVar="detalleTable" rowIndexVar="row" paginator="true" rows="25" size="small"
+					emptyMessage="No se encontraron detalles." editable="true"  editMode="cell" paginatorPosition="bottom" rowKey="#{detalle.id}">
+			
+						
+				<f:facet name="header">
+					<div class="p-d-flex p-ai-center p-jc-between">
+						<span>LISTA DE MOVIMIENTOS BANCARIOS MIGRACIÓN</span> 
+					</div>
+				</f:facet>   
+										
+		        <p:column headerText="Nro"  width="25px" filterMatchMode="contains">
+					#{row +1}
+				</p:column>
+				
+				<p:column headerText="Fecha Operación" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.fechaOperacion}"> 
+	        			<f:convertDateTime pattern="dd/MM/yyyy" />
+	        		</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Fecha Proceso" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.fechaProceso}" > 
+	        			<f:convertDateTime pattern="dd/MM/yyyy" />
+	        		</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Hora" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.hora}" />
+				</p:column>
+				
+				<p:column headerText="Nro. Operación" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.numeroOperacion}" />
+				</p:column>
+				
+				<p:column headerText="Descripcion / Referencia" filterMatchMode="contains" >
+					<h:outputText value="#{detalle.descripcion}" />
+				</p:column>
+				
+				<p:column headerText="Cargo" filterMatchMode="contains">
+					<h:outputText value="#{detalle.importe}" rendered="#{detalle.importe lt 0}" />
+				</p:column>
+				
+				<p:column headerText="Abono" filterMatchMode="contains">
+					<h:outputText value="#{detalle.importe}" rendered="#{detalle.importe gt 0}" />
+				</p:column>		
+			</p:dataTable>
+			
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog appendTo="@(body)" modal="true" dynamic="true" id="loteDialog" header="ASIGNAR LOTE" widgetVar="loteDialog" resizable="false" closable="true">
+		<h:form id="formLote">
+			<h:panelGrid columns="2">
+				<h:outputLabel value="Proyecto:" />
+					 <p:selectOneMenu value="#{movimientoBancarioBean.proyectoMov}" converter="#{movimientoBancarioBean.conversorProject}" > 
+						<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+						<f:selectItems value="#{movimientoBancarioBean.lstProyectos}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+						<p:ajax update="manzana, lote" listener="#{movimientoBancarioBean.listarManzanas}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Manzana: " />
+					<p:selectOneMenu id="manzana" value="#{movimientoBancarioBean.manzanaMov}" converter="#{movimientoBancarioBean.conversorManzana}" > 
+						<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+						<f:selectItems value="#{movimientoBancarioBean.lstManzanas}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+						<p:ajax update="lote" listener="#{movimientoBancarioBean.listarLotes}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Lote: " />
+					<p:selectOneMenu id="lote" value="#{movimientoBancarioBean.detalleMovimientoSelected.lote}" converter="#{movimientoBancarioBean.conversorLote}" > 
+						<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+						<f:selectItems value="#{movimientoBancarioBean.lstLotes}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+					</p:selectOneMenu>
+				
+					<p:commandButton value="GUARDAR" actionListener="#{movimientoBancarioBean.actualizarLoteDetalleMovimiento}" update=":formDetalleMov:idTableDetalle"/>
+					<p:commandButton value="CANCELAR" onclick="PF('loteDialog').hide();"/>
+					
+			</h:panelGrid>
+		</h:form>
+	</p:dialog>
+	
+	<pe:blockUI widgetVar="blockUIWidgetGeneral">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    
+    <pe:blockUI target="anulaMovimiento" widgetVar="blockUIWidgetAnularMov">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="anulaMovimiento" message="¿Está seguro de anular el movimiento?" header="Confirmación" severity="alert" widgetVar="anulaMovimiento" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetAnularMov').block();" oncomplete="PF('blockUIWidgetAnularMov').unblock();PF('anulaMovimiento').hide()"  action="#{movimientoBancarioBean.anularMovimiento()}" update=":form:idTableMovBanc"/>
+            <p:commandButton value="NO" oncomplete="PF('anulaMovimiento').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+		
+	
+</ui:composition>

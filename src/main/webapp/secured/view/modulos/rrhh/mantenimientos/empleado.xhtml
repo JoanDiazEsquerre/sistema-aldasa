@@ -1,0 +1,225 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">MANTENIMIENTOS > EMPLEADO</h2>
+		<p:selectOneButton value="#{empleadoBean.estado}" unselectable="false">
+			<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+			<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+			<p:ajax update=":form:idTableEmpleado" />
+		</p:selectOneButton>  
+		
+		<p:dataTable var="empleado" id="idTableEmpleado" value="#{empleadoBean.lstEmpleadoLazy}" widgetVar="empleadoTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+		emptyMessage="No se encontraron empleados."	paginatorPosition="bottom" rowKey="#{empleado.id}" selection="#{empleadoBean.empleadoSelected}" selectionMode="single">
+			<p:ajax event="rowSelect" listener="#{empleadoBean.modifyEmpleado()}" update=":formEmpleadoDialog :dialogEmpleado" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();PF('empleadoDialog').show();" />
+		
+			<f:facet name="header">
+				<div class="p-d-flex p-ai-center p-jc-between">
+					<span>Lista de Empleados</span>
+				</div>
+			</f:facet>
+		
+			<p:column style="width:42px;text-align: left">
+				<f:facet name="header">
+					<p:commandLink action="#{empleadoBean.newEmpleado()}"
+						update=":formEmpleadoDialog :dialogEmpleado"
+						onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();PF('empleadoDialog').show();"
+						title="NUEVO EMPLEADO">
+						<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+	
+					</p:commandLink>
+				</f:facet>
+			</p:column>
+	
+			<p:column width="25px">
+	                      #{row +1}
+	        </p:column>
+	        
+			<p:column headerText="Nombre del empleado" sortBy="#{empleado.person.surnames}" filterBy="#{empleado.person.surnames}" filterMatchMode="contains">
+				<h:outputText value="#{empleado.person.surnames} #{empleado.person.names}" />
+			</p:column>
+			<p:column headerText="Fecha Ingreso" filterMatchMode="contains">
+				<h:outputText value="#{empleado.fechaIngreso}">
+					<f:convertDateTime pattern="dd/MM/yyyy" />
+				</h:outputText>
+			</p:column>
+
+			<p:column headerText="Fecha Salida" filterMatchMode="contains">
+				<h:outputText value="#{empleado.fechaSalida}">
+					<f:convertDateTime pattern="dd/MM/yyyy" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Sueldo Básico" sortBy="#{empleado.sueldoBasico}" filterMatchMode="contains">
+				<h:outputText value="#{empleado.sueldoBasico}" > 
+				 <f:convertNumber currencySymbol="" type="currency"  />
+				 </h:outputText>
+			</p:column>
+			<p:column headerText="Cargo" style="text-align:center;">
+				<f:facet name="header">
+					Cargo
+		        	<p:selectOneMenu value="#{empleadoBean.cargoFilter}" converter="#{empleadoBean.conversorCargo}" style="margin:5px; width:130px" >
+						<f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
+						<f:selectItems value="#{empleadoBean.lstCargo}" var="cargo" itemLabel="#{cargo.descripcion}" itemValue="#{cargo}"/>
+						<p:ajax update=":form:idTableEmpleado" />
+					</p:selectOneMenu>
+				</f:facet>
+				
+				<h:outputText value="#{empleado.cargo.descripcion}" />
+			</p:column>
+			<p:column headerText="Área" style="text-align:center;">
+				<f:facet name="header">
+					Área
+		        	<p:selectOneMenu value="#{empleadoBean.areaFilter}" converter="#{empleadoBean.conversorArea}" style="margin:10px" >
+	                    <f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
+	                    <f:selectItems value="#{empleadoBean.lstArea}" var="area" itemLabel="#{area.nombre}" itemValue="#{area}"/>
+	                    <p:ajax update=":form:idTableEmpleado" />
+	                </p:selectOneMenu>
+				</f:facet>
+				
+				<h:outputText value="#{empleado.area.nombre}" />
+			</p:column>
+			<p:column headerText="Externo" sortBy="#{empleado.externo}" filterMatchMode="contains">
+				<h:outputText value="#{empleado.externo? 'SI': 'NO'}" />
+			</p:column>
+			<p:column headerText="Equipo" sortBy="#{empleado.team.name}" filterMatchMode="contains">
+				<h:outputText value="#{empleado.team.name}" />
+			</p:column>
+			<p:column headerText="Planilla" sortBy="#{empleado.planilla}" filterMatchMode="contains">
+				<h:outputText value="#{empleado.planilla? 'SI':'NO'}" />
+			</p:column>
+			<p:column headerText="Fondo Pensión" sortBy="#{empleado.fondoPension.nombre}" filterMatchMode="contains">
+				<h:outputText value="#{empleado.fondoPension.nombre}" />
+			</p:column>
+			<p:column headerText="Sucursal" sortBy="#{empleado.sucursal.razonSocial}" filterMatchMode="contains">
+				<h:outputText value="#{empleado.sucursal.razonSocial}" />
+			</p:column>
+		</p:dataTable>
+	
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogEmpleado" header="#{empleadoBean.tituloDialog}" widgetVar="empleadoDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formEmpleadoDialog">
+		
+		<p:tabView id="tabView"> 
+			<p:tab title="Datos de Empleados"> 
+				<h:panelGrid id="grid" columns="4">
+			
+					<h:outputLabel for="optionPerson" value="Persona:" />
+					<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{empleadoBean.empleadoSelected.person}" 
+					converter="#{empleadoBean.conversorPersonSurnames}" id="optionPerson" completeMethod="#{empleadoBean.completePersonSurnames}"  
+	                var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:10px" />
+					
+					
+						
+					<h:outputLabel for="optionArea" value="Área:" />
+	                <p:selectOneMenu id="optionArea" value="#{empleadoBean.empleadoSelected.area}" converter="#{empleadoBean.conversorArea}" style="margin:10px" >
+	                    <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+	                    <f:selectItems value="#{empleadoBean.lstArea}" var="area" itemLabel="#{area.nombre}" itemValue="#{area}"/>
+	                </p:selectOneMenu>
+	                
+	                <h:outputLabel value="Cargo: " for="cargo" />
+					<p:selectOneMenu id="cargo" value="#{empleadoBean.empleadoSelected.cargo}" converter="#{empleadoBean.conversorCargo}" style="margin:10px" >
+	                    <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+	                    <f:selectItems value="#{empleadoBean.lstCargo}" var="cargo" itemLabel="#{cargo.descripcion}" itemValue="#{cargo}"/>
+	                </p:selectOneMenu>
+					
+					
+					<h:outputLabel value="Fecha de ingreso:" style="text-align:right" />
+					<p:datePicker value="#{empleadoBean.empleadoSelected.fechaIngreso}" readonlyInput="true" style="margin:10px"> 
+						<p:ajax event="keyup"  />
+					</p:datePicker> 
+				
+					<h:outputLabel value="Fecha de salida:" style="text-align:right"/>
+					<p:datePicker value="#{empleadoBean.empleadoSelected.fechaSalida}" readonlyInput="true" style="margin:10px"> 
+						<p:ajax event="keyup"  />
+					</p:datePicker>
+					
+					<h:outputLabel for="optionTeam" value="Equipo:" />
+	                <p:selectOneMenu id="optionTeam" value="#{empleadoBean.empleadoSelected.team}" converter="#{empleadoBean.conversorTeam}" style="margin:10px" >
+	             	   <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+	                   <f:selectItems value="#{empleadoBean.lstTeam}" var="prof" itemLabel="#{prof.name} / #{prof.personSupervisor.surnames} #{prof.personSupervisor.names}" itemValue="#{prof}"/>
+	                </p:selectOneMenu>
+					
+					<h:outputLabel value="Externo:" />
+					<p:selectOneMenu value="#{empleadoBean.empleadoSelected.externo}" style="margin:10px">
+						<f:selectItem itemLabel="NO" itemValue="#{false}" />
+						<f:selectItem itemLabel="SI" itemValue="#{true}" />
+					</p:selectOneMenu>
+					
+					<h:outputLabel for="sucursal" value="Sucursal: " />
+					<p:selectOneMenu id="sucursal" value="#{empleadoBean.empleadoSelected.sucursal}" style="margin:5px;width:250px" converter="#{empleadoBean.conversorSucursal}">
+						<f:selectItems value="#{empleadoBean.lstSucursal}" var="suc" itemLabel="#{suc.razonSocial}" itemValue="#{suc}"/> 
+					</p:selectOneMenu>
+					
+					<h:outputLabel for="option" value="Estado:" />
+					<p:selectOneMenu id="option" value="#{empleadoBean.empleadoSelected.estado}" style="margin:10px">
+						<f:selectItem itemLabel="ACTIVO" itemValue="#{true}" />
+						<f:selectItem itemLabel="INACTIVO" itemValue="#{false}" />
+					</p:selectOneMenu>
+					
+				</h:panelGrid>
+		
+			</p:tab>
+			
+			<p:tab title="Datos de Pago"> 
+			
+				<h:panelGrid columns="4"> 
+				
+					<h:outputLabel value="Sueldo básico:" for="sueldoBasico" />
+					<p:inputNumber decimalSeparator="." thousandSeparator=","  id="sueldoBasico" value="#{empleadoBean.empleadoSelected.sueldoBasico}" style="margin:10px; width:220px" modifyValueOnWheel="false" /> 
+					
+					<h:outputLabel value="Planilla:" />
+					<p:selectOneMenu value="#{empleadoBean.empleadoSelected.planilla}" style="margin:10px">
+						<f:selectItem itemLabel="NO" itemValue="#{false}" />
+						<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						<p:ajax listener="#{empleadoBean.cambiarPlanilla()}" update="fondoPension" />
+					</p:selectOneMenu>	
+					
+					<h:outputLabel for="fondoPension" value="Fondo Pensión: " />
+					<p:selectOneMenu id="fondoPension" value="#{empleadoBean.empleadoSelected.fondoPension}" style="margin:5px;width:250px" converter="#{empleadoBean.conversorFondoPension}">
+						<f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+						<f:selectItems value="#{empleadoBean.lstFondoPension}" var="fondoPen" itemLabel="#{fondoPen.nombre}" itemValue="#{fondoPen}"/> 
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Comisión Variable:" />
+					<p:selectOneMenu value="#{empleadoBean.empleadoSelected.comisionVariable}" style="margin:10px">
+						<f:selectItem itemLabel="NO" itemValue="#{false}" />
+						<f:selectItem itemLabel="SI" itemValue="#{true}" />
+					</p:selectOneMenu>	
+					
+					<h:outputLabel value="Cuspp:" />
+					<p:inputText value="#{empleadoBean.empleadoSelected.cuspp}" style="margin:10px">
+					</p:inputText>	
+				
+				</h:panelGrid>
+			
+			</p:tab>
+		 
+		 
+		</p:tabView>
+		  
+			<p:commandButton value="Guardar" action="#{empleadoBean.saveEmpleado()}" update=":form:idTableEmpleado :formEmpleadoDialog" 
+			onstart="PF('blockUIWidgetDialogEmpleado').block();" oncomplete="PF('blockUIWidgetDialogEmpleado').unblock();"/>
+		</h:form>
+	</p:dialog>
+	
+	<pe:blockUI target="dialogEmpleado" widgetVar="blockUIWidgetDialogEmpleado">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    
+    <pe:blockUI widgetVar="blockUIWidget">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+
+</ui:composition>

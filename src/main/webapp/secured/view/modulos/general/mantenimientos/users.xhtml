@@ -1,0 +1,207 @@
+   <ui:composition xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:pe="http://primefaces.org/ui/extensions"
+    locale="#{localeBean.usedLocale}"
+    xmlns:f="http://java.sun.com/jsf/core">
+
+    <h:form id="form">
+    	<h2 style="color: #007d4c;">MANTENIMIENTOS > USUARIOS</h2>
+        <p:selectOneButton value="#{userBean.estado}" unselectable="false">
+            <f:selectItem itemLabel="Activos" itemValue="#{true}" />
+            <f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+            <p:ajax update=":form:idTableUser" />
+        </p:selectOneButton>
+
+       <p:dataTable reflow="true" var="user" id="idTableUser" value="#{userBean.lstUsuarioLazy}" widgetVar="usersTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+            emptyMessage="No se encontraron usuarios." paginatorPosition="bottom" rowKey="#{user.id}" selection="#{userBean.userSelected}" selectionMode="single">
+            <f:facet name="header">
+                <div class="p-d-flex p-ai-center p-jc-between">
+                    <span>Lista de Usuarios</span>
+                </div>
+            </f:facet>
+            <p:ajax event="rowSelect" update="dialogProyecto" listener="#{userBean.updateUser()}" oncomplete="PF('proyectoNewDialog').show();" />
+
+           <p:column style="width:42px;text-align: left">
+                <f:facet name="header">
+                    <p:commandLink actionListener="#{userBean.newUser()}" update="dialogProyecto" oncomplete="PF('proyectoNewDialog').show();" title="NUEVO USUARIO">
+                        <p:graphicImage width="50" value="/recursos/images/anadir.png" />
+
+                   </p:commandLink>
+                </f:facet>
+            </p:column>
+
+           <p:column width="25px">
+                      #{row +1}
+        </p:column>
+
+           <p:column headerText="Nombre de Usuario" sortBy="#{user.username}" filterBy="#{user.username}" filterMatchMode="contains">
+                <h:outputText value="#{user.username}" />
+            </p:column>
+            <p:column headerText="Contraseña" sortBy="#{user.password}" filterBy="#{user.password}" filterMatchMode="contains">
+                <h:outputText value="#{user.password}" />
+            </p:column>
+    	    <p:column headerText="Persona" sortBy="#{user.person.surnames}" filterBy="#{user.person.surnames},#{user.person.names}" filterMatchMode="contains">
+                <h:outputText value="#{user.person.surnames}#{user.person.names ne null?' ':'' }#{user.person.names}" />
+            </p:column>
+        
+            <p:column headerText="Perfil" sortBy="#{user.profile.name}" filterBy="#{user.profile.name}" filterMatchMode="contains">
+                <h:outputText value="#{user.profile.name}" />
+            </p:column>
+            <p:column headerText="Equipo" sortBy="#{user.team.name}" filterMatchMode="contains">
+                <h:outputText value="#{user.team eq null?'':user.team.name.concat(' / ').concat(user.team.personSupervisor.surnames).concat(user.team.personSupervisor.names)}"/>
+            </p:column>
+            
+            
+        </p:dataTable>
+        
+        <p:contextMenu for="idTableUser">
+            <p:menuitem value="Seleccionar Sucursal" update="dialogSucursal" icon="pi pi-search" oncomplete="PF('sucursalDialog').show()" actionListener="#{userBean.restablecerValores}"/>
+        </p:contextMenu>
+        
+    </h:form>
+    
+    <p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogSucursal" header="Asignar sucursal a : #{userBean.userSelected.person.names} #{userBean.userSelected.person.surnames}" 
+    	widgetVar="sucursalDialog" resizable="false" closable="true" appendTo="@(body)" width="55%">
+		<h:form id="formsucursalDialog">
+		
+	        <h:panelGrid id="grid" columns="5" width="50%">
+				
+				<h:outputLabel for="empresa" value="Empresa:" /> 
+               	<p:selectOneMenu id="empresa" value="#{userBean.empresa}" style="margin:5px;width:250px" converter="#{userBean.conversorEmpresa}">
+					<f:selectItems value="#{userBean.lstEmpresa}" var="empre" itemLabel="#{empre.nombre}" itemValue="#{empre}"/>
+					<p:ajax update="sucursal" listener="#{userBean.listarSucursalPorEmpresa}"  />		
+				</p:selectOneMenu>
+			
+				<h:outputLabel for="sucursal" value="Sucursal:" /> 
+               	<p:selectOneMenu id="sucursal" value="#{userBean.sucursal}" style="margin:5px;width:250px" converter="#{userBean.conversorSucursal}">
+					<f:selectItems value="#{userBean.lstSucursal}" var="sucur" itemLabel="#{sucur.razonSocial}" itemValue="#{sucur}"/>
+				</p:selectOneMenu>
+                
+                <p:commandButton value="Asignar" action="#{userBean.asignarSucursal()}" update="idSucurTable" />
+						   	
+			</h:panelGrid>
+			
+			<p:dataTable var="sucurs" id="idSucurTable" value="#{userBean.lstUsuarioSucursal}" widgetVar="idTeamTable" rowIndexVar="row" paginator="true" rows="4" 
+				size="small" emptyMessage="No se encontratos resultados." paginatorPosition="bottom" rowKey="#{sucurs.id}" selection="#{userBean.usuarioSucursalSelected}" selectionMode="single">
+				
+				<p:column width="25px">
+	                      #{row +1}
+	        	</p:column>
+	        	
+				<p:column headerText="Sucursal"  filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{sucurs.sucursal.razonSocial}"  />
+				</p:column>
+				
+				<p:column headerText="Empresa" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{sucurs.sucursal.empresa.nombre}" />
+				</p:column>
+				
+				<p:column width="10%" filterMatchMode="contains">
+					<p:commandButton action="#{userBean.desasignarSucursal}"  icon="pi pi-trash" styleClass="rounded-button ui-button-danger" process="@this" update="idSucurTable" >
+						<f:setPropertyActionListener value="#{sucurs}" target="#{userBean.joan}" />
+					</p:commandButton>
+				</p:column>
+				
+			</p:dataTable>
+			
+	    </h:form>
+	</p:dialog>
+    
+    <p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogProyecto" header="#{userBean.tituloDialog}" widgetVar="proyectoNewDialog" resizable="false" closable="true"
+        appendTo="@(body)" style="width:auto">
+        <h:form id="formUsuario">
+        
+        	<p:tabView id="tabOpciones">
+        	
+				<p:tab title="Datos del usuario" > 
+				
+		            <h:panelGrid id="grid" columns="2">
+		            	<h:outputLabel for="option" value="Persona:" />
+		                <p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{userBean.userSelected.person}" converter="#{userBean.conversorPerson}" id="option" completeMethod="#{userBean.completePerson}"  
+		                          var="per" itemLabel="#{per.surnames.concat(' ')}#{per.names}" itemValue="#{per}" forceSelection="true" style="margin:10px" />
+		                
+		                <h:outputLabel for="username" value="Nombre de Usuario: " />
+		                <p:inputText id="username" value="#{userBean.userSelected.username}" style="margin:10px" maxlength="30" />
+		
+		              	<h:outputLabel for="pass" value="Contraseña:" />
+		                <p:inputText id="pass" value="#{userBean.userSelected.password}" style="margin:10px" maxlength="50" />
+		                        
+		                  
+		                <h:outputLabel for="optionPerfil" value="Perfil:" />
+		                <p:selectOneMenu id="optionPerfil" value="#{userBean.userSelected.profile}" converter="#{userBean.conversorProfile}" style="margin:10px" >
+		                    <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+		                    <f:selectItems value="#{userBean.lstProfile}" var="prof" itemLabel="#{prof.name}" itemValue="#{prof}"/>
+		                </p:selectOneMenu>
+		                
+		                <h:outputLabel for="optionTeam" value="Equipo:" />
+		                <p:selectOneMenu id="optionTeam" value="#{userBean.userSelected.team}" converter="#{userBean.conversorTeam}" style="margin:10px" >
+		             	   <f:selectItem itemLabel="[-- Ninguno --]" itemValue="#{null}"/>
+		                   <f:selectItems value="#{userBean.lstTeam}" var="prof" itemLabel="#{prof.name} / #{prof.personSupervisor.surnames} #{prof.personSupervisor.names}" itemValue="#{prof}"/>
+		                </p:selectOneMenu>
+		                
+		                <h:outputLabel for="estado" value="Estado:" />
+		                <p:selectOneMenu id="estado" value="#{userBean.userSelected.status}" style="margin:10px" >
+		                    <f:selectItem itemLabel="Activo" itemValue="#{true}"/>
+		                    <f:selectItem itemLabel="Inactivo" itemValue="#{false}"/>
+		                </p:selectOneMenu>
+		                    <p:commandButton value="Guardar" actionListener="#{userBean.saveUpdateUser()}" update=":form:idTableUser :formUsuario"/>
+		                    
+		            </h:panelGrid>
+				
+				</p:tab>
+				<p:tab title="Permisos" > 
+				
+					<h:panelGrid columns="4"> 
+					
+						<h:outputLabel value="Modificar Cronograma:" />
+		                <p:selectOneMenu value="#{userBean.userSelected.modificarCronograma}" style="margin:10px" >
+		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
+		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
+		                </p:selectOneMenu>
+		                
+		                <h:outputLabel value="Aprobar Plantilla Venta:" />
+		                <p:selectOneMenu value="#{userBean.userSelected.aprobarPlantillaVenta}" style="margin:10px" >
+		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
+		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
+		                </p:selectOneMenu>
+		                
+		                <h:outputLabel value="Descargar Reporte Ventas:" />
+		                <p:selectOneMenu value="#{userBean.userSelected.descargarReporteVenta}" style="margin:10px" >
+		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
+		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
+		                </p:selectOneMenu>
+		                
+		                <h:outputLabel value="Modificar voucher:" />
+		                <p:selectOneMenu value="#{userBean.userSelected.modificarVoucher}" style="margin:10px" >
+		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
+		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
+		                </p:selectOneMenu>
+		                
+		                <h:outputLabel value="Aprobar Requerimiento Separación:" />
+		                <p:selectOneMenu value="#{userBean.userSelected.aprobarRequerimientoSeparacion}" style="margin:10px" >
+		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
+		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
+		                </p:selectOneMenu>
+		                
+		                <h:outputLabel value="Aprobar Orden Compra:" />
+		                <p:selectOneMenu value="#{userBean.userSelected.aprobarOrdenCompra}" style="margin:10px" >
+		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
+		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
+		                </p:selectOneMenu>
+		                
+		                 <h:outputLabel value="Modo Lectura Mantenimiento Voucher:" />
+		                <p:selectOneMenu value="#{userBean.userSelected.modoLecturaMantVoucher}" style="margin:10px" >
+		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
+		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
+		                </p:selectOneMenu>
+		                
+		             </h:panelGrid>
+				
+				</p:tab>
+	        </p:tabView>
+            
+        </h:form>
+    </p:dialog>
+</ui:composition>

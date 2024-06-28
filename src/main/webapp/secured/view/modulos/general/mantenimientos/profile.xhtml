@@ -1,0 +1,107 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">MANTENIMIENTOS > PERFILES</h2>
+		<p:selectOneButton value="#{profileBean.estado}" unselectable="false">
+			<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+			<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+			<p:ajax update=":form:idTableProfile" />
+		</p:selectOneButton>  
+		    
+		<p:dataTable var="profile" id="idTableProfile" value="#{profileBean.lstProfileLazy}" widgetVar="profileTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+			emptyMessage="No se encontraron perfiles."	paginatorPosition="bottom" rowKey="#{profile.id}" selection="#{profileBean.profileSelected}" selectionMode="single">
+			<f:facet name="header">
+				<div class="p-d-flex p-ai-center p-jc-between">
+					<span>Lista de Perfiles</span>
+				</div>
+			</f:facet>
+			<p:ajax event="rowSelect" listener="#{profileBean.modifyProfile()}" update=":formProfileDialog :dialogProfile" oncomplete="PF('profileDialog').show();" />
+	
+			<p:column style="width:42px;text-align: left">
+				<f:facet name="header">
+					<p:commandLink action="#{profileBean.newProfile()}"
+						update=":formProfileDialog :dialogProfile"
+						oncomplete="PF('profileDialog').show();"
+						title="NUEVO PERFIL">
+						<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+	
+					</p:commandLink>
+				</f:facet>
+			</p:column>
+	
+			<p:column width="25px">
+	                      #{row +1}
+	        </p:column>
+	        
+			<p:column headerText="Nombre de Perfil" sortBy="#{profile.name}"
+				filterBy="#{profile.name}" filterMatchMode="contains">
+				<h:outputText value="#{profile.name}" />
+			</p:column>
+			<p:column headerText="Permisos" width="10%">
+				<p:commandButton icon="pi pi-sign-in" process="@this" oncomplete="PF('profileDialogPermiso').show()" action="#{profileBean.verPermisos}" update="dialogProfilePermiso" >
+					<f:setPropertyActionListener value="#{profile}" target="#{profileBean.profileSelected}" />
+				</p:commandButton> 
+			</p:column>
+		</p:dataTable>
+
+	</h:form>
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogProfile" header="#{profileBean.tituloDialog}" widgetVar="profileDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formProfileDialog">
+		   
+			<h:panelGrid id="grid" columns="2">
+				<h:outputLabel value="Nombre de Perfil: " for="nombrePerfil" />
+				<p:inputText value="#{profileBean.profileSelected.name}" id="nombrePerfil" > 
+							<p:ajax event="keyup" />
+				</p:inputText>
+				
+				<h:outputLabel for="option" value="Estado:" /> 
+				<p:selectOneMenu id="option" value="#{profileBean.profileSelected.status}" style="margin:5px">
+					<f:selectItem itemLabel="ACTIVO" itemValue="#{true}" />
+					<f:selectItem itemLabel="INACTIVO" itemValue="#{false}" />
+						<p:ajax event="change"  />
+				</p:selectOneMenu>	
+				<p:commandButton value="Guardar" action="#{profileBean.saveProfile()}" 
+					update=":form:idTableProfile :formProfileDialog"/>
+			</h:panelGrid>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog  modal="true" dynamic="true" closeOnEscape="true" id="dialogProfilePermiso" header="Permisos: #{profileBean.profileSelected.name}" widgetVar="profileDialogPermiso" resizable="false" closable="true"
+		appendTo="@(body)" width="50%" height="600px">
+		<h:form id="formProfileDialogPermiso">
+		    <h:panelGrid columns="2"> 
+		    	<p:outputLabel value="Modulos:" />
+		    	<p:selectOneMenu value="#{profileBean.moduloSelected}" style="margin:5px;width:250px" converter="#{profileBean.conversorModuloSistema}">
+		    		<f:selectItem itemLabel="[-- Seleccionar --]" itemValue="#{null}"/>
+					<f:selectItems value="#{profileBean.lstModulos}" var="m" itemLabel="#{m.nombre}" itemValue="#{m}"/>
+				</p:selectOneMenu>
+				
+				<p:commandButton value="Añadir Permiso" update="formProfileDialogPermiso" action="#{profileBean.agregarPermiso()}" />
+		    </h:panelGrid>
+		    
+		    <p:dataTable var="m" value="#{profileBean.lstModulosSelected}" emptyMessage="No se asignaron modulos" rowIndexVar="row" paginator="true" rows="10" paginatorPosition="bottom">
+				<f:facet name="header">  
+                    <h:outputText value="Lista de Modulos Asignados"/>
+                </f:facet>  		    
+	            <p:column headerText="Nombre Modulo">
+	                <h:outputText value="#{m.nombre}" />
+	            </p:column>
+	
+	            <p:column headerText="Eliminar" width="10%">
+	                <p:commandButton icon="pi pi-trash" update="formProfileDialogPermiso" actionListener="#{profileBean.eliminarPermiso(m)}"/>
+	            </p:column>
+	        </p:dataTable>
+			
+		</h:form>
+	</p:dialog>
+		
+	
+</ui:composition>

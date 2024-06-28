@@ -1,0 +1,85 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">PROSPECCIÓN > SIMULADOR DE CUOTAS</h2>
+
+		<h:panelGrid id="grid" columns="4" columnClasses="ui-g-12 ui-md-2,ui-g-12 ui-md-4,ui-g-12 ui-md-2,ui-g-12 ui-md-4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid">
+			<h:outputLabel for="montoTotal" value="Monto total: " style="font-weight: bold;width:200px" />
+			<p:inputNumber decimalSeparator="." thousandSeparator=","  id="montoTotal"  value="#{simuladorBean.montoTotal}" style="margin:5px; width:220px" > 
+				<p:ajax listener="#{simuladorBean.calcularMontoDeuda()}" update=":form:grid ,idTableSimulador" />
+			</p:inputNumber>
+						
+			<h:outputLabel for="montoInicial" value="Monto inicial: " style="font-weight: bold;"/>
+			<p:inputNumber decimalSeparator="." thousandSeparator=","  id="montoInicial"  value="#{simuladorBean.montoInicial}" style="margin:5px; width:220px" > 
+				<p:ajax listener="#{simuladorBean.calcularMontoDeuda()}" update=":form:grid ,idTableSimulador" />
+			</p:inputNumber>
+			
+			<h:outputLabel for="montoDeuda" value="Monto deuda: " style="font-weight: bold;"/>
+			<h:outputLabel id="montoDeuda"  value="#{simuladorBean.montoDeuda}" />
+			
+			<h:outputLabel for="cuotas" value="N° Cuotas: " style="font-weight: bold;" />
+   			<p:selectOneMenu  style="margin:10px; width:220px" id="cuotas" value="#{simuladorBean.numeroCuotas}">
+				<f:selectItem itemLabel="6 meses" itemValue="#{6}"/>
+				<f:selectItem itemLabel="12 meses" itemValue="#{12}"/>
+				<f:selectItem itemLabel="18 meses" itemValue="#{18}"/>
+				<f:selectItem itemLabel="24 meses" itemValue="#{24}"/>
+				<f:selectItem itemLabel="36 meses" itemValue="#{36}"/>
+				<f:selectItem itemLabel="48 meses" itemValue="#{48}"/>
+				<f:selectItem itemLabel="60 meses" itemValue="#{60}"/>
+				
+				<p:ajax listener="#{simuladorBean.calcularPorcentaje}" update=":form:grid" /> 
+			</p:selectOneMenu>
+			
+			<h:outputLabel for="interes" value="Interés: " style="font-weight: bold;" />
+			<p:inputNumber decimalSeparator="." thousandSeparator=","  id="interes" value="#{simuladorBean.porcentaje}" symbol="%" symbolPosition="s" emptyValue="always" /> 
+     		
+		</h:panelGrid>
+		
+		<p:commandButton value="Simular" actionListener="#{simuladorBean.simularCuotas()}" update="form:idTableSimulador" />
+		<p:commandButton value="Limpiar" actionListener="#{simuladorBean.limpiar()}" update="form" style="margin-left:20px;" styleClass="font-bold ui-button-outlined" />
+		
+		<p:dataTable reflow="true" var="simulador" id="idTableSimulador" emptyMessage="Vacío." style="margin:20px" value="#{simuladorBean.lstSimulador}" widgetVar="personsTable" rowIndexVar="row" size="small">
+		
+			<p:column headerText="Nro. Cuota">
+				<h:outputText value="#{simulador.nroCuota}" />
+			</p:column>
+			
+			<p:column headerText="Inicial">
+			S/
+				<h:outputText value="#{simulador.inicial}">
+	                <f:convertNumber type="currency" currencySymbol=""/>
+	            </h:outputText>
+			</p:column>
+			
+			<p:column headerText="Cuota S.I">
+			S/
+				<h:outputText value="#{simulador.cuotaSI}">
+	                <f:convertNumber type="currency" currencySymbol=""/>
+	            </h:outputText>
+			</p:column>
+			
+			<p:column headerText="Interés">
+			S/
+				<h:outputText value="#{simulador.interes}">
+	                <f:convertNumber type="currency" currencySymbol=""/>
+	            </h:outputText>
+			</p:column>
+			
+			<p:column headerText="Cuota total">
+			S/
+				<h:outputText value="#{simulador.cuotaTotal}">
+	                <f:convertNumber type="currency" currencySymbol=""/>
+	            </h:outputText>
+			</p:column>
+
+		</p:dataTable>
+	</h:form>
+
+
+</ui:composition>

@@ -1,0 +1,70 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">PROYECTOS > MANZANAS</h2>
+		<p:selectOneButton value="#{manzanaBean.estado}" unselectable="false">
+			<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+			<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+			<p:ajax update=":form:idTableManzana"
+				listener="#{manzanaBean.listarManzana()}" />
+		</p:selectOneButton>      
+		<p:dataTable var="manzana" id="idTableManzana" value="#{manzanaBean.listManzana}" widgetVar="manzanaTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+		emptyMessage="No se encontraron manzanas."	paginatorPosition="bottom" rowKey="#{manzana.id}" selection="#{manzanaBean.manzanaSelected}" selectionMode="single">
+		<f:facet name="header">
+			<div class="p-d-flex p-ai-center p-jc-between">
+				<span>Lista de Manzanas</span>
+			</div>
+		</f:facet>
+		<p:ajax event="rowSelect" listener="#{manzanaBean.modifyManzana()}" update=":formManzanaDialog :dialogManzana" oncomplete="PF('manzanaDialog').show();" />
+
+		<p:column style="width:42px;text-align: left">
+			<f:facet name="header">
+				<p:commandLink action="#{manzanaBean.newManzana()}"
+					update=":formManzanaDialog :dialogManzana"
+					oncomplete="PF('manzanaDialog').show();"
+					title="NUEVA MANZANA">
+					<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+
+				</p:commandLink>
+			</f:facet>
+		</p:column>
+
+		<p:column width="25px">
+                      #{row +1}
+        </p:column>
+        
+		<p:column headerText="Nombre de Manzana" sortBy="#{manzana.name}"
+			filterBy="#{manzana.name}" filterMatchMode="contains">
+			<h:outputText value="#{manzana.name}" />
+		</p:column>
+	</p:dataTable>
+
+	</h:form>
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogManzana" header="#{manzanaBean.tituloDialog}" widgetVar="manzanaDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formManzanaDialog">
+		    
+			<h:panelGrid id="grid" columns="2">
+				<h:outputLabel value="Nombre de Manzana: " for="nombreManzana" />
+				<p:inputText value="#{manzanaBean.manzanaSelected.name}"
+					id="nombreManzana" />
+				<h:outputLabel for="option" value="Estado:" />
+				<p:selectOneMenu id="option" value="#{manzanaBean.manzanaSelected.status}" style="margin:5px">
+					<f:selectItem itemLabel="ACTIVO" itemValue="#{true}" />
+					<f:selectItem itemLabel="INACTIVO" itemValue="#{false}" />
+				</p:selectOneMenu>	
+				<p:commandButton value="Guardar" action="#{manzanaBean.saveManzana()}" 
+					update=":form:idTableManzana :formManzanaDialog"/>
+			</h:panelGrid>
+		</h:form>
+	</p:dialog>
+		
+	
+</ui:composition>

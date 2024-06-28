@@ -1,0 +1,139 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">VENTAS > RANKIG DE VENTAS</h2>
+		<h:panelGrid id="grid" columns="7" width="70%">
+	
+			<h:outputLabel for="años" value="Año:" />
+			<p:selectOneMenu id="años" value="#{rankingVentasBean.anio}" style="margin:10px">
+				<f:selectItem itemLabel="2021" itemValue="21" />
+				<f:selectItem itemLabel="2022" itemValue="22" />
+				<f:selectItem itemLabel="2023" itemValue="23" />
+				<f:selectItem itemLabel="2024" itemValue="24" />
+				<f:selectItem itemLabel="2025" itemValue="25" />
+				<f:selectItem itemLabel="2026" itemValue="26" />
+				<f:selectItem itemLabel="2027" itemValue="27" />
+				<f:selectItem itemLabel="2028" itemValue="28" />
+				<f:selectItem itemLabel="2029" itemValue="29" />
+				<f:selectItem itemLabel="2030" itemValue="30" />
+				<p:ajax  update="idTableEmpleado" listener="#{rankingVentasBean.listarUsuario}"/>
+			</p:selectOneMenu>
+            
+<!--             <p:commandButton value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{reporteAsistenciaBean.procesarExcel}" -->
+<!--                          icon="pi pi-arrow-down" styleClass="mr-2"> -->
+<!--             <p:fileDownload value="#{reporteAsistenciaBean.fileDes}"/>  -->
+<!--       		</p:commandButton> -->
+			
+		</h:panelGrid>  
+		
+		<p:dataTable var="usuario" id="idTableEmpleado" value="#{rankingVentasBean.lstUsuario}" widgetVar="empleadoTable" style="width:150%" rowIndexVar="row" paginator="true" rows="15" size="small"
+		emptyMessage="No se encontraron empleados."	paginatorPosition="bottom" rowKey="#{usuario.id}" selection="#{rankingVentasBean.userSelected}" selectionMode="single">
+		
+			<f:facet name="header">
+				<div class="p-d-flex p-ai-center p-jc-between">
+					<span>Lista de Empleados</span>
+				</div>
+			</f:facet>
+		
+			<p:column style="width:9px;text-align: left" >
+				<f:facet name="header" >
+				N°
+				</f:facet>
+			</p:column>
+			
+			<p:column width="25px" >
+	                      #{row +1}
+	        </p:column>
+	        
+	   		<p:column headerText="Supervisor" width="150px" sortBy="#{usuario.team.personSupervisor.surnames}" filterBy="#{usuario.team.personSupervisor.surnames}, #{usuario.team.personSupervisor.names}, #{usuario.team.name}" filterMatchMode="contains">
+				<h:outputText value="#{usuario.team.personSupervisor eq null ? usuario.team.name : usuario.team.personSupervisor.surnames.concat(' ').concat(usuario.team.personSupervisor.names)}" />
+			</p:column>
+	        
+			<p:column headerText="Asesor" width="150px" sortBy="#{usuario.person.surnames}" filterBy="#{usuario.person.surnames}, #{usuario.person.names}" filterMatchMode="contains">
+				<h:outputText value="#{usuario.person.surnames} #{usuario.person.names}" />
+			</p:column>
+		
+			
+			<p:column headerText="ENE"  filterMatchMode="contains" style="text-align:center" >
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('01',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'01',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="FEB"  filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('02',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'02',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="MAR"  filterMatchMode="contains" style="text-align:center" >
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('03',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'03',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="ABR"  filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('04',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'04',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="MAY"  filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('05',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'05',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="JUN"	filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('06',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'06',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="JUL" filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('07',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'07',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="AGO" filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('08',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'08',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="SEP" filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('09',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'09',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="OCT"  filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('10',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'10',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="NOV" filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('11',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'11',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}" />
+			</p:column>
+			
+			<p:column headerText="DIC" filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.lotesVendidoMes('12',rankingVentasBean.anio,usuario)}" style="#{rankingVentasBean.validarMesNoTrabajado(usuario,'12',rankingVentasBean.anio)?'background:black;font-size:25px':'background:white'}"/>
+			</p:column>
+			
+			<p:column headerText="Total Lotes Vendidos" filterMatchMode="contains" style="text-align:center;color:blue">
+				<h:outputText value="#{rankingVentasBean.totalLotesVendido(usuario)}" style="color:blue"/>
+			</p:column>
+			
+			<p:column headerText="Meses Trabajados" filterMatchMode="contains" style="text-align:center;color:red">
+				<h:outputText value="#{rankingVentasBean.mesesTrabajados(usuario)}" style="color:red"/>
+			</p:column>
+			
+			<p:column headerText="Meses que Vendió" filterMatchMode="contains" style="text-align:center;color:green">
+				<h:outputText value="#{rankingVentasBean.mesesQueVendio(usuario)}" style="color:green"/>
+			</p:column>
+			
+			<p:column headerText="Prom. Mensual de Ventas" filterMatchMode="contains" style="text-align:center;color:brown">
+				<h:outputText value="#{rankingVentasBean.promedioMensualVentas(usuario)}" style="color:brown"/>
+			</p:column>
+			
+			<p:column headerText="Prom. 3 Últimos Meses" sortBy="#{rankingVentasBean.promedio3UltimosMenses(usuario)}" filterMatchMode="contains" style="text-align:center;color: #ff33dd">
+				<h:outputText value="#{rankingVentasBean.promedio3UltimosMenses(usuario)}" style="color: #ff33dd"/>
+			</p:column>
+			
+			<p:column headerText="RENDIMIENTO" width="120px" sortBy="#{rankingVentasBean.promedio3UltimosMenses(usuario)}" filterMatchMode="contains" style="text-align:center">
+				<h:outputText value="#{rankingVentasBean.rendimiento(usuario)}" style="#{rankingVentasBean.rendimiento(usuario)  eq 'BAJO'?'color:red':rankingVentasBean.rendimiento(usuario)  eq 'MEDIO'?'color:orange':'color:blue'}"  />
+			</p:column>                                                                                                 
+			
+		</p:dataTable>
+	</h:form>
+	
+</ui:composition>

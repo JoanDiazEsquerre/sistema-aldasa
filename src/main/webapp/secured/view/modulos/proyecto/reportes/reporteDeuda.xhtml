@@ -1,0 +1,352 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<p:growl id="msgs" showDetail="true" />
+		<h2 style="color: #007d4c;">REPORTES > REPORTE DE DEUDAS</h2>
+		
+		<p:tabView id="tabView">
+			<p:tab title="Reporte de Deudas"> 
+				<h:panelGrid columns="8">
+					<p:selectOneButton value="#{reporteDeudaBean.estadoFilter}" unselectable="false">
+						<f:selectItem itemLabel="Pendientes" itemValue="N" />
+						<f:selectItem itemLabel="Pagados" itemValue="S" />
+						<p:ajax update="idTableCuota" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+					</p:selectOneButton>
+			
+					<p:outputLabel value="Año:" style="margin-left: 20px;"/>
+					<p:selectOneMenu value="#{reporteDeudaBean.year}">
+						<f:selectItem itemLabel="[-TODOS-]" itemValue="#{0}" />
+						<f:selectItem itemLabel="2019" itemValue="#{2019}" />
+						<f:selectItem itemLabel="2020" itemValue="#{2020}" />
+						<f:selectItem itemLabel="2021" itemValue="#{2021}" />
+						<f:selectItem itemLabel="2022" itemValue="#{2022}" />
+						<f:selectItem itemLabel="2023" itemValue="#{2023}" />
+						<f:selectItem itemLabel="2024" itemValue="#{2024}" />
+						<f:selectItem itemLabel="2025" itemValue="#{2025}" />
+						<f:selectItem itemLabel="2026" itemValue="#{2026}" />
+						<f:selectItem itemLabel="2027" itemValue="#{2027}" />
+						<f:selectItem itemLabel="2028" itemValue="#{2028}" />
+						<p:ajax update="idTableCuota" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+					</p:selectOneMenu>
+					
+					<p:outputLabel value="Mes:" style="margin-left: 20px;"/>
+					<p:selectOneMenu value="#{reporteDeudaBean.month}">
+						<f:selectItem itemLabel="[-TODOS-]" itemValue="#{0}" />
+						<f:selectItem itemLabel="Enero" itemValue="#{1}" />
+						<f:selectItem itemLabel="Febrero" itemValue="#{2}" />
+						<f:selectItem itemLabel="Marzo" itemValue="#{3}" />
+						<f:selectItem itemLabel="Abril" itemValue="#{4}" />
+						<f:selectItem itemLabel="Mayo" itemValue="#{5}" />
+						<f:selectItem itemLabel="Junio" itemValue="#{6}" />
+						<f:selectItem itemLabel="Julio" itemValue="#{7}" />
+						<f:selectItem itemLabel="Agosto" itemValue="#{8}" />
+						<f:selectItem itemLabel="Setiembre" itemValue="#{9}" />
+						<f:selectItem itemLabel="Octubre" itemValue="#{10}" />
+						<f:selectItem itemLabel="Noviembre" itemValue="#{11}" />
+						<f:selectItem itemLabel="Diciembre" itemValue="#{12}" />
+						<p:ajax update="idTableCuota" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+					</p:selectOneMenu>
+				</h:panelGrid>
+				
+		
+				<p:dataTable var="cuota" id="idTableCuota" value="#{reporteDeudaBean.lstCuotaLazy}" widgetVar="cuotaTable" rowIndexVar="row" paginator="true" rows="30" size="small"
+					emptyMessage="No se encontraron cuotas." style="width: 100%" paginatorPosition="bottom" rowKey="#{cuota.id}" selectionMode="single" 
+					selection="#{reporteDeudaBean.cuotaSelected}">
+					
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<h:outputLabel value="TOTAL: " style="font-size: 25px; font-weight: bold;"/>
+					      	<h:outputLabel value="#{reporteDeudaBean.total}" style="font-size: 25px; font-weight: bold; color: red;"/>
+						</div>
+					</f:facet>
+		
+					<p:column width="25px">
+			                      #{row +1}
+			        </p:column>
+			
+					<p:column headerText="Proyecto" style="text-align:center; width:150px" sortBy="#{cuota.contrato.lote.project.name}">
+						<f:facet name="header">
+							Proyecto
+				        	<p:selectOneMenu value="#{reporteDeudaBean.projectFilter}" converter="#{reporteDeudaBean.conversorProject}" style="width:100%" >
+								<f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
+								<f:selectItems value="#{reporteDeudaBean.lstProject}" var="project" itemLabel="#{project.name}" itemValue="#{project}"/>
+								<p:ajax update="idTableCuota" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+							</p:selectOneMenu>
+						</f:facet>
+						
+						<h:outputText value="#{cuota.contrato.lote.project.name}"/>
+					</p:column>
+					
+					<p:column headerText="Manzana" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.contrato.lote.manzana.name}">
+						<f:facet name="header">
+							Manzana
+				        	 <p:inputText value="#{reporteDeudaBean.manzanaFilter}" style="width: 100%">
+						        <p:ajax event="keyup" update="idTableCuota" />
+						    </p:inputText>
+						</f:facet>
+					
+						<h:outputText value="#{cuota.contrato.lote.manzana.name}" />
+					</p:column>
+					<p:column headerText="Lote" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.contrato.lote.numberLote}">
+						<f:facet name="header">
+							Lote
+				        	 <p:inputText value="#{reporteDeudaBean.loteFilter}" style="width: 100%">
+						        <p:ajax event="keyup" update="idTableCuota" />
+						    </p:inputText>
+						</f:facet>
+						<h:outputText value="#{cuota.contrato.lote.numberLote}" />
+					</p:column>
+					<p:column headerText="Cliente" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.contrato.personVenta.surnames}">
+						<f:facet name="header">
+							Cliente
+				        	 <p:inputText value="#{reporteDeudaBean.surnamesFilter}" style="width: 100%">
+						        <p:ajax event="keyup" update="idTableCuota" />
+						    </p:inputText>
+						</f:facet>
+						<h:outputText value="#{cuota.contrato.personVenta.surnames} #{cuota.contrato.personVenta.names}" />
+					</p:column>
+					
+					<p:column headerText="DNI Cliente" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.contrato.personVenta.dni}">
+						<f:facet name="header">
+							DNI Cliente
+				        	 <p:inputText value="#{reporteDeudaBean.dniFilter}" style="width: 100%">
+						        <p:ajax event="keyup" update="idTableCuota" />
+						    </p:inputText>
+						</f:facet>
+						<h:outputText value="#{cuota.contrato.personVenta.dni}" />
+					</p:column>
+					
+					<p:column headerText="Número Cuota" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.nroCuota}">
+						<h:outputText value="#{cuota.prepago ? 'PREPAGO': cuota.nroCuota eq 0 ? 'INICIAL': cuota.nroCuota}" />
+					</p:column>
+					<p:column headerText="Fecha de Pago" sortBy="#{cuota.fechaPago}" filterMatchMode="contains" width="100px">
+						<h:outputText value="#{cuota.fechaPago}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Cuota S.I" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.cuotaSI}">
+						<h:outputText value="#{cuota.cuotaSI}" />
+					</p:column>
+					<p:column headerText="Interés" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.interes}">
+						<h:outputText value="#{cuota.interes}" />
+					</p:column>
+					
+					<p:column headerText="Adelanto" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.adelanto}">
+						<h:outputText value="#{cuota.adelanto}"/>
+					</p:column>
+					
+					<p:column headerText="Cuota total" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.cuotaTotal}">
+						<h:outputText value="#{cuota.cuotaTotal - cuota.adelanto}" />
+					</p:column>
+					
+					<p:column headerText="Estado Contrato" filterMatchMode="contains" style="text-align:center" sortBy="#{cuota.contrato.estado}">
+						<h:outputText value="#{cuota.contrato.estado}" />
+					</p:column>
+				</p:dataTable>
+				
+				<p:contextMenu id="menuTableReq" for="idTableCuota" >
+		        	<p:menuitem value="Ver Observación" icon="pi pi-comments" action="#{reporteDeudaBean.cargarListaObservacion()}" oncomplete="PF('añadirObservacionDialog').show();" update="dialogAñadirObservacion"  />	
+		        </p:contextMenu>
+			</p:tab>
+			
+			<p:tab title="Reporte Gráfico General"> 
+				<h:panelGrid columns="4">
+					<p:outputLabel value="Año:" style="margin-left: 20px;"/>
+					<p:selectOneMenu value="#{reporteDeudaBean.yearGrafico}">
+						<f:selectItem itemLabel="2019" itemValue="#{2019}" />
+						<f:selectItem itemLabel="2020" itemValue="#{2020}" />
+						<f:selectItem itemLabel="2021" itemValue="#{2021}" />
+						<f:selectItem itemLabel="2022" itemValue="#{2022}" />
+						<f:selectItem itemLabel="2023" itemValue="#{2023}" />
+						<f:selectItem itemLabel="2024" itemValue="#{2024}" />
+						<f:selectItem itemLabel="2025" itemValue="#{2025}" />
+						<f:selectItem itemLabel="2026" itemValue="#{2026}" />
+						<f:selectItem itemLabel="2027" itemValue="#{2027}" />
+						<f:selectItem itemLabel="2028" itemValue="#{2028}" />
+						<p:ajax listener="#{reporteDeudaBean.createBarModel2}" update=":form:tabView:grafico" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+					</p:selectOneMenu>
+					
+					<p:outputLabel value="Proyecto:" style="margin-left: 20px;"/>
+					<p:selectOneMenu value="#{reporteDeudaBean.projectGrafico}" converter="#{reporteDeudaBean.conversorProject}" style="width:100%" >
+						<f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
+						<f:selectItems value="#{reporteDeudaBean.lstProject}" var="project" itemLabel="#{project.name}" itemValue="#{project}"/>
+						<p:ajax listener="#{reporteDeudaBean.createBarModel2}" update=":form:tabView:grafico" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+					</p:selectOneMenu>
+				</h:panelGrid>
+				
+				<p:barChart id="grafico" model="#{reporteDeudaBean.barModel2}" style="width: 100%; height: 500px;">
+		        </p:barChart>
+				
+			</p:tab>
+			
+			<p:tab title="Reporte Gráfico de Contratos" > 
+				<p:selectOneButton value="#{reporteDeudaBean.estadoGrafico}" unselectable="false">
+					<f:selectItem itemLabel="Activos" itemValue="Activo" />
+					<f:selectItem itemLabel="Terminados" itemValue="Terminado" />
+					<f:selectItem itemLabel="Resueltos" itemValue="Resuelto" />
+					<f:selectItem itemLabel="Anulados" itemValue="Anulado" />
+					<p:ajax  update="idTableContratoGrafico, donutChart" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+				</p:selectOneButton>
+				
+				<p:selectOneButton value="#{reporteDeudaBean.estadoDeudaGrafico}" unselectable="false" style="margin-left: 30px">
+					<f:selectItem itemLabel="Al día" itemValue="al Dia" />
+					<f:selectItem itemLabel="Atrasados" itemValue="Atrasados" />
+					<f:selectItem itemLabel="Con compromiso" itemValue="Compromiso" />
+					<p:ajax  update="idTableContratoGrafico, donutChart" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+				</p:selectOneButton>
+				
+				<div class="grid" style="width: 40%; text-align: center">
+				    <div class="col-12 lg:col-6 xl:col-4">
+				        <div class="card">
+				            <p:donutChart id="donutChart" model="#{reporteDeudaBean.donutModel}" style="width:1;height:1"/>
+				        </div>
+				    </div>
+				</div>
+				
+					
+				<p:dataTable var="contrato" id="idTableContratoGrafico" value="#{reporteDeudaBean.lstContratoLazy}" rowIndexVar="row" paginator="true" rows="30" size="small" editable="true" editMode="cell"
+					emptyMessage="No se encontraron proyectos." style="width: 100%" paginatorPosition="bottom" rowKey="#{contrato.id}" selectionMode="single" >
+					
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Lista de Contratos #{reporteDeudaBean.estadoDeudaGrafico}</span>
+						</div>
+					</f:facet>
+		
+					<p:column width="25px">
+			                      #{row +1}
+			        </p:column>
+			        
+					<p:column headerText="Proyecto" style="text-align:center;" filterBy="#{contrato.lote.project.name}" sortBy="#{contrato.lote.project.name}">	
+						<h:outputText value="#{contrato.lote.project.name}"/>
+					</p:column>
+					
+					<p:column headerText="Manzana" filterMatchMode="contains" style="text-align:center" sortBy="#{contrato.lote.manzana.name}" filterBy="#{contrato.lote.manzana.name}" >
+						<h:outputText value="#{contrato.lote.manzana.name}"/>
+					</p:column>
+					
+					<p:column headerText="Num. Lote" filterMatchMode="contains" sortBy="#{contrato.lote.numberLote}" style="text-align:center" filterBy="#{contrato.lote.numberLote}" >
+						<h:outputText value="#{contrato.lote.numberLote}"/>
+					</p:column>
+			    
+					<p:column headerText="Persona Venta 1" filterMatchMode="contains" sortBy="#{contrato.personVenta.surnames}" filterBy="#{contrato.personVenta.surnames}">
+						<h:outputText value="#{contrato.personVenta.surnames} #{contrato.personVenta.names}"/>
+					</p:column>
+					
+					<p:column headerText="Persona Venta 2" filterMatchMode="contains">
+						<h:outputText  value="#{contrato.personVenta2.surnames} #{contrato.personVenta2.names}"/>
+					</p:column>
+			
+					<p:column headerText="Cuota Especial" sortBy="#{contrato.cuotaEspecial}" filterMatchMode="contains" style="text-align:center;">
+						<p:outputLabel value="#{contrato.cuotaEspecial eq true?'SI':'NO'}"/>
+					</p:column>
+					
+					<p:column style="text-align:center" >
+						<f:facet name="header">
+							Cuotas Atrasadas
+				        	<p:selectOneMenu value="#{reporteDeudaBean.busquedaCuotasAtrasadas}" style="margin:5px; width:100%" >
+								<f:selectItem itemLabel="[-TODOS-]" itemValue="#{0}"/>
+								<f:selectItem itemLabel="1" itemValue="#{1}"/>
+								<f:selectItem itemLabel="2" itemValue="#{2}"/>
+								<f:selectItem itemLabel="3" itemValue="#{3}"/>
+								<f:selectItem itemLabel="4" itemValue="#{4}"/>
+								<f:selectItem itemLabel="5" itemValue="#{5}"/>
+								<f:selectItem itemLabel="6" itemValue="#{6}"/>
+								<f:selectItem itemLabel="7" itemValue="#{7}"/>
+								<f:selectItem itemLabel="8" itemValue="#{8}"/>
+								<f:selectItem itemLabel="9" itemValue="#{9}"/>
+								<f:selectItem itemLabel="10" itemValue="#{10}"/>
+								<f:selectItem itemLabel="11" itemValue="#{11}"/>
+								<f:selectItem itemLabel="12" itemValue="#{12}"/>
+								<f:selectItem itemLabel="13" itemValue="#{13}"/>
+								<f:selectItem itemLabel="14" itemValue="#{14}"/>
+								<f:selectItem itemLabel="15" itemValue="#{15}"/>
+								<f:selectItem itemLabel="16" itemValue="#{16}"/>
+								<f:selectItem itemLabel="17" itemValue="#{17}"/>
+								<f:selectItem itemLabel="18" itemValue="#{18}"/>
+								<f:selectItem itemLabel="19" itemValue="#{19}"/>
+								<f:selectItem itemLabel="20" itemValue="#{20}"/>
+								<p:ajax update="idTableContratoGrafico" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+							</p:selectOneMenu>
+						</f:facet>
+					
+						<h:outputText value="#{contrato.cuotasAtrasadas}"/>
+					</p:column>
+					
+					<p:column headerText="Asesor Cobranza" sortBy="#{contrato.usuarioCobranza.username}" width="100px">
+		                <p:cellEditor>
+		                    <f:facet name="output">
+		                        <h:outputText value="#{contrato.usuarioCobranza.username}"/>
+		                    </f:facet>
+		                    <f:facet name="input">    
+		                        <h:selectOneMenu value="#{contrato.usuarioCobranza}" converter="#{reporteDeudaBean.conversorUsuario}">
+									<f:selectItem itemLabel="[-Ninguno-]" itemValue="#{null}"></f:selectItem>
+									<f:selectItems value="#{reporteDeudaBean.lstUsuarioCobranza}" var="usu" itemLabel="#{usu.username}" itemValue="#{usu}"/> 
+									<p:ajax listener="#{reporteDeudaBean.actualizarUsuarioCobranza(contrato)}" update="idTableContratoGrafico" />
+								</h:selectOneMenu>
+		                    </f:facet>
+		                </p:cellEditor>
+		            </p:column>
+		            <p:column headerText="Fecha Compromiso" sortBy="#{contrato.fechaVencimientoComp}" filterMatchMode="contains" width="100px" rendered="#{reporteDeudaBean.estadoDeudaGrafico eq 'Compromiso'}">
+						<h:outputText value="#{contrato.fechaVencimientoComp}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</p:column>
+					
+				</p:dataTable>
+			
+			</p:tab>
+			
+		</p:tabView>
+		
+		
+
+	</h:form>
+	
+	<p:dialog modal="true" height="600px" dynamic="true" closeOnEscape="true" id="dialogAñadirObservacion" header="Observaciones del Contrato" widgetVar="añadirObservacionDialog" resizable="false" closable="true"
+		appendTo="@(body)"  width="50%">
+		<h:form id="formAñadirObservacionDialog">
+			
+        	<p:dataTable var="observacion" id="idObsContrato" value="#{reporteDeudaBean.lstObservacionContrato}"  rowIndexVar="row" paginator="true" rows="5" 
+				size="small" emptyMessage="No se encontratos resultados." paginatorPosition="bottom" rowKey="#{observacion.id}" selectionMode="single">
+				
+				<p:column width="25px">
+	                      #{row +1}
+	        	</p:column>
+	        	
+				<p:column headerText="Observación" >
+					<h:outputText value="#{observacion.observacion}" />
+				</p:column>
+				
+				<p:column headerText="Usuario" filterMatchMode="contains" style="text-align: center; width:50px">
+					<h:outputText value="#{observacion.usuario.username}" />
+				</p:column>
+				
+				<p:column headerText="Fecha Registro" filterMatchMode="contains" sortBy="#{observacion.fechaRegistro}" style="text-align: center; width:80px">
+					<h:outputText value="#{observacion.fechaRegistro}">
+						<f:convertDateTime pattern="dd/MM/yyyy" />
+					</h:outputText>
+				</p:column>
+				
+			</p:dataTable>
+			
+		</h:form>
+	</p:dialog>
+
+
+
+	<pe:blockUI widgetVar="blockUIWidgetGeneral">
+		<h:form style="background: white">
+			<h:outputText value="Cargando, espere..."
+				style="white-space: nowrap; font-weight:bold; color: #036fab; background: white" />
+		</h:form>
+	</pe:blockUI>
+
+</ui:composition>

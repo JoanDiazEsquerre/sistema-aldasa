@@ -1,0 +1,848 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">RECURSOS HUMANOS > PLANILLAS</h2>
+		
+		<p:tabView id="tabView">
+			<p:tab title="Lista de Planillas"> 
+				<p:selectOneButton value="#{planillaBean.estado}" unselectable="false">
+					<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+					<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+					<p:ajax update=":form:tabView:idTable" />
+				</p:selectOneButton>
+				
+				<p:dataTable var="pl" id="idTable" value="#{planillaBean.lstPlanillaLazy}" widgetVar="planillaTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+					emptyMessage="No se encontraron resultados"	paginatorPosition="bottom" rowKey="#{pl.id}" selection="#{planillaBean.planillaSelected}" selectionMode="single">
+					
+					<p:ajax event="rowSelect" listener="#{planillaBean.listarDetallesPlanillaSelected}" update=":formDP" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();PF('DPDialog').show();" />
+				
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Lista de Planillas</span>
+						</div>
+					</f:facet>
+				
+					<p:column style="width:45px;text-align: left">
+						<f:facet name="header">
+							<p:commandLink action="#{planillaBean.verDetalles}"
+								update=":formDP"
+								onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();PF('DPDialog').show();"
+								title="NUEVA PLANTILLA">
+								<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+							</p:commandLink>
+						</f:facet>
+					</p:column>
+			
+					<p:column width="25px">
+			                      #{row +1}
+			        </p:column>
+			        
+					<p:column filterStyle="width: 90%; font-size: 9px;" style="text-align:center;"   headerText="Periodo" sortBy="#{pl.periodo}" filterBy="#{pl.periodo}" id="c_periodo" >  
+			            #{pl.periodo}
+			        </p:column> 
+			        <p:column filterStyle="width: 80%;" style="text-align: center; " headerText="Mes"   sortBy="#{pl.mes}" filterBy="#{pl.mes}" filterOptions="#{planillaBean.cboMes}" id="c_mes" >  
+			            #{(pl.mes eq 1?'Enero':(pl.mes eq 2?'Febrero':(pl.mes eq 3?'Marzo':(pl.mes eq 4?'Abril':(pl.mes eq 5?'Mayo':(pl.mes eq 6?'Junio':(pl.mes eq 7?'Julio':(pl.mes eq 8?'Agosto':(pl.mes eq 9?'Septiembre':(pl.mes eq 10?'Octubre':(pl.mes eq 11?'Noviembre':(pl.mes eq 12?'Diciembre':''))))))))))))}
+			        </p:column>   
+			        <p:column  filterStyle="width: 80%;font-size: 9px;" headerText="Tipo Planilla:" sortBy="#{pl.tipoPlanilla}" filterBy="#{pl.tipoPlanilla}" filterOptions="#{planillaBean.cboTipoPlanilla}" id="id_tipo_planilla">  
+			            <h:outputText value="#{pl.tipoPlanilla}" />
+			        </p:column>  
+			       
+			        <p:column  filterStyle="width: 90%;" style="text-align:center;"  headerText="Sucursal:" filterBy="#{pl.sucursal.razonSocial}">  
+			            <h:outputText value="#{pl.sucursal.razonSocial}" />
+			        </p:column>
+			        <p:column  filterStyle="width: 90%;" style="text-align:center;"  headerText="Usuario:">  
+			            <h:outputText value="#{pl.usuario.username}" />
+			        </p:column>
+			        <p:column  filterStyle="width: 90%;" style="text-align:center;"  headerText="Fecha Registro:">  
+			            <h:outputText value="#{pl.fechaRegistro}">
+			                <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			            </h:outputText>
+			        </p:column>
+				</p:dataTable>
+			</p:tab>
+			
+			<p:tab title="Nueva Planilla" id="tabListDoc"> 
+				<h:panelGrid id="idFiltros" columns="11">
+					<p:outputLabel value="Sucursal:" style="margin-left: 10px"/>
+					<p:selectOneMenu id="sucursal" value="#{planillaBean.sucursal}" disabled="#{planillaBean.bloqueo}" style="margin:5px;width:250px" converter="#{planillaBean.conversorSucursal}">
+						<f:selectItems value="#{planillaBean.lstSucursal}" var="suc" itemLabel="#{suc.razonSocial}" itemValue="#{suc}"/> 
+						<p:ajax update=":form:tabView:idTableEmpleado" listener="#{planillaBean.listarDetallePlantillaTemporal}" />
+					</p:selectOneMenu>
+					
+					<p:outputLabel value="Periodo :" style="margin-left: 15px"/>
+	                <p:selectOneMenu value="#{planillaBean.periodo}" disabled="#{planillaBean.bloqueo}">
+	                	<f:selectItem itemLabel="2022" itemValue="2022"/>
+	                	<f:selectItem itemLabel="2023" itemValue="2023"/>
+	                    <f:selectItem itemLabel="2024" itemValue="2024"/>
+	                    <f:selectItem itemLabel="2025" itemValue="2025"/>
+	                    <f:selectItem itemLabel="2026" itemValue="2026"/>
+	                    <f:selectItem itemLabel="2027" itemValue="2027"/>
+	                    <f:selectItem itemLabel="2028" itemValue="2028"/>
+	                    <f:selectItem itemLabel="2029" itemValue="2029"/>
+	                    <f:selectItem itemLabel="2030" itemValue="2030"/>
+	                    <f:selectItem itemLabel="2031" itemValue="2031"/>
+	                    <f:selectItem itemLabel="2032" itemValue="2032"/>
+	                    <f:selectItem itemLabel="2033" itemValue="2033"/>
+	                    <p:ajax update=":form:tabView:idTableEmpleado" listener="#{planillaBean.listarDetallePlantillaTemporal}" />
+	                </p:selectOneMenu>
+                
+                	<p:outputLabel value="Mes :" style="margin-left: 15px"/>
+                   	<p:selectOneMenu value="#{planillaBean.mes}" disabled="#{planillaBean.bloqueo}">
+                       <f:selectItem itemLabel="Enero"   	itemValue="01"/>
+                       <f:selectItem itemLabel="Febrero"    itemValue="02"/>
+                       <f:selectItem itemLabel="Marzo"      itemValue="03"/>
+                       <f:selectItem itemLabel="Abril"      itemValue="04"/>
+                       <f:selectItem itemLabel="Mayo"       itemValue="05"/>
+                       <f:selectItem itemLabel="Junio"      itemValue="06"/>
+                       <f:selectItem itemLabel="Julio"      itemValue="07"/>
+                       <f:selectItem itemLabel="Agosto"     itemValue="08"/>
+                       <f:selectItem itemLabel="Septiembre" itemValue="09"/>
+                       <f:selectItem itemLabel="Octubre"    itemValue="10"/>
+                       <f:selectItem itemLabel="Noviembre"  itemValue="11"/>
+                       <f:selectItem itemLabel="Diciembre"  itemValue="12"/>
+                       <p:ajax update=":form:tabView:idTableEmpleado" listener="#{planillaBean.listarDetallePlantillaTemporal}" />
+                   	</p:selectOneMenu>
+                        
+                    <p:outputLabel value="Tipo Planilla :" style="margin-left: 15px"/>
+                    <p:selectOneMenu value="#{planillaBean.tipoPlanilla}" disabled="#{planillaBean.bloqueo}">
+                        <f:selectItem itemLabel="DEPENDIENTE" itemValue="#{true}"/>
+                        <f:selectItem itemLabel="INDEPENDIENTE" itemValue="#{false}"/>
+						<p:ajax update=":form:tabView:idTableEmpleado" listener="#{planillaBean.listarDetallePlantillaTemporal}" />
+                    </p:selectOneMenu>
+                    
+                    <h:outputLabel for="optionPerson" value="Empleado:" style="margin-left: 15px"/>
+					<p:autoComplete scrollHeight="300" styleClass="ui-autocompV" value="#{planillaBean.empleado}" 
+						converter="#{planillaBean.conversorEmpleado}" id="optionPerson" completeMethod="#{planillaBean.completeEmpleado}"  
+	                	var="per" itemLabel="#{per.person.surnames.concat(' ')}#{per.person.names}" itemValue="#{per}" forceSelection="true" />
+					<p:commandButton icon="pi pi-check" styleClass="rounded-button" actionListener="#{planillaBean.agregarDetalle}" update=":form:tabView:idTableEmpleado"/>
+				</h:panelGrid>
+				
+				<h:panelGrid id="gridBotones" columns="4">
+					<p:commandButton value="GUARDAR" onclick="PF('saveConfirmaTemp').show()" />
+                    <p:commandButton value="CANCELAR" onclick="PF('cancelarPlanilla').show()" rendered="#{planillaBean.bloqueo}"/>
+                    <p:commandButton value="TERMINAR" onclick="PF('terminarPlanilla').show()" />
+				</h:panelGrid>
+				
+				<p:dataTable reflow="true" var="dp" id="idTableEmpleado" value="#{planillaBean.lstDetallePlanillaTemp}" widgetVar="empleadoTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+					emptyMessage="No se encontraron empleados." editable="true" editMode="cell" style="font-size: 14px; width:140%"	paginatorPosition="bottom" rowKey="#{dp.id}" selectionMode="single">
+					
+				
+					<f:facet name="header">
+						<div class="p-d-flex p-ai-center p-jc-between">
+							<span>Detalle de Planilla</span>
+						</div>
+					</f:facet>
+				
+					<p:column headerText="N°" width="25px">
+			                      #{row +1}
+			        </p:column>
+			        
+					<p:column headerText="Empleado" sortBy="#{dp.empleado.person.surnames}" filterBy="#{dp.empleado.person.surnames}" filterMatchMode="contains" width="200px">
+						<h:outputText value="#{dp.empleado.person.surnames} #{dp.empleado.person.names}" />
+					</p:column>
+					
+					<p:column headerText="Cargo" style="text-align:center;">
+						<h:outputText value="#{dp.empleado.cargo.descripcion}" />
+					</p:column>
+					
+					<p:column headerText="Sueldo Básico" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{dp.empleado.sueldoBasico}" style="font-weight: bold"> 
+						 <f:convertNumber currencySymbol="" type="currency"  />
+						 </h:outputText>
+					</p:column>
+					
+					<p:column headerText="Tardanza" id="idTardanza" width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.tardanza}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.tardanza}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporal(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="Vacaciones" id="idVacaciones" width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.vacaciones}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.vacaciones}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporal(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="Comisiones" id="idComisiones" width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.comisiones}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.comisiones}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporal(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="Bono" id="idBono" width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.bono}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.bono}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporal(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="Total" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{dp.total}" style="font-weight: bold" > 
+						 <f:convertNumber currencySymbol="" type="currency"  />
+						 </h:outputText>
+					</p:column>
+					
+					<p:column headerText="ONP SNP"  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.onp}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.onp}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					
+					<p:column headerText="AP. OBLIG."  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.aporteObligatorio}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.aporteObligatorio}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="SEG. INV."  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.primaSeguros}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.primaSeguros}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="COM. VAR."  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.comisionVariable}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.comisionVariable}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="REN. 5TA."  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.rentaQuinta}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.rentaQuinta}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="DESC. MES ANT."  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.descMesAnterior}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.descMesAnterior}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="FE SALUD"  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.feSalud}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.feSalud}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="PAGO VAC. TRUN."  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.pagoVacTrunca}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.pagoVacTrunca}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="ADELANTO"  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.adelanto}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.adelanto}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+				
+					<p:column headerText="PRÉSTAMO"  width="70px" style="text-align: center" filterMatchMode="contains" >
+						<p:cellEditor>
+		                    <f:facet name="output">
+		                       	<h:outputText value="#{dp.prestamo}" > 
+								 <f:convertNumber currencySymbol="" type="currency"  />
+								</h:outputText> 
+		                    </f:facet>
+		                    <f:facet name="input">
+		                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{dp.prestamo}" modifyValueOnWheel="false" > 
+		                        	<p:ajax listener="#{planillaBean.editarTablaTemporalDatosPension(dp)}" update=":form:tabView:idTableEmpleado"/>
+		                        </p:inputNumber>
+		                    </f:facet>
+		                </p:cellEditor>
+					</p:column>
+					
+					<p:column headerText="TOTAL DESC." filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{dp.totalDescuento}" style="font-weight: bold"> 
+							<f:convertNumber currencySymbol="" type="currency"  />
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="NETO A PAGAR." filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{dp.netoPagar}" style="font-weight: bold"> 
+							<f:convertNumber currencySymbol="" type="currency"  />
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="EsSalud" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{dp.esSalud}"  > 
+						 <f:convertNumber currencySymbol="" type="currency"  />
+						 </h:outputText>
+					</p:column>
+					
+					<p:column headerText="Abonado 30" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{dp.abonado30}"  > 
+						 <f:convertNumber currencySymbol="" type="currency"  />
+						 </h:outputText>
+					</p:column>
+					
+					
+				
+					<p:column headerText="Planilla" sortBy="#{dp.empleado.planilla}" filterMatchMode="contains" rendered="false">
+						<h:outputText value="#{dp.empleado.planilla? 'SI':'NO'}" />
+					</p:column>
+					<p:column headerText="Fondo Pensión" sortBy="#{dp.empleado.fondoPension.nombre}" filterMatchMode="contains">
+						<h:outputText value="#{dp.empleado.fondoPension.nombre}" />
+					</p:column>
+					
+					<p:column headerText="Sucursal" sortBy="#{dp.empleado.sucursal.razonSocial}" filterMatchMode="contains" width="150px">
+						<h:outputText value="#{dp.empleado.sucursal.razonSocial}" />
+					</p:column>
+					
+				</p:dataTable>
+				
+				<p:panel header="CONFIGURACIÓN DE FONDO PENSIÓN" style="margin: 20px; width: 45%">
+				
+				
+					<p:dataTable reflow="true" var="fondoPension" id="idTableFondoPension" value="#{planillaBean.lstFondoPension}" widgetVar="fondoPensionTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+						emptyMessage="No se encontraron datos." editable="true" editMode="cell" style="font-size: 12px" paginatorPosition="bottom" rowKey="#{fondoPension.id}" selectionMode="single"> 
+						
+				        <p:column headerText="Nombre"  filterMatchMode="contains" width="60px">
+							<h:outputText value="#{fondoPension.nombre}" />
+						</p:column>
+						
+						<p:column headerText="Aprote Obligatorio" id="idAporOblig" style="text-align:center;width: 100px;" filterMatchMode="contains" >
+							<p:cellEditor>
+			                    <f:facet name="output">
+			                       	<h:outputText value="#{fondoPension.aporteObligatorio}" > 
+									 <f:convertNumber currencySymbol="%" type="currency"  />
+									</h:outputText> 
+			                    </f:facet>
+			                    <f:facet name="input">
+			                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{fondoPension.aporteObligatorio}" modifyValueOnWheel="false" > 
+			                        	<p:ajax listener="#{planillaBean.editarAporteObligatorio(fondoPension)}" update=":form:tabView:idTableFondoPension :form:tabView:idTableEmpleado"/>
+			                        </p:inputNumber>
+			                    </f:facet>
+			                </p:cellEditor>
+						</p:column>
+						
+						<p:column headerText="Prima Seguro" id="idSegPrima" style="text-align:center;width: 100px;" filterMatchMode="contains" >
+							<p:cellEditor>
+			                    <f:facet name="output">
+			                       	<h:outputText value="#{fondoPension.primaSeguro}" > 
+									 <f:convertNumber currencySymbol="%" type="currency"  />
+									</h:outputText> 
+			                    </f:facet>
+			                    <f:facet name="input">
+			                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{fondoPension.primaSeguro}" modifyValueOnWheel="false" > 
+			                        	<p:ajax listener="#{planillaBean.editarPrimaSeguro(fondoPension)}" update=":form:tabView:idTableFondoPension :form:tabView:idTableEmpleado"/>
+			                        </p:inputNumber>
+			                    </f:facet>
+			                </p:cellEditor>
+						</p:column>
+					
+						<p:column headerText="Comisión Sobre Flujo" id="idComSobFluj" style="text-align:center;width: 100px;" filterMatchMode="contains" >
+							<p:cellEditor>
+			                    <f:facet name="output">
+			                       	<h:outputText value="#{fondoPension.comisionSobreFlujo1}" > 
+									 <f:convertNumber currencySymbol="%" type="currency"  />
+									</h:outputText> 
+			                    </f:facet>
+			                    <f:facet name="input">
+			                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{fondoPension.comisionSobreFlujo1}" modifyValueOnWheel="false" > 
+			                        	<p:ajax listener="#{planillaBean.editarComisionSobreFlujo(fondoPension)}" update=":form:tabView:idTableFondoPension :form:tabView:idTableEmpleado"/>
+			                        </p:inputNumber>
+			                    </f:facet>
+			                </p:cellEditor>
+						</p:column>
+						
+						<p:column headerText="Comisión Sobre Flujo 2" filterMatchMode="contains" style="text-align:center;width: 100px;" rendered="false">
+							<h:outputText value="#{fondoPension.comisionSobreFlujo2}" > 
+								<f:convertNumber type="currency" currencySymbol=""/>
+							</h:outputText>
+						</p:column>
+						
+						<p:column headerText="Comisión Sobre Flujo 3" filterMatchMode="contains" style="text-align:center;width: 100px;" rendered="false">
+							<h:outputText value="#{fondoPension.comisionSobreFlujo3}" > 
+								<f:convertNumber type="currency" currencySymbol=""/>
+							</h:outputText>
+						</p:column>
+						
+						<p:column headerText="Comisión Anual Sobre Saldo" id="idComSobSald" style="text-align:center;width: 100px;" filterMatchMode="contains" >
+							<p:cellEditor>
+			                    <f:facet name="output">
+			                       	<h:outputText value="#{fondoPension.comisionAnualSobreSaldo}" > 
+									 <f:convertNumber currencySymbol="%" type="currency"  />
+									</h:outputText> 
+			                    </f:facet>
+			                    <f:facet name="input">
+			                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{fondoPension.comisionAnualSobreSaldo}" modifyValueOnWheel="false" > 
+			                        	<p:ajax listener="#{planillaBean.editarComisionAnualSobreSaldo(fondoPension)}" update=":form:tabView:idTableFondoPension :form:tabView:idTableEmpleado"/>
+			                        </p:inputNumber>
+			                    </f:facet>
+			                </p:cellEditor>
+						</p:column>
+				        
+						<p:column headerText="Remuneración Máxima" id="idRemunMax" style="text-align:center" width="100px" filterMatchMode="contains" >
+							<p:cellEditor>
+			                    <f:facet name="output">
+			                       	<h:outputText value="#{fondoPension.remuneracionMaxima}" > 
+									 <f:convertNumber currencySymbol="" type="currency"  />
+									</h:outputText> 
+			                    </f:facet>
+			                    <f:facet name="input">
+			                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{fondoPension.remuneracionMaxima}" modifyValueOnWheel="false" > 
+			                        	<p:ajax listener="#{planillaBean.editarRemuneracionMaxima(fondoPension)}" update=":form:tabView:idTableFondoPension :form:tabView:idTableEmpleado"/>
+			                        </p:inputNumber>
+			                    </f:facet>
+			                </p:cellEditor>
+						</p:column>
+					
+					</p:dataTable>
+			       
+			    </p:panel>
+			    
+			    
+			</p:tab>
+		</p:tabView>
+	</h:form>
+	
+
+	
+	<p:dialog modal="true"  closeOnEscape="true" header="DETALLES PLANILLA" hideEffect="drop" showEffect="drop" id="dialogDP"  widgetVar="DPDialog" 
+		resizable="false"  width="100%" appendTo="@(body)" style="width:auto">  
+        <h:form id="formDP" >
+            <h:panelGrid columns="2" style="font-size: 12px;"  >
+               
+                <p:outputLabel style="font-size: 13px;font-weight: bold;color: #036fab;" value="PERIODO :"/>
+                <p:outputLabel style="font-size: 17px;font-weight: bold;color: black;" value="#{planillaBean.planillaSelected.periodo} - #{(planillaBean.planillaSelected.mes eq 1?'Enero':(planillaBean.planillaSelected.mes eq 2?'Febrero':(planillaBean.planillaSelected.mes eq 3?'Marzo':(planillaBean.planillaSelected.mes eq 4?'Abril':(planillaBean.planillaSelected.mes eq 5?'Mayo':(planillaBean.planillaSelected.mes eq 6?'Junio':(planillaBean.planillaSelected.mes eq 7?'Julio':(planillaBean.planillaSelected.mes eq 8?'Agosto':(planillaBean.planillaSelected.mes eq 9?'Septiembre':(planillaBean.planillaSelected.mes eq 10?'Octubre':(planillaBean.planillaSelected.mes eq 11?'Noviembre':(planillaBean.planillaSelected.mes eq 12?'Diciembre':''))))))))))))}"/>
+                <p:outputLabel style="font-size: 13px;font-weight: bold;color: #036fab;" value="TIPO PLANILLA :"/>
+                <p:outputLabel style="font-size: 17px;font-weight: bold;color: black;" value="#{planillaBean.planillaSelected.tipoPlanilla}"/>
+                  
+                <p:commandButton value="GUARDAR" action="#{planillaBean.saveDetallePlanilla()}" />
+                
+<!--                 <p:commandButton value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{planillaBean.procesarExcel()}" icon="pi pi-file-excel" styleClass="mr-2"> -->
+<!-- 	            	<p:fileDownload value="#{planillaBean.fileDes}"/>  -->
+<!-- 	      		</p:commandButton> -->
+	      		
+	      		<p:commandButton value="Descargar"  ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{planillaBean.procesarExcel()}" icon="pi pi-file-excel" styleClass="ui-button-success" style="margin-left:20px">
+		           <p:fileDownload value="#{planillaBean.fileDes}"/> 
+		      	</p:commandButton>
+                
+            </h:panelGrid>
+            
+            <p:dataTable reflow="true" var="detallePlanilla" id="idTabDetallePlanilla" value="#{planillaBean.lstDetallePlanillaSelected}" rowIndexVar="row" rows="10" paginator="true" size="small"
+	    				editable="true" editMode="cell" paginatorPosition="bottom" rowKey="#{detallePlanilla.id}"  selectionMode="single" style="font-size: 14px; width:140%">
+	             
+	            
+	            <f:facet name="header">
+	                <div class="p-d-flex p-ai-center p-jc-between">
+	                    <span>LISTA DE PLANILLAS</span>
+	                </div>
+	            </f:facet>
+	            
+	            <p:column width="25px">
+	                      #{row +1}
+	       		</p:column>
+	       		
+	       		 <p:column headerText="Sucursal" sortBy="#{detallePlanilla.empleado.sucursal.razonSocial}" filterMatchMode="contains" width="150px">
+					<h:outputText value="#{detallePlanilla.empleado.sucursal.razonSocial}" />
+				</p:column>
+		        
+				<p:column headerText="Empleado" sortBy="#{detallePlanilla.empleado.person.surnames}" filterBy="#{detallePlanilla.empleado.person.surnames}" filterMatchMode="contains" width="200px">
+					<h:outputText value="#{detallePlanilla.empleado.person.surnames} #{detallePlanilla.empleado.person.names}" />
+				</p:column>
+			
+				<p:column headerText="Cargo" style="text-align:center;">
+					<h:outputText value="#{detallePlanilla.empleado.cargo.descripcion}" />
+				</p:column>
+			
+				<p:column headerText="Planilla" sortBy="#{detallePlanilla.empleado.planilla}" filterMatchMode="contains" rendered="false">
+					<h:outputText value="#{detallePlanilla.empleado.planilla? 'SI':'NO'}" />
+				</p:column>
+				<p:column headerText="Fondo Pensión" sortBy="#{detallePlanilla.empleado.fondoPension.nombre}" filterMatchMode="contains">
+					<h:outputText value="#{detallePlanilla.empleado.fondoPension.nombre}" />
+				</p:column>
+				
+				<p:column headerText="Sueldo Básico" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.empleado.sueldoBasico}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="Tardanza" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.tardanza}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="Vacaciones"  width="70px" style="text-align: center" filterMatchMode="contains" >
+					<p:cellEditor>
+	                    <f:facet name="output">
+	                       	<h:outputText value="#{detallePlanilla.vacaciones}" > 
+							 <f:convertNumber currencySymbol="" type="currency"  />
+							</h:outputText> 
+	                    </f:facet>
+	                    <f:facet name="input">
+	                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{detallePlanilla.vacaciones}" modifyValueOnWheel="false" > 
+	                        	<p:ajax listener="#{planillaBean.editarTabla(detallePlanilla)}" update=":formDP:idTabDetallePlanilla"/>
+	                        </p:inputNumber>
+	                    </f:facet>
+	                </p:cellEditor>
+				</p:column>
+				
+				<p:column headerText="Comisiones"  width="70px" style="text-align: center" filterMatchMode="contains" >
+					<p:cellEditor>
+	                    <f:facet name="output">
+	                       	<h:outputText value="#{detallePlanilla.comisiones}" > 
+							 <f:convertNumber currencySymbol="" type="currency"  />
+							</h:outputText> 
+	                    </f:facet>
+	                    <f:facet name="input">
+	                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{detallePlanilla.comisiones}" modifyValueOnWheel="false" > 
+	                        	<p:ajax listener="#{planillaBean.editarTabla(detallePlanilla)}" update=":formDP:idTabDetallePlanilla"/>
+	                        </p:inputNumber>
+	                    </f:facet>
+	                </p:cellEditor>
+				</p:column>
+				
+				<p:column headerText="Bono"  width="70px" style="text-align: center" filterMatchMode="contains" >
+					<p:cellEditor>
+	                    <f:facet name="output">
+	                       	<h:outputText value="#{detallePlanilla.bono}" > 
+							 <f:convertNumber currencySymbol="" type="currency"  />
+							</h:outputText> 
+	                    </f:facet>
+	                    <f:facet name="input">
+	                        <p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{detallePlanilla.bono}" modifyValueOnWheel="false" > 
+	                        	<p:ajax listener="#{planillaBean.editarTabla(detallePlanilla)}" update=":formDP:idTabDetallePlanilla"/>
+	                        </p:inputNumber>
+	                    </f:facet>
+	                </p:cellEditor>
+				</p:column>
+				
+				<p:column headerText="Total" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.total}" style="font-weight: bold" > 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="ONP SNP" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.onp}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="AP. OBLIG." filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.aporteObligatorio}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="SEG. INV." filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.primaSeguros}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="COM. VAR." filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.comisionVariable}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="REN. 5TA." filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.rentaQuinta}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="DESC. MES ANT." filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.descMesAnterior}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="FE SALUD" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.feSalud}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="PAGO VAC. TRUN." filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.pagoVacTrunca}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="ADELANTO" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.adelanto}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="PRÉSTAMO" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.prestamo}" style="font-weight: bold"> 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="TOTAL DESC." filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.totalDescuento}" style="font-weight: bold"> 
+						<f:convertNumber currencySymbol="" type="currency"  />
+					</h:outputText>
+				</p:column>
+				
+				<p:column headerText="NETO A PAGAR." filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.netoPagar}" style="font-weight: bold"> 
+						<f:convertNumber currencySymbol="" type="currency"  />
+					</h:outputText>
+				</p:column>
+				
+				<p:column headerText="EsSalud" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.esSalud}"  > 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="Abonado 30" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.abonado30}"  > 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+				
+				<p:column headerText="Abonado 4" filterMatchMode="contains" style="text-align: center">
+					<h:outputText value="#{detallePlanilla.abonado4}"  > 
+					 <f:convertNumber currencySymbol="" type="currency"  />
+					 </h:outputText>
+				</p:column>
+      	
+	            
+	        </p:dataTable>
+            
+        </h:form>
+    </p:dialog>
+	
+	<pe:blockUI widgetVar="blockUIWidget">
+	    <h:form style="background: white"> 
+	    	<h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+	    </h:form>
+    </pe:blockUI>
+	
+	
+	<pe:blockUI target="saveConfirmaTemp" widgetVar="blockUIWidgetTemp">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="saveConfirmaTemp" message="¿Está seguro de guardar la planilla temporalmente?" header="Confirmación"
+                      severity="alert" widgetVar="saveConfirmaTemp" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetTemp').block();" oncomplete="PF('blockUIWidgetTemp').unblock();PF('saveConfirmaTemp').hide()" actionListener="#{planillaBean.savePlanillaTemporal}" update=":form:tabView:idFiltros :form:tabView:idTableEmpleado :form:tabView:gridBotones"/>
+            <p:commandButton value="NO" oncomplete="PF('saveConfirmaTemp').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <pe:blockUI target="cancelarPlanilla" widgetVar="blockUIWidgetcancelarPlanilla">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="cancelarPlanilla" message="¿Está seguro de cancelar la planilla temporalmente?" header="Confirmación"
+                      severity="alert" widgetVar="cancelarPlanilla" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetcancelarPlanilla').block();" oncomplete="PF('blockUIWidgetcancelarPlanilla').unblock();PF('cancelarPlanilla').hide()" actionListener="#{planillaBean.cancelarPlanilla()}" update=":form:tabView:idFiltros :form:tabView:idTableEmpleado "/>
+            <p:commandButton value="NO" oncomplete="PF('cancelarPlanilla').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+     <pe:blockUI target="terminarPlanilla" widgetVar="blockUIWidgetterminarPlanilla">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="terminarPlanilla" message="¿Está seguro de terminar la planilla temporalmente?" header="Confirmación"
+                      severity="alert" widgetVar="terminarPlanilla" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetterminarPlanilla').block();" oncomplete="PF('blockUIWidgetterminarPlanilla').unblock();PF('terminarPlanilla').hide()" actionListener="#{planillaBean.terminarPlanilla()}" update=":form:tabView:idFiltros :form:tabView:idTableEmpleado :form:tabView:idTable"/>
+            <p:commandButton value="NO" oncomplete="PF('terminarPlanilla').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    
+    <script>
+	    PrimeFaces.locales['es'] = {
+	        closeText: 'Cerrar',
+	        prevText: 'Anterior',
+	        nextText: 'Siguiente',
+	        monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+	        monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+	        dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+	        dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+	        dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+	        weekHeader: 'Semana',
+	        firstDay: 1,
+	        isRTL: false,
+	        showMonthAfterYear: false,
+	        yearSuffix: '',
+	        timeOnlyTitle: 'Sólo hora',
+	        timeText: 'Tiempo',
+	        hourText: 'Hora',
+	        minuteText: 'Minuto',
+	        secondText: 'Segundo',
+	        millisecondText: 'Milisegundo',
+	        currentText: 'Fecha actual',
+	        ampm: false,
+	        month: 'Mes',
+	        week: 'Semana',
+	        day: 'Día',
+	        allDayText: 'Todo el día',
+	        today: 'Hoy',
+	        clear: 'Claro'
+	    };
+	    PrimeFaces.locales ['de'] = {
+	        closeText: 'Schließen',
+	        prevText: 'Zurück',
+	        nextText: 'Weiter',
+	        monthNames: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+	        monthNamesShort: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+	        dayNames: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+	        dayNamesShort: ['Son', 'Mon', 'Die', 'Mit', 'Don', 'Fre', 'Sam'],
+	        dayNamesMin: ['S', 'M', 'D', 'M ', 'D', 'F ', 'S'],
+	        weekHeader: 'Woche',
+	        firstDay: 1,
+	        isRTL: false,
+	        showMonthAfterYear: false,
+	        yearSuffix: '',
+	        timeOnlyTitle: 'Nur Zeit',
+	        timeText: 'Zeit',
+	        hourText: 'Stunde',
+	        minuteText: 'Minute',
+	        secondText: 'Sekunde',
+	        millisecondText: 'Millisekunde',
+	        currentText: 'Aktuelles Datum',
+	        ampm: false,
+	        month: 'Monat',
+	        week: 'Woche',
+	        day: 'Tag',
+	        allDayText: 'Ganzer Tag',
+	        today: 'Heute',
+	        clear: 'Löschen'
+	    };
+	</script>
+
+
+</ui:composition>

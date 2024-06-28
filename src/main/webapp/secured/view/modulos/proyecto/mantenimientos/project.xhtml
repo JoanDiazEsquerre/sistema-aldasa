@@ -1,0 +1,213 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">PROYECTOS > PROYECTOS</h2>
+		<p:selectOneButton value="#{projectBean.estado}" unselectable="false">
+			<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+			<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+			<p:ajax update=":form:idTableProject"
+				listener="#{projectBean.listarProject()}" />
+		</p:selectOneButton>      
+		<p:dataTable var="project" id="idTableProject" value="#{projectBean.listProject}" widgetVar="projectTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+			emptyMessage="No se encontraron proyectos."	paginatorPosition="bottom" rowKey="#{project.id}" selection="#{projectBean.projectSelected}" selectionMode="single">
+			<f:facet name="header">
+				<div class="p-d-flex p-ai-center p-jc-between">
+					<span>Lista de Proyectos</span>
+				</div>
+			</f:facet>
+			<p:ajax event="rowSelect" listener="#{projectBean.modifyProject()}" update=":formProjectDialog :dialogProject" oncomplete="PF('projectDialog').show();" />
+	
+			<p:column style="width:42px;text-align: left">
+				<f:facet name="header">
+					<p:commandLink action="#{projectBean.newProject()}"
+						update=":formProjectDialog :dialogProject"
+						oncomplete="PF('projectDialog').show();"
+						title="NUEVO PROYECTO">
+						<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+	
+					</p:commandLink>
+				</f:facet>
+			</p:column>
+	
+			<p:column width="25px">
+	                      #{row +1}
+	        </p:column>
+	        
+			<p:column headerText="Nombre de Proyecto" sortBy="#{project.name}"
+				filterBy="#{project.name}" filterMatchMode="contains">
+				<h:outputText value="#{project.name}" />
+			</p:column> 
+		</p:dataTable>
+		<p:contextMenu id="menuTableReq" for="idTableProject" >
+       		<p:menuitem value="Agregar Nueva Partida" icon="pi pi-search-plus" action="#{projectBean.iniciarDatosProyectoPartidaNew}" oncomplete="PF('proyectoPartidaDialog').show();" update="dialogProyectoPartida"  />
+        </p:contextMenu>
+
+	</h:form>
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogProject" header="#{projectBean.tituloDialog}" widgetVar="projectDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+		<h:form id="formProjectDialog">
+		    
+			<h:panelGrid id="grid" columns="4">
+			
+				<h:outputLabel value="Nombre de Proyecto: " for="nombreProyecto" />
+				<p:inputText value="#{projectBean.projectSelected.name}" id="nombreProyecto" maxlength="45" />
+				
+				<h:outputLabel value="Ubicación: " for="ubicacion" />
+				<p:inputText value="#{projectBean.projectSelected.ubicacion}" id="ubicacion" maxlength="200" />
+				
+				<h:outputLabel value="Sector: " for="sector" />
+				<p:inputText value="#{projectBean.projectSelected.sector}" id="sector" maxlength="200"/>
+				
+				<h:outputLabel value="Predio:  " for="predio" />
+				<p:inputText value="#{projectBean.projectSelected.predio}" id="predio" maxlength="200"/>
+				
+				<h:outputLabel value="Código de predio:  " for="codigoPredio" />
+				<p:inputText value="#{projectBean.projectSelected.codigoPredio}" id="codigoPredio" maxlength="100" />
+				
+				<h:outputLabel value="Área / Hectárea:  " for="areaHectarea" />
+				<p:inputText value="#{projectBean.projectSelected.areaHectarea}" id="areaHectarea" maxlength="15"/>
+				
+				<h:outputLabel value="Unidad catastral:  " for="unidadCatastral" />
+				<p:inputText value="#{projectBean.projectSelected.unidadCatastral}" id="unidadCatastral" maxlength="50"/>
+				
+				<h:outputLabel value="N° Partida electrónica:  " for="numPartidaElectronica" />
+				<p:inputText value="#{projectBean.projectSelected.numPartidaElectronica}" id="numPartidaElectronica" maxlength="50"/>
+				
+				<h:outputLabel value="Zona registral: " for="zonaRegistral" />
+				<p:inputText value="#{projectBean.projectSelected.zonaRegistral}" id="zonaRegistral" maxlength="100"/>
+				
+				<h:outputLabel for="option" value="Estado:" />
+				<p:selectOneMenu id="option" value="#{projectBean.projectSelected.status}" style="margin:5px">
+					<f:selectItem itemLabel="ACTIVO" itemValue="#{true}" />
+					<f:selectItem itemLabel="INACTIVO" itemValue="#{false}" />
+				</p:selectOneMenu>	
+				
+				<h:outputLabel for="pais" value="País: " />
+				<p:selectOneMenu style="margin:5px; width:220px" id="pais" value="#{projectBean.countrySelected}" converter="#{projectBean.conversorCountry}">
+					<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}" />
+					<f:selectItems value="#{projectBean.lstCountry}" var="country"
+						itemLabel="#{country.name}" itemValue="#{country}" />
+					<p:ajax listener="#{projectBean.listarDepartamentos}" update="dep,prov,dist" />
+				</p:selectOneMenu>
+
+				<h:outputLabel for="dep" value="Departamento: " />
+				<p:selectOneMenu style="margin:5px; width:220px" id="dep" value="#{projectBean.departmentSelected}" converter="#{projectBean.conversorDepartment}">
+					<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}" />
+					<f:selectItems value="#{projectBean.lstDepartment}" var="dep"
+						itemLabel="#{dep.name}" itemValue="#{dep}" />
+					<p:ajax listener="#{projectBean.listarProvincias}"
+						update="prov,dist" />
+				</p:selectOneMenu>
+
+				<h:outputLabel for="prov" value="Provincia: " />
+				<p:selectOneMenu style="margin:5px; width:220px" id="prov" value="#{projectBean.provinceSelected}" converter="#{projectBean.conversorProvince}">
+					<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}" />
+					<f:selectItems value="#{projectBean.lstProvince}" var="pro"
+						itemLabel="#{pro.name}" itemValue="#{pro}" />
+					<p:ajax listener="#{projectBean.listarDistritos}" update="dist" />
+				</p:selectOneMenu>
+
+				<h:outputLabel for="dist" value="Distrito: " />
+				<p:selectOneMenu style="margin:5px; width:220px" id="dist" value="#{projectBean.districtSelected}" converter="#{projectBean.conversorDistrict}">
+					<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}" />
+					<f:selectItems value="#{projectBean.lstDistrict}" var="pro"
+						itemLabel="#{pro.name}" itemValue="#{pro}" />
+				</p:selectOneMenu>
+				
+				
+				<p:commandButton value="Guardar" action="#{projectBean.saveProject()}" 
+					update=":form:idTableProject :formProjectDialog"/>
+			</h:panelGrid>
+		</h:form>
+	</p:dialog>
+	
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogProyectoPartida" header="Agregar Partida: #{projectBean.projectSelected.name}" widgetVar="proyectoPartidaDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:80%">
+		<h:form id="formProyectoPartida">
+			<h:panelGrid columns="4">
+				<p:outputLabel value="Manzana"/>
+				<p:autoComplete scrollHeight="300" value="#{projectBean.proyectoPartidaNew.manzana}" dropdown="true" converter="#{projectBean.conversorManzana}" completeMethod="#{projectBean.completeManzana}"  
+                         var="uni" itemLabel="#{uni.name}" itemValue="#{uni}" forceSelection="true"  > 
+	            </p:autoComplete>
+	            
+	            <h:outputLabel value="Código de predio:  " />
+				<p:inputText value="#{projectBean.proyectoPartidaNew.codigoPredio}" maxlength="45" />
+				
+				<h:outputLabel value="Área / Hectárea:  " />
+				<p:inputText value="#{projectBean.proyectoPartidaNew.areaHectarea}" maxlength="45"/>
+				
+				<h:outputLabel value="Unidad catastral:  "/>
+				<p:inputText value="#{projectBean.proyectoPartidaNew.unidadCatastral}" maxlength="45"/>
+				
+				<h:outputLabel value="N° Partida electrónica:  " />
+				<p:inputText value="#{projectBean.proyectoPartidaNew.numPartidaElectronica}" maxlength="45"/>
+				
+				<p:commandButton value="GUARDAR" action="#{projectBean.saveProyectoPartida}" update=":formProyectoPartida:idTableProyPartida"/>
+			</h:panelGrid>
+			
+			<p:dataTable var="det" id="idTableProyPartida" value="#{projectBean.lstProyectoPartidaSelected}" rowIndexVar="row" paginator="true" rows="10" size="small" 
+				emptyMessage="No se encontraron resultados." paginatorPosition="bottom" rowKey="#{det.id}" selection="#{projectBean.proyectoPartidaSelected}" selectionMode="single"> 
+				<f:facet name="header">
+					<div class="p-d-flex p-ai-center p-jc-between">
+						<span>Lista de Eventos</span>
+					</div>
+				</f:facet>
+
+				<p:column style="width:42px;text-align: left">
+					<f:facet name="header">
+					#
+					</f:facet>
+				</p:column>
+
+				<p:column width="25px">
+              		#{row +1}
+   				</p:column>
+
+				<p:column headerText="Manzana" sortBy="#{det.manzana.name}" filterMatchMode="contains">
+					<h:outputText value="#{det.manzana.name}" />
+				</p:column>
+				<p:column headerText="Código de predio" filterMatchMode="contains">
+					<h:outputText value="#{det.codigoPredio}" />
+				</p:column>
+				<p:column headerText="Área / Hectárea" filterMatchMode="contains">
+					<h:outputText value="#{det.areaHectarea}" />
+				</p:column>
+				<p:column headerText="Unidad catastral" >
+					<h:outputText value="#{det.unidadCatastral}" />
+				</p:column>
+				<p:column headerText="N° Partida electrónica" filterMatchMode="contains">
+					<h:outputText value="#{det.numPartidaElectronica}" />
+				</p:column>
+				
+				<p:column width="10%" filterMatchMode="contains">					
+					<p:commandButton icon="pi pi-trash" process="@this" styleClass="rounded-button ui-button-danger" oncomplete="PF('deletePartidaDialog').show()" >
+						<f:setPropertyActionListener value="#{det}" target="#{projectBean.proyectoPartidaSelected}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+		    
+			
+		</h:form>
+	</p:dialog>
+	
+	<pe:blockUI target="idDeletePartidaDialog" widgetVar="blockUIWidgetDeletePartida">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+	<p:confirmDialog id="idDeletePartidaDialog" widgetVar="deletePartidaDialog" showEffect="fade" width="300" message="¿Deseas eliminar?" header="Confirmación" severity="warn" appendTo="@(body)">
+        <p:commandButton value="Si" onstart="PF('blockUIWidgetDeletePartida').block();" oncomplete="PF('blockUIWidgetDeletePartida').unblock();PF('deletePartidaDialog').hide()" icon="pi pi-check" 
+        					process="@this" update=":formProyectoPartida:idTableProyPartida" actionListener="#{projectBean.eliminarProyectoPartida}" />
+        <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times" onclick="PF('deletePartidaDialog').hide()" />
+    </p:confirmDialog>
+		
+	
+</ui:composition>

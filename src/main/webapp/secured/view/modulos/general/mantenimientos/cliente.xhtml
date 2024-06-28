@@ -1,0 +1,164 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">MANTENIMIENTOS > CLIENTES</h2>
+	
+		<p:selectOneButton value="#{clienteBean.estado}" unselectable="false" >
+			<f:selectItem itemLabel="Activos" itemValue="#{true}" />
+			<f:selectItem itemLabel="Inactivos" itemValue="#{false}" />
+			<p:ajax update=":form:idTableCliente" />
+		</p:selectOneButton>  
+		
+		<p:dataTable var="cliente" id="idTableCliente" value="#{clienteBean.lstClienteLazy}" widgetVar="clienteTable" rowIndexVar="row" paginator="true" rows="15" size="small"
+		emptyMessage="No se encontraron clientes."	paginatorPosition="bottom" rowKey="#{cliente.id}" selection="#{clienteBean.clienteSelected}" selectionMode="single">
+			
+			<p:ajax event="rowSelect" listener="#{clienteBean.modifyCliente()}" update=":formClienteDialog :dialogCliente" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();PF('clienteDialog').show();" />
+		
+			<f:facet name="header">
+				<div class="p-d-flex p-ai-center p-jc-between">
+					<span>Lista de Clientes</span>
+				</div>
+			</f:facet>
+		
+			<p:column style="width:42px;text-align: left">
+				<f:facet name="header">
+					<p:commandLink action="#{clienteBean.newCliente()}"
+						update=":formClienteDialog :dialogCliente"
+						onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();PF('clienteDialog').show();"
+						title="NUEVO CLIENTE">
+						<p:graphicImage width="50" value="/recursos/images/anadir.png" />
+	
+					</p:commandLink>
+				</f:facet>
+			</p:column>
+	
+			<p:column width="25px">
+	                      #{row +1}
+	        </p:column>
+	        
+			<p:column headerText="Razon Social" sortBy="#{cliente.razonSocial}" filterBy="#{cliente.razonSocial}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.razonSocial}" />
+			</p:column>
+			
+			<p:column headerText="Nombre Comercial" sortBy="#{cliente.nombreComercial}" filterBy="#{cliente.nombreComercial}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.nombreComercial}" />
+			</p:column>
+			
+			<p:column headerText="RUC" sortBy="#{cliente.ruc}" filterBy="#{cliente.ruc}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.ruc}" />
+			</p:column>
+			
+			<p:column headerText="DNI" sortBy="#{cliente.dni}" filterBy="#{cliente.dni}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.dni}" />
+			</p:column>
+			
+			<p:column headerText="Direccion" sortBy="#{cliente.direccion}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.direccion}" />
+			</p:column>
+			
+			<p:column headerText="Persona Natura" sortBy="#{cliente.personaNatural}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.personaNatural eq true ? 'SI' : 'NO'}" />
+			</p:column>
+			
+			<p:column headerText="Fecha Registro" filterMatchMode="contains">
+				<h:outputText value="#{cliente.fechaRegistro}">
+					<f:convertDateTime pattern="dd/MM/yyyy" />
+				</h:outputText>
+			</p:column>
+		
+			<p:column headerText="Usuario" sortBy="#{cliente.idUsuarioRegistro.username}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.idUsuarioRegistro.username}" />
+			</p:column>
+
+			<p:column headerText="Correo 1" sortBy="#{cliente.email1Fe}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.email1Fe}" />
+			</p:column>
+			
+			<p:column headerText="Correo 2" sortBy="#{cliente.email2Fe}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.email2Fe}" />
+			</p:column>
+			
+			<p:column headerText="Correo 3" sortBy="#{cliente.email3Fe}" filterMatchMode="contains">
+				<h:outputText value="#{cliente.email3Fe}" />
+			</p:column>
+			
+		</p:dataTable>
+	
+	</h:form>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogCliente" header="#{clienteBean.tituloDialog}" widgetVar="clienteDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="width:auto">
+
+		<h:form id="formClienteDialog">
+            <p:selectOneButton value="#{clienteBean.personaNaturalCliente}" disabled="#{clienteBean.bloqueo}"
+                unselectable="false">
+                <f:selectItem itemLabel="Persona" itemValue="#{true}" />
+                <f:selectItem itemLabel="Empresa" itemValue="#{false}" />
+                <p:ajax update=":formClienteDialog"/>
+            </p:selectOneButton>
+            
+            <h:panelGrid columns="2">
+                <h:outputLabel value="Persona: " rendered="#{clienteBean.personaNaturalCliente eq true}" />
+                <h:outputLabel value="Representante: " rendered="#{clienteBean.personaNaturalCliente eq false}"/>
+                <p:autoComplete  scrollHeight="500" styleClass="ui-autocompV" value="#{clienteBean.personSelected}" converter="#{clienteBean.conversorPerson}" completeMethod="#{clienteBean.completePerson}"  
+                      var="person" itemLabel="#{person.surnames.concat(' ')}#{person.names}" itemValue="#{person}" forceSelection="true" style="margin:5px;" disabled="#{clienteBean.bloqueo}">
+                    <p:column width="400px">
+                        <h:outputLabel value="#{person.surnames} #{person.names}" />
+                    </p:column>
+                    <p:column width="400px">
+                        <h:outputLabel value="#{person.dni}" />
+                    </p:column>
+                     
+                     <p:ajax event="change" update=":formClienteDialog" listener="#{clienteBean.onChangePerson}" />
+                </p:autoComplete>
+            
+                 <h:outputText value="Razon social:" />
+                 <p:inputText value="#{clienteBean.razonSocialCliente}" />
+                 
+                 <h:outputText value="Nombre comercial:" />
+                 <p:inputText value="#{clienteBean.nombreComercialCliente}" />
+                 
+                 <h:outputText value="DNI:" rendered="#{clienteBean.personaNaturalCliente eq true}"/>
+                 <h:outputText value="RUC:" rendered="#{clienteBean.personaNaturalCliente eq false}"/>
+                 
+                 <p:inputText value="#{clienteBean.rucDniCliente}" />
+                 
+                 <h:outputText value="Direccion:" />
+                 <p:inputText value="#{clienteBean.direccionCliente}" />
+                 
+                 <h:outputText value="E-mail 1:" />
+                 <p:inputText value="#{clienteBean.email1Cliente}" />
+                 
+                 <h:outputText value="E-mail 2:" />
+                 <p:inputText value="#{clienteBean.email2Cliente}" />
+                 
+                 <h:outputText value="E-mail 3:" />
+                 <p:inputText value="#{clienteBean.email3Cliente}" />
+            </h:panelGrid>
+            
+            <p:commandButton value="Guardar" action="#{clienteBean.saveCliente()}" update=":form:idTableCliente :formClienteDialog" 
+			onstart="PF('blockUIWidgetDialogCliente').block();" oncomplete="PF('blockUIWidgetDialogCliente').unblock();"/>
+            
+        </h:form>
+	</p:dialog>
+	
+	<pe:blockUI target="dialogCliente" widgetVar="blockUIWidgetDialogCliente">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    
+    <pe:blockUI widgetVar="blockUIWidget">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+
+
+</ui:composition>

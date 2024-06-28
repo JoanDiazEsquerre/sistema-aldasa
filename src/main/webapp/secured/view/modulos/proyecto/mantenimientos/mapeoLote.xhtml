@@ -1,0 +1,50 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+
+	<h:form id="form">
+		<h2 style="color: #007d4c;">PROYECTOS > MAPEO DE LOTES</h2>
+		
+			
+		<p:outputLabel for="optionProject" value="Proyecto: " />
+		<p:selectOneMenu id="optionProject" value="#{mapeoLoteBean.projectFilter}" converter="#{mapeoLoteBean.conversorProject}" >
+			<f:selectItems value="#{mapeoLoteBean.lstProject}" var="proy" itemLabel="#{proy.name}" itemValue="#{proy}"/>
+			<p:ajax update=":form" listener="#{mapeoLoteBean.listarLotes}" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();"/>
+		</p:selectOneMenu>
+			
+		
+		<p:panelGrid style="margin-bottom: 20px" id="grdLotes" columns="5" layout="grid">
+			<p:outputLabel value="No se ha registrado lotes" rendered="#{mapeoLoteBean.cantidadLotes eq 0}"  />
+			<p:repeat value="#{mapeoLoteBean.lstLotes}" var="lote">
+          			<p:button value="#{lote.manzana.name}-#{lote.numberLote}" rendered="#{lote.numberLote ne 'x'}" disabled="true" style="background:#{lote.status eq 'Vendido'?'red':lote.status eq 'Separado'?'blue':lote.status eq 'Disponible'?'green':'black'}"> </p:button>
+       			<p:separator rendered="#{lote.numberLote eq 'x'}"/>
+       		</p:repeat>
+		</p:panelGrid>
+		
+		Leyenda:
+		<p:panelGrid  columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"> 
+			<p:button value="Disponible" style="background: green" disabled="true"/>
+			<p:button value="Separado" style="background: blue" disabled="true"/>
+			<p:button value="Vendido" style="background: red" disabled="true"/>
+			<p:button value="Inactivo" style="background: black" disabled="true"/>
+		</p:panelGrid>
+		
+
+	
+	</h:form>
+    
+    <pe:blockUI widgetVar="blockUIWidget">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    
+   
+
+
+</ui:composition>

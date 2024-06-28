@@ -1,0 +1,186 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	locale="#{localeBean.usedLocale}"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+	<h:form id="form">
+        <f:event type="preRenderComponent" listener="#{comisionesBean.cargarListaConfiguracion}" />
+		<h2 style="color: #007d4c;">PROYECTOS > COMISIONES</h2>
+		<p:tabView id="tabView">
+			<p:tab title="Comisiones" id="tabListDoc"> 
+				<h:panelGrid id="grid" columns="13" style="margin-bottom: 15px;">
+		
+					<h:outputLabel for="optionComision" value="Comision: " />
+					<p:selectOneMenu id="optionComision" value="#{comisionesBean.configuracionComisionSelected}" converter="#{comisionesBean.conversorConfiguracionComision}" >
+						<f:selectItems value="#{comisionesBean.lstConfiguracionComision}" var="com" itemLabel="#{com.codigo} : #{comisionesBean.sdf.format(com.fechaInicio)}-#{comisionesBean.sdf.format(com.fechaFin)}" itemValue="#{prof}" />
+						<p:ajax listener="#{comisionesBean.cambiarComision}" update=":form:tabView:idTableComisiones :form:tabView:grid" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Bono Jefe Venta: " style="margin-left: 20px; font-size:20px; font-weight: bolder;" />
+					<h:outputLabel value="#{comisionesBean.configuracionComisionSelected.bonojv}" style="font-size:20px; font-weight: bolder; color: red" />
+					
+					<h:outputLabel value="Monto Comisión Jefe V.: " style="margin-left: 20px; font-size:20px; font-weight: bolder;" />
+					<h:outputLabel value="#{comisionesBean.configuracionComisionSelected.montoComisionjv}" style="font-size:20px; font-weight: bolder; color: red"/>
+					
+					<h:outputLabel value="Total Vendidos: " style="margin-left: 20px; font-size:20px; font-weight: bolder;" />
+					<h:outputLabel value="#{comisionesBean.configuracionComisionSelected.numVendidojv}" style="font-size:20px; font-weight: bolder; color: red"/>
+					
+					<h:outputLabel value="Meta General: " style="margin-left: 20px; font-size:20px; font-weight: bolder;" />
+					<h:outputLabel value="#{comisionesBean.configuracionComisionSelected.metajv}" style="font-size:20px; font-weight: bolder; color: red"/>
+					
+					<h:outputLabel value="Porcentaje de venta Jefe V.: " style="margin-left: 20px; font-size:20px; font-weight: bolder;" />
+					<h:outputLabel value="#{comisionesBean.configuracionComisionSelected.comisionPorcentajejv}%" style="font-size:20px; font-weight: bolder; color: red"/>
+					
+					<p:progressBar widgetVar="progressBar" value="#{comisionesBean.porcentajeGeneral}" labelTemplate="{value}%" style="width: 150px" />
+					
+					<h:outputLabel value="Comision Sub-Gerente: " style="font-size:20px; font-weight: bolder;" />
+					<h:outputLabel value="#{comisionesBean.configuracionComisionSelected.montoComisionSubgerente}" style="font-size:20px; font-weight: bolder; color: red"/>
+					
+					 
+<!-- 		       		<p:commandButton value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{comisionesBean.procesarExcel()}" style="margin-left: 30px" -->
+<!-- 		                         icon="pi pi-file-excel" styleClass="mr-2"> -->
+<!-- 		            	<p:fileDownload value="#{comisionesBean.fileDes}"/>  -->
+<!-- 		      		</p:commandButton>   -->
+		      		       	
+				</h:panelGrid>
+				
+		
+				
+				
+			
+				<p:dataTable var="com" id="idTableComisiones" value="#{comisionesBean.lstComisionSupervisorLazy}" widgetVar="loteTable" rowIndexVar="row" paginator="true" rows="15" style="width:100%"
+					size="small" emptyMessage="No se encontraron comisiones." paginatorPosition="bottom" rowKey="#{com.id}" selection="#{comisionesBean.comisionSupervisorSelected}" selectionMode="single">
+					
+					<p:ajax event="rowSelect" update="dialogSupervisorComision" oncomplete="PF('comisionSupervisorDialog').show();" />
+					
+					<p:column width="25px">
+		                      #{row +1}
+		        	</p:column>
+		        	
+		        	<p:column headerText="Supervisor" sortBy="#{com.personaSupervisor.surnames}" filterMatchMode="contains" >
+						<h:outputText value="#{com.personaSupervisor.surnames.concat(' ').concat(com.personaSupervisor.names)}" />
+					</p:column>
+					
+					
+				
+					<p:column headerText="Bono" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{com.bono}"  >
+		                    <f:convertNumber currencySymbol="" type="currency"  />
+		                </h:outputText> 
+					</p:column>
+					
+					<p:column headerText="Monto Comisión" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{com.montoComision}"  >
+		                    <f:convertNumber currencySymbol="" type="currency"  />
+		                </h:outputText> 
+					</p:column>
+					
+					<p:column headerText="Lotes Vendidos" filterMatchMode="contains" style="text-align: center" >
+						<h:outputText value="#{com.numVendido}"  />
+					</p:column>
+					
+					<p:column headerText="Meta" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{com.meta}"  />
+					</p:column>
+					
+					<p:column headerText="Porcentaje por venta" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{com.comisionPorcentaje}"  />
+					</p:column>
+					
+					<p:column headerText="Alcance Meta" filterMatchMode="contains" style="text-align: center">
+						<p:progressBar widgetVar="progressBar" value="#{comisionesBean.calcularPorcentaje(com)}" labelTemplate="{value}%" />					
+					</p:column>				
+					
+					
+				</p:dataTable>
+			
+			</p:tab>
+		</p:tabView>
+	</h:form>
+	
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogSupervisorComision" header="SUPERVISOR: #{comisionesBean.comisionSupervisorSelected.personaSupervisor.names}" 
+		widgetVar="comisionSupervisorDialog" resizable="false" closable="true"
+		appendTo="@(body)" width="100%" height="850px">
+		<h:form id="formSupervisorDialog">
+			<p:commandButton value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{comisionesBean.procesarExcel}"
+                         icon="pi pi-arrow-down" styleClass="mr-2">
+            <p:fileDownload value="#{comisionesBean.fileDes}"/> 
+      		</p:commandButton>
+			
+			<p:dataTable var="com" id="com" value="#{comisionesBean.lstComisionesLazy}" widgetVar="comisionesTable" rowIndexVar="row" paginator="true" rows="15" style="width:100%"
+					size="small" emptyMessage="No se encontraron comisiones." paginatorPosition="bottom" rowKey="#{com.id}" selection="#{comisionesBean.comisionesSelected}" selectionMode="single">
+				
+				<f:facet name="header">
+					<h:outputText id="for_doc" value="LISTA DE ASESORES CON VENTAS" />
+				</f:facet>
+				<p:ajax event="rowToggle" />
+				<p:column style="width:25px">
+					<p:rowToggler />
+				</p:column>
+				<p:column style="width:25px">
+					<h:outputLabel value="#{row +1}" />
+				</p:column>
+				<p:column headerText="Asesor">
+					<h:outputText
+						value="#{com.personaAsesor.surnames} #{com.personaAsesor.names}" />
+				</p:column>
+				<p:column headerText="Bono">
+					<h:outputText value="#{com.bono}" />
+				</p:column>
+				<p:column headerText="Total Comisión">
+					<h:outputText value="#{com.montoComision}" />
+				</p:column>
+				<p:column headerText="Lotes Vendidos">
+					<h:outputText value="#{com.numVendido}" />
+				</p:column>
+				<p:rowExpansion>
+
+					<p:dataTable showGridlines="true" var="det"
+						value="#{comisionesBean.getDetalleComisiones(com)}"
+						style=" margin-left: 5px; margin-bottom: 40px; margin-top: 20px;width:100%"
+						rowKey="#{det.id}" id="detTable">
+
+						<p:column headerText="Manzana/Lote" style="text-align: center;">
+							<p:outputLabel
+								value="#{det.plantillaVenta.lote.manzana.name}/#{det.plantillaVenta.lote.numberLote}" />
+						</p:column>
+						<p:column headerText="Proyecto" style="text-align: center;">
+							<p:outputLabel value="#{det.plantillaVenta.lote.project.name}" />
+						</p:column>
+
+						<p:column headerText="Monto Comisión" style="text-align: center;">
+							<p:outputLabel value="#{det.montoComision}" />
+						</p:column>
+
+						<p:column headerText="Monto Comisión Supervisor"
+							style="text-align: center;">
+							<p:outputLabel value="#{det.montoComisionSupervisor}" />
+						</p:column>
+						<p:column headerText="Monto Comisión Jefe de Venta"
+							style="text-align: center;">
+							<p:outputLabel value="#{det.montoComisionJefeVenta}" />
+						</p:column>
+						<p:column headerText="Monto Comisión Subgerente"
+							style="text-align: center;">
+							<p:outputLabel value="#{det.montoComisionSubgerente}" />
+						</p:column>
+					</p:dataTable>
+
+				</p:rowExpansion>
+			</p:dataTable>
+		</h:form>
+	</p:dialog>
+	
+	<pe:blockUI widgetVar="blockUIWidget">          
+		<h:form style="background: white">           
+			<h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/>           
+		</h:form>            
+	</pe:blockUI>
+	
+    
+
+</ui:composition>
