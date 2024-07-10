@@ -220,6 +220,38 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
 		iniciarLazyContratos();
 	}
 	
+	public void actualizarCuotasAtrasadas() {
+		List<Contrato> lstContratos = contratoService.findByEstado(EstadoContrato.ACTIVO.getName());
+		for(Contrato c : lstContratos) {
+	
+			int numCuotasAtrasadas=0;
+			
+			List<Cuota> lstcuotas = cuotaService.findByContratoAndEstado(c, true);
+			if(!lstcuotas.isEmpty()) {
+				for(Cuota cuota : lstcuotas) {
+					if(cuota.getNroCuota()!=0) { 
+						if(cuota.getPagoTotal().equals("N") && !cuota.isPrepago()) {	
+							if(cuota.getFechaPago().before(new Date())) {
+								numCuotasAtrasadas++;
+								
+							}
+						}
+					}
+				
+				}
+			}
+			
+			if(numCuotasAtrasadas != c.getCuotasAtrasadas()) {
+				c.setCuotasAtrasadas(numCuotasAtrasadas);
+				contratoService.save(c);
+			}
+		
+		}	
+		
+		addInfoMessage("Se actualizó las cuotas atrasadas de los contratos ACTIVOS");
+ 		
+	}
+	
 //	public int calcularCuotasAtrasadas(Contrato c) {
 //		
 //		int numCuotasAtrasadas=0;

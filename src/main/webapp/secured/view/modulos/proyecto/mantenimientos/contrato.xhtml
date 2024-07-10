@@ -220,6 +220,7 @@
 		       		<p:menuitem value="Pasar a Terminado" icon="pi pi-check-circle" oncomplete="PF('terminarContra').show()"  />	
 		       		<p:menuitem value="Pasar a Resuelto" icon="pi pi-arrow-circle-down" oncomplete="PF('resolverContra').show()"  />	
 		       		<p:menuitem value="Cambiar Titular" rendered="#{navegacionBean.usuarioLogin.id eq 1}" icon="pi pi-users" oncomplete="PF('cambiarTitularDialog').show()"  />	
+		       		<p:menuitem value="Cambiar Lote" update="formCambioLote" action="#{contratoBean.iniciarVariablesCambioLote}" icon="pi pi-pencil" onclick="PF('cambiarLoteDialog').show();"/>
 		       		<p:menuitem value="Anular" icon="pi pi-trash" oncomplete="PF('anulaContra').show()"  />		        
 		        </p:contextMenu>
 		        
@@ -515,7 +516,7 @@
 	
 	<p:dialog modal="true" height="600px" dynamic="true" closeOnEscape="true" id="dialogVoucher" header="Vouchers de Pagos" widgetVar="voucherDialog" resizable="false" closable="true"
 		appendTo="@(body)"  width="100%">
-		<h:form id="formVoucherDialog">
+		<h:form id="formVoucherDialog" enctype="multipart/form-data">
 				<p:commandButton value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{contratoBean.procesarExcelVoucher}" icon="pi pi-file-excel" styleClass="ui-button-success" style="margin-left:20px">
 		           <p:fileDownload value="#{contratoBean.fileDesVoucher}"/> 
 		      	</p:commandButton>			<p:dataTable var="dv" value="#{contratoBean.lstImagenVoucher}" paginator="true" selectionMode="single" rowIndexVar="row" paginatorPosition="bottom" 
@@ -558,6 +559,9 @@
 						<f:setPropertyActionListener value="#{dv.nombre}" target="#{loadImageDocumentoBean.nombreArchivo}"  />
 					</p:commandButton>
 					<p:overlayPanel for="botton" dismissable="false" showCloseIcon="true" style="width:550px">
+						<h:commandLink value="Descargar Imagen" action="#{fileDownloadBean.downloadFile(navegacionBean.sucursalLogin.empresa.rutaDocumentoVenta.concat(dv.nombre))}" style="font-size: 20px;color: #3399ff;" />
+						
+						
 			        	<p:graphicImage width="500px"  value="#{loadImageDocumentoBean.image}" style="float: left;" id="imagenLoad" cache="false"/>
 			        </p:overlayPanel>
 				</p:column>
@@ -834,13 +838,62 @@
 						
 					<h:commandLink value="Descargar Archivo" action="#{fileDownloadBean.downloadFile(navegacionBean.sucursalLogin.empresa.rutaArchivoContrato.concat(archivo.nombreArchivo))}" style="font-size: 10px;color: #3399ff;" />
 					
-					<p:commandButton action="#{contratoBean.eliminarArchivo}" icon="pi pi-trash" styleClass="rounded-button ui-button-danger" process="@this" style="margin-left: 10px" update=":formArchivo:idTableArchivo :form:tabView:idTableContrato" >
+					<p:commandButton rendered="#{navegacionBean.usuarioLogin.profile.id eq 1}" action="#{contratoBean.eliminarArchivo}" icon="pi pi-trash" styleClass="rounded-button ui-button-danger" process="@this" style="margin-left: 10px" update=":formArchivo:idTableArchivo :form:tabView:idTableContrato" >
 						<f:setPropertyActionListener value="#{archivo}" target="#{contratoBean.archivoSelected}"  />
 					</p:commandButton>
 				</p:column>
 				
 			</p:dataTable>
 			
+		</h:form>
+	</p:dialog>
+	
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogCambiarLote" header="CAMBIAR LOTE" widgetVar="cambiarLoteDialog" resizable="false" closable="true"
+		appendTo="@(body)">
+		<h:form id="formCambioLote">
+			<p:panel header="LOTE ACTUAL" style="margin: 20px;">
+		        <h:panelGrid columns="2">
+		        	<p:outputLabel value="Proyecto: "/>
+					<p:outputLabel value="#{contratoBean.contratoSelected.lote.project.name}"/>
+					
+					<p:outputLabel value="Manzana: "/>
+					<p:outputLabel value="#{contratoBean.contratoSelected.lote.manzana.name}"/>
+					
+					<p:outputLabel value="Número del lote: "/>
+					<p:outputLabel value="#{contratoBean.contratoSelected.lote.numberLote}"/>
+			
+		        </h:panelGrid>
+		    </p:panel>
+		    
+		    <p:panel header="CAMBIAR DE LOTE A:" style="margin: 20px;">
+		        <h:panelGrid columns="2">
+		        	
+					<h:outputLabel value="Proyecto:" />
+					 <p:selectOneMenu value="#{contratoBean.proyectoCambio}" converter="#{contratoBean.conversorProyectoCambio}" > 
+						<f:selectItem itemLabel="[-Seleccionar-]" itemValue="#{null}"/> 
+						<f:selectItems value="#{contratoBean.lstProyectosCambio}" var="pro" itemLabel="#{pro.name}" itemValue="#{pro}"/> 
+						<p:ajax update=":formCambioLote:manzana :formCambioLote:lote" listener="#{contratoBean.listarManzanas}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Manzana: " />
+					<p:selectOneMenu id="manzana" value="#{contratoBean.manzanaCambio}" converter="#{contratoBean.conversorManzanaCambio}" > 
+						<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+						<f:selectItems value="#{contratoBean.lstManzanasCambio}" var="manz" itemLabel="#{manz.name}" itemValue="#{manz}"/>
+						<p:ajax update=":formCambioLote:lote" listener="#{contratoBean.listarLotes}"/>
+					</p:selectOneMenu>
+					
+					<h:outputLabel value="Lote: " />
+					<p:selectOneMenu id="lote" value="#{contratoBean.loteCambio}" converter="#{contratoBean.conversorLoteCambio}" > 
+						<f:selectItem itemLabel="[-- Selecionar --]" itemValue="#{null}"/>
+						<f:selectItems value="#{contratoBean.lstLotesCambio}" var="manz" itemLabel="#{manz.numberLote}" itemValue="#{manz}"/>
+					</p:selectOneMenu>
+					
+					<p:commandButton value="Guardar" action="#{contratoBean.saveCambioLote}" update=":form:tabView:idTableContrato"/>
+		        
+		        </h:panelGrid>
+		    </p:panel>
+		
 		</h:form>
 	</p:dialog>
 	

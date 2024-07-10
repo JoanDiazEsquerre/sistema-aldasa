@@ -46,12 +46,12 @@ public class NavegacionBean implements Serializable  {
 
 	
 	private boolean menuProspeccion, menuProyecto, menuMantenimiento,menuReporte, menuAsistencia, menuVentas, menuAlmacen, menuRRHH, menucaja, menuCompra, menuContabilidad;
-	private boolean subMenuReporteLotes, subMenuEmpleado, subMenuPlanilla, subMenuComision, subMenuComisiones, subMenuManzanas, subMenuLotes, subMenuProspectos, subMenuProspeccion,subMenuAgenda, subMenuSimulador, subMenuPersonas,subMenuUsuarios,subMenuPerfiles, 
+	private boolean subMenuEmpleado, subMenuPlanilla, subMenuComision, subMenuComisiones, subMenuManzanas, subMenuLotes, subMenuProspectos, subMenuProspeccion,subMenuAgenda, subMenuSimulador, subMenuPersonas,subMenuUsuarios,subMenuPerfiles, 
 					subMenuProyectos,subMenuEquipos,subMenuCambiarContrasenia, subMenuReporteAcciones, subMenuAsistencia, subMenuReporteAsistencia, subMenuRequerimientoSeparacion, subMenuRankingVentas, subMenuContrato, subMenuDocumentoVentas, subMenuPlantillaVenta, 
 					subMenuReporteDocumentoVenta, subMenuInventario, subMenuCliente, subMenuMapeoLote, subMenuVoucher, subMenuCaja, subMenuRequerimientoCompra, subMenuDocumentoCompra, subMenuReporteDeuda, subMenuMovimientosBanc;
 	
 	private int[] permisoProspectos,permisoProspeccion,permisoAgenda,permisoSimulador,permisoPersonas,permisoUsuarios,permisoPerfiles,permisoProyectos,permisoEquipos, permisoCambiarConstrasenia,
-					permisoReporteAcciones,permisoManzanas,permisoLotes,permisoComisiones,permisoComision,permisoEmpleado,permisoReporteLotes,permisoAsistencia,permisoReporteAsistencia,permisoRequerimientoSeparacion,
+					permisoReporteAcciones,permisoManzanas,permisoLotes,permisoComisiones,permisoComision,permisoEmpleado,permisoAsistencia,permisoReporteAsistencia,permisoRequerimientoSeparacion,
 					permisoRankingVentas,permisoContrato,permisoReporteDocumentoVentas,permisoDocumentoVenta,permisoInventario,permisoCliente, permisoPlantillaVenta, permisoMapeoLote, permisoVoucher,
 					permisoPlanilla, permisoCaja, permisoRequerimientoCompra, permisoDocumentoCompra, permisoReporteDeuda, permisoMovimientoBanc;
 
@@ -88,7 +88,6 @@ public class NavegacionBean implements Serializable  {
 		permisoComision= obtenerPermisosPorPerfil(18);
 		permisoCambiarConstrasenia= obtenerPermisosPorPerfil(19);
 		permisoReporteAcciones= obtenerPermisosPorPerfil(20);
-		permisoReporteLotes= obtenerPermisosPorPerfil(21);
 		permisoReporteAsistencia= obtenerPermisosPorPerfil(22);
 		permisoReporteDocumentoVentas= obtenerPermisosPorPerfil(23);
 		permisoAsistencia= obtenerPermisosPorPerfil(24);
@@ -111,8 +110,10 @@ public class NavegacionBean implements Serializable  {
 			rutaLogo = "/recursos/images/LOGO.png";
 		}else if(sucursalLogin.getId().toString().equals("2")){
 			rutaLogo = "/recursos/images/LOGO_ABARCA.png";
-		}else {
+		}else if(sucursalLogin.getId().toString().equals("3")) {
 			rutaLogo = "/recursos/images/LOGO_CONSORCIO.png";
+		}else {
+			rutaLogo = "/recursos/images/LOGO_ALDASA_BIENES_RAICES.png";
 		}
 	}
 	
@@ -222,13 +223,12 @@ public class NavegacionBean implements Serializable  {
 		
 		//*******************************************************************************
 		subMenuReporteAcciones = validaPermiso(permisoReporteAcciones);
-		subMenuReporteLotes = validaPermiso(permisoReporteLotes);
 		subMenuReporteAsistencia = validaPermiso(permisoReporteAsistencia);
 		subMenuReporteDocumentoVenta=validaPermiso(permisoReporteDocumentoVentas);
 		subMenuReporteDeuda = validaPermiso(permisoReporteDeuda);
 
 		
-		if(subMenuReporteAcciones || subMenuReporteLotes || subMenuReporteAsistencia || subMenuReporteDocumentoVenta || subMenuReporteDeuda) {
+		if(subMenuReporteAcciones || subMenuReporteAsistencia || subMenuReporteDocumentoVenta || subMenuReporteDeuda) {
 			menuReporte=true;
 		}
 		//*******************************************************************************
@@ -311,10 +311,6 @@ public class NavegacionBean implements Serializable  {
 
 	public void getProyectoComisionesPage() {
 		ruta = "modulos/proyecto/procesos/comisiones.xhtml";
-	}
-
-	public void getProcesoReporteLotesPage() {
-		ruta = "modulos/proyecto/procesos/reporteLotes.xhtml";
 	}
 
 	public void getMantenimientoPersonasPage() {
@@ -683,18 +679,6 @@ public class NavegacionBean implements Serializable  {
 	}
 	public void setPermisoEmpleado(int[] permisoEmpleado) {
 		this.permisoEmpleado = permisoEmpleado;
-	}
-	public boolean isSubMenuReporteLotes() {
-		return subMenuReporteLotes;
-	}
-	public void setSubMenuReporteLotes(boolean subMenuReporteLotes) {
-		this.subMenuReporteLotes = subMenuReporteLotes;
-	}
-	public int[] getPermisoReporteLotes() {
-		return permisoReporteLotes;
-	}
-	public void setPermisoReporteLotes(int[] permisoReporteLotes) {
-		this.permisoReporteLotes = permisoReporteLotes;
 	}
 	public boolean isMenuAsistencia() {
 		return menuAsistencia;

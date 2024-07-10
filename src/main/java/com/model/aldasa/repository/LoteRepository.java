@@ -29,10 +29,11 @@ public interface LoteRepository extends JpaRepository<Lote, Integer> {
 	@Query(nativeQuery = true,value = "SELECT * FROM lote WHERE numberLote=:name AND idManzana=:manzana AND idProject=:project AND id <> :idLote ")
 	Lote findByNumberLoteAndManzanaAndProjectException(String name, int manzana, int project, int idLote);
 	
-	Page<Lote> findAllByNumberLoteLikeAndManzanaNameLikeAndProjectNameLikeAndStatusLikeAndProjectSucursal(String numberLote, String nameManzana,String projectName ,String status,Sucursal sucursal,Pageable pageable);
-	Page<Lote> findAllByNumberLoteLikeAndManzanaNameLikeAndStatusLike(String numberLote,  String nameManzana, String status,Pageable pageable);
-	Page<Lote> findAllByStatusAndFechaVencimientoBetween(String status,Date fechaIni , Date fechaFin,Pageable pageable);
-	Page<Lote> findAllByStatusAndFechaVencimientoLessThan(String status,Date fechaIni, Pageable pageable);
+	Page<Lote> findByNumberLoteLikeAndStatusLikeAndProjectSucursal(String numberLote, String status,Sucursal sucursal,Pageable pageable);
+	Page<Lote> findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndManzana(String numberLote, String status,Sucursal sucursal, Manzana manzana,Pageable pageable);
+	Page<Lote> findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndProject(String numberLote, String status,Sucursal sucursal, Project project, Pageable pageable);
+	Page<Lote> findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndManzanaAndProject(String numberLote, String status,Sucursal sucursal, Manzana manzana, Project project,Pageable pageable);
+	
 	Page<Lote> findByStatusAndProjectSucursalAndRealizoContratoAndNumberLoteLikeAndManzanaNameLikeAndProjectNameLike(String status, Sucursal sucursal, String realizoContrato,String numberLote,  String nameManzana, String proyecto, Pageable pageable);
 	Page<Lote> findByStatusAndProjectSucursalAndRealizoContratoAndNumberLoteLikeAndManzanaNameLikeAndProjectNameLikeAndProject(String status, Sucursal sucursal, String realizoContrato,String numberLote,  String nameManzana, String proyecto, Project project, Pageable pageable);
 

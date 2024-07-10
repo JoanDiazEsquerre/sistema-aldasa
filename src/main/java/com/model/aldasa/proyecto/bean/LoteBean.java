@@ -294,16 +294,6 @@ public class LoteBean extends BaseBean implements Serializable{
 			public List<Lote> load(int first, int pageSize, Map<String, SortMeta> sortBy,Map<String, FilterMeta> filterBy) {
 				
 				String numberLote="%"+ (filterBy.get("numberLote")!=null?filterBy.get("numberLote").getFilterValue().toString().trim().replaceAll(" ", "%"):"")+ "%";
-				String manzana = "";
-				if(manzanaFilter != null) {
-					manzana = manzanaFilter.getName();
-				}
-				
-				String proyecto = "%%";
-				if(projectFilter != null) {
-					proyecto = projectFilter.getName();
-				}
-				
                                 
                 Sort sort=Sort.by("numberLote").ascending();
                 if(sortBy!=null) {
@@ -319,13 +309,25 @@ public class LoteBean extends BaseBean implements Serializable{
                 
                 Pageable pageable = PageRequest.of(first/pageSize, pageSize,sort);
                 
-				Page<Lote> pageLote;
-//				if(projectFilter.equals("")) {
-//					pageLote= loteService.findAllByNumberLoteLikeAndManzanaNameLikeAndStatusLike(numberLote,"%"+manzana+"%","%"+status+"%", pageable);
-//				}else {
-					pageLote= loteService.findAllByNumberLoteLikeAndManzanaNameLikeAndProjectNameLikeAndStatusLikeAndProjectSucursal(numberLote, "%"+manzana+"%",proyecto,"%"+status+"%", navegacionBean.getSucursalLogin(), pageable);
+				Page<Lote> pageLote=null;
 				
-//				}
+				if(projectFilter==null) {
+					if(manzanaFilter==null) {
+						pageLote= loteService.findByNumberLoteLikeAndStatusLikeAndProjectSucursal(numberLote, "%"+status+"%", navegacionBean.getSucursalLogin(), pageable);
+					}else {
+						pageLote= loteService.findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndManzana(numberLote, "%"+status+"%", navegacionBean.getSucursalLogin(), manzanaFilter, pageable);
+					}
+				}else {
+					if(manzanaFilter==null) {
+						pageLote= loteService.findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndProject(numberLote, "%"+status+"%", navegacionBean.getSucursalLogin(), projectFilter, pageable);
+					}else {
+						pageLote= loteService.findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndManzanaAndProject(numberLote, "%"+status+"%", navegacionBean.getSucursalLogin(), manzanaFilter, projectFilter, pageable);
+					}
+				}
+				
+
+				
+
 				setRowCount((int) pageLote.getTotalElements());
 				return datasource = pageLote.getContent();
 			}
@@ -697,16 +699,6 @@ public class LoteBean extends BaseBean implements Serializable{
         };
     }
 	
-	public List<Manzana> completeManzana(String query) {
-        List<Manzana> lista = new ArrayList<>();
-        for (Manzana c : lstManzana) {
-            if (c.getName().toUpperCase().contains(query.toUpperCase()) ) {
-                lista.add(c);
-            }
-        }
-        return lista;
-    }
-	
 	public List<Person> completePerson(String query) {
         List<Person> lista = new ArrayList<>();
         for (Person c : getLstPerson()) {
@@ -721,6 +713,7 @@ public class LoteBean extends BaseBean implements Serializable{
 	public void cargarAsesorPorEquipo() {
 		lstPersonAsesor = new ArrayList<>();
 //		List<Usuario> lstUsuarios = new ArrayList<>();
+		lstEmpleado= new ArrayList<>();
 		
 		loteSelected.setPersonAssessor(null);
 		if(teamSelected!= null) {

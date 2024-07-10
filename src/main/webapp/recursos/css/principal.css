@@ -1,0 +1,37 @@
+/* Estilos para el menú principal */
+.ui-menu {
+    background-color: #f2f2f2; /* Color de fondo */
+    border: 1px solid #ccc; /* Borde del menú */
+    border-radius: 5px; /* Esquinas redondeadas */
+    font-size: 14px; /* Tamaño de la fuente */
+}
+
+/* Estilos para los ítems del menú */
+.ui-menuitem {
+    padding: 8px 12px; /* Espaciado interno */
+    border-bottom: 1px solid #ddd; /* Borde inferior entre ítems */
+}
+
+/* Estilos para los submenús */
+.ui-menu-child {
+    background-color: #fff; /* Color de fondo de los submenús */
+    border: 1px solid #ccc; /* Borde de los submenús */
+    border-radius: 5px; /* Esquinas redondeadas de los submenús */
+}
+
+/* Estilos para los íconos de los ítems del menú */
+.ui-menuitem-icon {
+    font-size: 20px; /* Tamaño del ícono */
+}
+
+/* Estilos para los submenús y sus ítems */
+.ui-submenu {
+    background-color: #f8f8f8; /* Color de fondo del submenú */
+    border: 1px solid #ddd; /* Borde del submenú */
+    border-radius: 3px; /* Esquinas redondeadas del submenú */
+}
+
+/* Estilos para los ítems de los submenús */
+.ui-submenu-list {
+    padding: 6px 12px; /* Espaciado interno de los ítems del submenú */
+}

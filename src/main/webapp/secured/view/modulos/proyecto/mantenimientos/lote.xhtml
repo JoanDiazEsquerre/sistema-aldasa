@@ -9,30 +9,30 @@
 
 	<h:form id="form">
 		<h2 style="color: #007d4c;">PROYECTOS > LOTES</h2>
-		<p:panelGrid  columns="4" id="panelFilter" columnClasses="ui-g-12 ui-md-2,ui-g-12 ui-md-4,ui-g-12 ui-md-2,ui-g-12 ui-md-4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid" style="width:auto">
-			<p:outputLabel for="statusFilter" value="Estado: "/>
-			<p:selectOneMenu id="statusFilter" value="#{loteBean.status}">
-				<f:selectItem itemLabel="[--Todos--]" itemValue=""/>
+		<h:panelGrid  columns="5">
+			<p:selectOneButton id="statusFilter" value="#{loteBean.status}" unselectable="false">
+				<f:selectItem itemLabel="TODOS" itemValue=""/>
 				<f:selectItem itemLabel="Disponibles" itemValue="Disponible" />
 				<f:selectItem itemLabel="Separados" itemValue="Separado"/>
 				<f:selectItem itemLabel="Vendidos" itemValue="Vendido"/>
 				<f:selectItem itemLabel="Inactivos" itemValue="Inactivo"/>
 				<p:ajax update="idTableLote" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();" />
-			</p:selectOneMenu>
+			</p:selectOneButton>
 			
-			<p:outputLabel for="optionProject" value="Proyecto: " />
-			<p:selectOneMenu id="optionProject" value="#{loteBean.projectFilter}" converter="#{loteBean.conversorProject}" >
+			<p:outputLabel for="optionProject" value="Proyecto: "  style="margin-left: 30px"/>
+			<p:selectOneMenu id="optionProject" value="#{loteBean.projectFilter}" converter="#{loteBean.conversorProject}" filter="true">
 				<f:selectItem itemLabel="[--Todos--]" itemValue="#{null}"/>
 				<f:selectItems value="#{loteBean.lstProject}" var="proy" itemLabel="#{proy.name}" itemValue="#{proy}"/>
 				<p:ajax update="idTableLote" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();"/>
 			</p:selectOneMenu>
 			
-			<p:outputLabel for="optionManzana" value="Manzana: "/>
-            <p:autoComplete scrollHeight="300" onkeyup="javascript:this.value=this.value.toUpperCase();" value="#{loteBean.manzanaFilter}" converter="#{loteBean.conversorManzana}" id="optionManzana" completeMethod="#{loteBean.completeManzana}"  
-                          var="ase" itemLabel="#{ase.name}" itemValue="#{ase}" forceSelection="true"  > 
-            	<p:ajax update="idTableLote" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();"/>
-            </p:autoComplete>
-		</p:panelGrid>
+			<p:outputLabel for="optionManzana" value="Manzana: " style="margin-left: 30px"/>
+			<p:selectOneMenu id="optionManzana" value="#{loteBean.manzanaFilter}" converter="#{loteBean.conversorManzana}" filter="true" >
+				<f:selectItem itemLabel="[--Todos--]" itemValue="#{null}"/>
+				<f:selectItems value="#{loteBean.lstManzana}" var="proy" itemLabel="#{proy.name}" itemValue="#{proy}"/>
+				<p:ajax update="idTableLote" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();"/>
+			</p:selectOneMenu>
+		</h:panelGrid>
 		
 		
 
@@ -52,15 +52,15 @@
                       #{row +1}
         	</p:column>
 
-			<p:column headerText="Número de Lote" sortBy="#{lote.numberLote}"  filterMatchMode="contains" responsivePriority="14">
+			<p:column headerText="Número de Lote" sortBy="#{lote.numberLote}" style="text-align: center" filterBy="#{lote.numberLote}" filterMatchMode="contains" responsivePriority="14">
 				<h:outputText value="#{lote.numberLote}" />
 			</p:column>
 			
-			<p:column headerText="Manzana" sortBy="#{lote.manzana.name}" filterMatchMode="contains" responsivePriority="13" >
+			<p:column headerText="Manzana" sortBy="#{lote.manzana.name}" style="text-align: center" filterMatchMode="contains" responsivePriority="13" >
 				<h:outputText value="#{lote.manzana.name}" />
 			</p:column>
 			
-			<p:column headerText="Ampliación" sortBy="#{lote.ampliacion}" filterMatchMode="contains" responsivePriority="4">
+			<p:column headerText="Ampliación" sortBy="#{lote.ampliacion}" style="text-align: center" filterMatchMode="contains" responsivePriority="4">
 				<h:outputText value="#{lote.ampliacion eq 'S'?'Si':'No'}" />
 			</p:column>
 			

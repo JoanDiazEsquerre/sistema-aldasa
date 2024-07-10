@@ -13,6 +13,7 @@ public interface CuentaBancariaService {
 	void delete(CuentaBancaria entity);
 	
 	List<CuentaBancaria> findByEstado(boolean estado);
+	List<CuentaBancaria> findBySucursal(Sucursal sucursal);
 	List<CuentaBancaria> findByEstadoAndSucursal(boolean estado, Sucursal sucursal);
 
 

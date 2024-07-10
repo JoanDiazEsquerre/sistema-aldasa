@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.model.aldasa.entity.MovimientoBancario;
+import com.model.aldasa.entity.Sucursal;
 import com.model.aldasa.repository.MovimientoBancarioRepository;
 import com.model.aldasa.service.MovimientoBancarioService;
 
@@ -37,11 +38,12 @@ public class MovimientoBancarioServiceImpl implements MovimientoBancarioService 
 	}
 
 	@Override
-	public Page<MovimientoBancario> findByEstadoAndMesLikeAndAnioLike(boolean estado, String mes, String anio,
-			Pageable pageable) {
+	public Page<MovimientoBancario> findByEstadoAndMesLikeAndAnioLikeAndCuentaBancariaNumeroLikeAndCuentaBancariaSucursal(
+			boolean estado, String mes, String anio, String cuentaBanc, Sucursal sucursal, Pageable pageable) {
 		// TODO Auto-generated method stub
-		return movimientoBancarioRepository.findByEstadoAndMesLikeAndAnioLike(estado, mes, anio, pageable); 
+		return movimientoBancarioRepository.findByEstadoAndMesLikeAndAnioLikeAndCuentaBancariaNumeroLikeAndCuentaBancariaSucursal(estado, mes, anio, cuentaBanc, sucursal, pageable);
 	}
+
 
 	
 

@@ -52,7 +52,17 @@
 			<p:column headerText="Banco" sortBy="#{mov.cuentaBancaria.banco.nombre}" filterMatchMode="contains">
 				<h:outputText value="#{mov.cuentaBancaria.banco.nombre}" />
 			</p:column>
-			<p:column headerText="Nro. Cuenta" sortBy="#{mov.cuentaBancaria.numero}" filterMatchMode="contains">
+			<p:column headerText="Cuenta" sortBy="#{mov.cuentaBancaria.numero}" filterMatchMode="contains">
+				<f:facet name="header">
+					Cuenta
+					<p:selectOneMenu value="#{movimientoBancarioBean.cuentaBancariaFilter}" converter="#{movimientoBancarioBean.conversorCuentaBancariaAll}"  style="width:100%">
+						<f:selectItem itemLabel="[-Niguno-]" itemValue="#{null}"/>
+	                    <f:selectItems value="#{movimientoBancarioBean.lstCuentaBancariaAll}" var="cb" itemLabel="#{cb.banco.abreviatura} : #{cb.numero}  (#{cb.moneda eq 'D'?'Dól':'Sol'}) #{cb.sucursal.prenombre}" itemValue="#{cb}"/>
+   						<p:ajax update=":form:idTableMovBanc" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();" />
+	                    
+	                </p:selectOneMenu>
+				</f:facet>
+			
 				<h:outputText value="#{mov.cuentaBancaria.numero}" />
 			</p:column>
 			<p:column headerText="Saldo Inicial" sortBy="#{mov.saldoInicial}" filterMatchMode="contains">
@@ -140,7 +150,7 @@
 			
 			<p:dataTable var="detalle" id="idTableDetalle" value="#{movimientoBancarioBean.lstDetalleMovimientoBancLazy}" widgetVar="detalleTable" rowIndexVar="row" paginator="true" rows="25" size="small"
 					emptyMessage="No se encontraron detalles." editable="true" editMode="cell" paginatorPosition="bottom" rowKey="#{detalle.id}" 
-					selection="#{movimientoBancarioBean.detalleMovimientoSelected}" selectionMode="single">
+					selection="#{movimientoBancarioBean.detalleMovimientoSelected}" selectionMode="single" style="width: 120%;" >
 			
 						
 				<f:facet name="header">
@@ -148,14 +158,19 @@
 						<span>LISTA DE MOVIMIENTOS BANCARIOS</span>
 					</div>
 				</f:facet>   
-				
-				
 										
 		        <p:column headerText="Nro"  width="25px" filterMatchMode="contains">
 					#{row +1}
 				</p:column>
 				
-				<p:column headerText="Fecha Operación" filterMatchMode="contains" >
+				<p:column headerText="Fecha Operación" filterMatchMode="contains" sortBy="#{detalle.fechaOperacion}" >
+					<f:facet name="header">
+						Fecha Operación
+						<p:datePicker value="#{movimientoBancarioBean.fechaDetalleFilter}" > 
+							<p:ajax update="idTableDetalle"></p:ajax>
+						</p:datePicker>
+					</f:facet>
+				
 					<h:outputText value="#{detalle.fechaOperacion}"> 
 	        			<f:convertDateTime pattern="dd/MM/yyyy" />
 	        		</h:outputText>
@@ -175,7 +190,7 @@
 					<h:outputText value="#{detalle.numeroOperacion}" />
 				</p:column>
 				
-				<p:column headerText="Descripcion / Referencia" filterMatchMode="contains" >
+				<p:column headerText="Descripcion / Referencia" filterMatchMode="contains" width="20%" >
 					<h:outputText value="#{detalle.descripcion}" />
 				</p:column>
 				
@@ -185,7 +200,7 @@
 	                        <h:outputText value="#{detalle.tipoMovimiento eq null ? '[-Ninguno-]': detalle.tipoMovimiento.nombre}" />
 	                    </f:facet>
 	                    <f:facet name="input">
-	                        <p:selectOneMenu value="#{detalle.tipoMovimiento}" converter="#{movimientoBancarioBean.getConversorTipoMovimiento(detalle)}" style="margin:5px; width:130px" >
+	                        <p:selectOneMenu value="#{detalle.tipoMovimiento}" converter="#{movimientoBancarioBean.getConversorTipoMovimiento(detalle)}" style="margin:5px; width:130px" rendered="#{detalle.importe lt 0 ? navegacionBean.usuarioLogin.modificarMovimientoCargo : true}" >
 	                        	<f:selectItem itemLabel="[-Ninguno-]" itemValue="#{null}"/>
 	                        	<f:selectItems value="#{movimientoBancarioBean.listarTipoMovimiento(detalle)}" var="cb" itemLabel="#{cb.nombre}" itemValue="#{cb}"/>
 	                        	<p:ajax update="idTableDetalle" listener="#{movimientoBancarioBean.actualizarDetalleMovimiento(detalle)}"></p:ajax>

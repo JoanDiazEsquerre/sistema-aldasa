@@ -882,6 +882,10 @@
 			<property-name>contratoArchivoService</property-name> 
 			<value>#{contratoArchivoService}</value> 
 		</managed-property>
+		<managed-property> 
+			<property-name>manzanaService</property-name> 
+			<value>#{manzanaService}</value> 
+		</managed-property>
 	</managed-bean>
 	
 	<managed-bean>

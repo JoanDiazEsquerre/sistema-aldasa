@@ -1900,6 +1900,13 @@ public class DocumentoVentaBean extends BaseBean {
 		if(lstDetalleDocumentoVenta.isEmpty()) { 
 			addErrorMessage("Debes importar al menos un documento.");
 			return;
+		}else {
+			for(DetalleDocumentoVenta dt : lstDetalleDocumentoVenta) {
+				if(dt.getImporteVenta().compareTo(BigDecimal.ZERO)==0) {
+					addErrorMessage("Elimina el detalle que tiene el importe de venta 0 (cero)");
+					return;
+				}
+			}
 		}
 		
 		if(clienteSelected == null) {

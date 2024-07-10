@@ -95,6 +95,7 @@ import com.model.aldasa.entity.DocumentoVenta;
 import com.model.aldasa.entity.Imagen;
 import com.model.aldasa.entity.ImagenPlantillaVenta;
 import com.model.aldasa.entity.Lote;
+import com.model.aldasa.entity.Manzana;
 import com.model.aldasa.entity.ObservacionContrato;
 import com.model.aldasa.entity.Person;
 import com.model.aldasa.entity.PlantillaVenta;
@@ -116,6 +117,7 @@ import com.model.aldasa.service.DocumentoVentaService;
 import com.model.aldasa.service.ImagenPlantillaVentaService;
 import com.model.aldasa.service.ImagenService;
 import com.model.aldasa.service.LoteService;
+import com.model.aldasa.service.ManzanaService;
 import com.model.aldasa.service.ObservacionContratoService;
 import com.model.aldasa.service.PersonService;
 import com.model.aldasa.service.PlantillaVentaService;
@@ -127,6 +129,7 @@ import com.model.aldasa.service.VoucherService;
 import com.model.aldasa.util.BaseBean;
 import com.model.aldasa.util.EstadoContrato;
 import com.model.aldasa.util.EstadoLote;
+import com.model.aldasa.util.EstadoRequerimientoSeparacionType;
 import com.model.aldasa.util.NumeroALetra;
 import com.model.aldasa.util.Perfiles;
 import com.model.aldasa.util.UtilXls;
@@ -207,6 +210,9 @@ public class ContratoBean extends BaseBean implements Serializable{
 	@ManagedProperty(value = "#{contratoArchivoService}")
 	private ContratoArchivoService contratoArchivoService;
 	
+	@ManagedProperty(value = "#{manzanaService}")
+	private ManzanaService manzanaService;
+	
 	
 	private String meses[]= {"ENERO","FEBRERO","MARZO","ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE","DICIEMBRE"};
 	
@@ -221,17 +227,19 @@ public class ContratoBean extends BaseBean implements Serializable{
 	private List<ObservacionContrato> lstObservacionContrato = new ArrayList<>();
 	private List<Usuario> lstUsuarioCobranza;
 	private List<Cuota> lstCuotaVista = new ArrayList<>();
-	private List<Project> lstProject;
+	private List<Project> lstProject, lstProyectosCambio;
 	private List<Imagen> lstImagenVoucher;
 	private List<ObservacionContrato> lstObsContrato = new ArrayList<>();
 	private List<ContratoArchivo> lstContratoArchivoSelected;
+	private List<Manzana> lstManzanasCambio;
+	private List<Lote> lstLotesCambio;
 
-	private Lote loteSelected;
+	private Lote loteSelected, loteCambio;
 	private Contrato contratoSelected;
 	private ObservacionContrato obsSelected;
-	private Project projectFilter;
-	private Project projectFilterLote;
+	private Project projectFilter, projectFilterLote, proyectoCambio;
 	private ContratoArchivo archivoSelected;
+	private Manzana manzanaCambio;
 
 	
 	private StreamedContent fileDes, fileDesVoucher, fileResumen;
@@ -275,7 +283,7 @@ public class ContratoBean extends BaseBean implements Serializable{
 	
 	@PostConstruct
 	public void init() {
-		
+		lstProyectosCambio = projectService.findByStatusOrderByNameAsc(true);
 		compromisoPagoFilter="%%";
 		lstProject= projectService.findByStatusAndSucursalOrderByNameAsc(true, navegacionBean.getSucursalLogin());
 		estado = EstadoContrato.ACTIVO.getName();
@@ -292,6 +300,74 @@ public class ContratoBean extends BaseBean implements Serializable{
 		year = 0;
 	}
 	
+	public void iniciarVariablesCambioLote() {
+		proyectoCambio=null;
+		lstManzanasCambio = new ArrayList<>();
+		manzanaCambio = null;
+		lstLotesCambio = new ArrayList<>();
+		loteCambio = null;
+	}
+	
+	public void saveCambioLote() {
+		
+		if(loteCambio== null) {
+			addErrorMessage("Debes seleccionar un lote.");
+			return;
+		}
+		
+		if(contratoSelected.getLote().getId().equals(loteCambio.getId())) {
+			addErrorMessage("Has seleccionado el mismo lote."); 
+			return;
+		}
+		
+		Contrato contratoActivo = contratoService.findByLoteAndEstado(loteCambio, EstadoContrato.ACTIVO.getName());
+		Contrato contratoTerminado = contratoService.findByLoteAndEstado(loteCambio, EstadoContrato.TERMINADO.getName());
+		
+		if(contratoActivo != null || contratoTerminado != null) {
+			addErrorMessage("Ya existe un contrato ACTIVO o TERMINADO con el lote seleccionado.");
+			return;
+		}
+		
+	
+		Lote loteNuevo = loteService.findById(loteCambio.getId());
+		
+		if(loteNuevo.getStatus().equals(EstadoLote.SEPARADO.getName()) || loteNuevo.getStatus().equals(EstadoLote.VENDIDO.getName())) {
+			addErrorMessage("El lote al que deseas cambiar ya se encuentra "+ loteNuevo.getStatus().toUpperCase()); 
+			return;
+		}
+		
+		
+		contratoSelected.getLote().setStatus(EstadoLote.DISPONIBLE.getName()); 
+		loteService.save(contratoSelected.getLote());
+		
+		contratoSelected.setLote(loteCambio);
+		loteCambio.setStatus(EstadoLote.VENDIDO.getName());
+		loteService.save(loteCambio);
+		
+		contratoService.save(contratoSelected);
+		
+		addInfoMessage("Se cambio de lote correctamente.");
+		PrimeFaces.current().executeScript("PF('cambiarLoteDialog').hide();");
+		
+	}
+	
+	public void listarLotes() {
+		if(manzanaCambio != null) {
+			lstLotesCambio = loteService.findByProjectAndManzanaAndStatusLikeOrderByManzanaNameAscNumberLoteAsc(proyectoCambio, manzanaCambio, "%%");
+		}else {
+			lstLotesCambio = new ArrayList<>();
+		}
+	}
+	
+	public void listarManzanas() {
+		manzanaCambio=null;
+		loteCambio = null;
+		lstLotesCambio = new ArrayList<>();
+		lstManzanasCambio = new ArrayList<>();
+		if(proyectoCambio != null) {
+			lstManzanasCambio = manzanaService.findByProject(proyectoCambio.getId());
+		}
+	}
 	
 	public void actualizarCuotasAtrasadas() {
 		List<Contrato> lstContratos = contratoService.findByEstado(EstadoContrato.ACTIVO.getName());
@@ -1002,7 +1078,7 @@ public class ContratoBean extends BaseBean implements Serializable{
 			cellSub1 = rowSubTitulo.createCell(0);cellSub1.setCellValue(c.getCuentaBancaria().getNumero());cellSub1.setCellStyle(styleBorder);
 			cellSub1 = rowSubTitulo.createCell(1);cellSub1.setCellValue(c.getMonto()+"");cellSub1.setCellStyle(styleBorder);
 			cellSub1 = rowSubTitulo.createCell(2);cellSub1.setCellValue(c.getCuentaBancaria().getBanco().getNombre());cellSub1.setCellStyle(styleBorder);
-			cellSub1 = rowSubTitulo.createCell(3);cellSub1.setCellValue(sdfFull.format(c.getFecha()));cellSub1.setCellStyle(styleBorder);
+			cellSub1 = rowSubTitulo.createCell(3);cellSub1.setCellValue(c.getFecha()==null ? "" : sdfFull.format(c.getFecha()));cellSub1.setCellStyle(styleBorder);
 			cellSub1 = rowSubTitulo.createCell(4);cellSub1.setCellValue(c.getNumeroOperacion());cellSub1.setCellStyle(styleBorder);
 			cellSub1 = rowSubTitulo.createCell(5);cellSub1.setCellValue(c.getDocumentoVenta() !=null? c.getDocumentoVenta().getSerie()+"-"+c.getDocumentoVenta().getNumero():"");cellSub1.setCellStyle(styleBorder);
 			cellSub1 = rowSubTitulo.createCell(6);cellSub1.setCellValue(c.getDocumentoVenta() !=null? obtenerDetalleBoleta(c.getDocumentoVenta()): "");cellSub1.setCellStyle(styleBorder);
@@ -15021,6 +15097,90 @@ public class ContratoBean extends BaseBean implements Serializable{
             }
         };
     }
+	
+	public Converter getConversorProyectoCambio() {
+        return new Converter() {
+            @Override
+            public Object getAsObject(FacesContext context, UIComponent component, String value) {
+                if (value.trim().equals("") || value == null || value.trim().equals("null")) {
+                    return null;
+                } else {
+                    Project c = null;
+                    for (Project si : lstProyectosCambio) {
+                        if (si.getId().toString().equals(value)) {
+                            c = si;
+                        }
+                    }
+                    return c;
+                }
+            }
+
+            @Override
+            public String getAsString(FacesContext context, UIComponent component, Object value) {
+                if (value == null || value.equals("")) {
+                    return "";
+                } else {
+                    return ((Project) value).getId() + "";
+                }
+            }
+        };
+    }
+	
+	public Converter getConversorManzanaCambio() {
+        return new Converter() {
+            @Override
+            public Object getAsObject(FacesContext context, UIComponent component, String value) {
+                if (value.trim().equals("") || value == null || value.trim().equals("null")) {
+                    return null;
+                } else {
+                	Manzana c = null;
+                    for (Manzana si : lstManzanasCambio) {
+                        if (si.getId().toString().equals(value)) {
+                            c = si;
+                        }
+                    }
+                    return c;
+                }
+            }
+
+            @Override
+            public String getAsString(FacesContext context, UIComponent component, Object value) {
+                if (value == null || value.equals("")) {
+                    return "";
+                } else {
+                    return ((Manzana) value).getId() + "";
+                }
+            }
+        };
+    }
+	
+	public Converter getConversorLoteCambio() {
+        return new Converter() {
+            @Override
+            public Object getAsObject(FacesContext context, UIComponent component, String value) {
+                if (value.trim().equals("") || value == null || value.trim().equals("null")) {
+                    return null;
+                } else {
+                	Lote c = null;
+                    for (Lote si : lstLotesCambio) {
+                        if (si.getId().toString().equals(value)) {
+                            c = si;
+                        }
+                    }
+                    return c;
+                }
+            }
+
+            @Override
+            public String getAsString(FacesContext context, UIComponent component, Object value) {
+                if (value == null || value.equals("")) {
+                    return "";
+                } else {
+                    return ((Lote) value).getId() + "";
+                }
+            }
+        };
+    }
 		
 	public LoteService getLoteService() {
 		return loteService;
@@ -15541,11 +15701,9 @@ public class ContratoBean extends BaseBean implements Serializable{
 	public void setFechaCompromiso(Date fechaCompromiso) {
 		this.fechaCompromiso = fechaCompromiso;
 	}
-
 	public String getCompromisoPagoFilter() {
 		return compromisoPagoFilter;
 	}
-
 	public void setCompromisoPagoFilter(String compromisoPagoFilter) {
 		this.compromisoPagoFilter = compromisoPagoFilter;
 	}
@@ -15572,6 +15730,54 @@ public class ContratoBean extends BaseBean implements Serializable{
 	}
 	public void setNombreResumenContrato(String nombreResumenContrato) {
 		this.nombreResumenContrato = nombreResumenContrato;
+	}
+	public List<Project> getLstProyectosCambio() {
+		return lstProyectosCambio;
+	}
+	public void setLstProyectosCambio(List<Project> lstProyectosCambio) {
+		this.lstProyectosCambio = lstProyectosCambio;
+	}
+	public List<Manzana> getLstManzanasCambio() {
+		return lstManzanasCambio;
+	}
+	public void setLstManzanasCambio(List<Manzana> lstManzanasCambio) {
+		this.lstManzanasCambio = lstManzanasCambio;
+	}
+	public List<Lote> getLstLotesCambio() {
+		return lstLotesCambio;
+	}
+	public void setLstLotesCambio(List<Lote> lstLotesCambio) {
+		this.lstLotesCambio = lstLotesCambio;
+	}
+	public Lote getLoteCambio() {
+		return loteCambio;
+	}
+	public void setLoteCambio(Lote loteCambio) {
+		this.loteCambio = loteCambio;
+	}
+	public Project getProyectoCambio() {
+		return proyectoCambio;
+	}
+	public void setProyectoCambio(Project proyectoCambio) {
+		this.proyectoCambio = proyectoCambio;
+	}
+	public Manzana getManzanaCambio() {
+		return manzanaCambio;
+	}
+	public void setManzanaCambio(Manzana manzanaCambio) {
+		this.manzanaCambio = manzanaCambio;
+	}
+	public SimpleDateFormat getSdfQuery() {
+		return sdfQuery;
+	}
+	public void setSdfQuery(SimpleDateFormat sdfQuery) {
+		this.sdfQuery = sdfQuery;
+	}
+	public ManzanaService getManzanaService() {
+		return manzanaService;
+	}
+	public void setManzanaService(ManzanaService manzanaService) {
+		this.manzanaService = manzanaService;
 	}
 		
 	

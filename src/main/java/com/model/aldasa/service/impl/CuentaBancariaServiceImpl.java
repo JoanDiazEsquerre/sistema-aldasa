@@ -47,5 +47,11 @@ public class CuentaBancariaServiceImpl  implements CuentaBancariaService {
 		return cuentaBancariaRepository.findByEstadoAndSucursal(estado, sucursal);
 	}
 
+	@Override
+	public List<CuentaBancaria> findBySucursal(Sucursal sucursal) {
+		// TODO Auto-generated method stub
+		return cuentaBancariaRepository.findBySucursal(sucursal); 
+	}
+
 
 }

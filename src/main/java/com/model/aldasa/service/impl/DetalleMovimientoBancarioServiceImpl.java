@@ -1,6 +1,7 @@
 package com.model.aldasa.service.impl;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +50,13 @@ public class DetalleMovimientoBancarioServiceImpl implements DetalleMovimientoBa
 	public BigDecimal totalImporteMovimiento(int idMovimientoBancario) {
 		// TODO Auto-generated method stub
 		return detalleMovimientoBancarioRepository.totalImporteMovimiento(idMovimientoBancario);
+	}
+
+	@Override
+	public Page<DetalleMovimientoBancario> findByEstadoAndMovimientoBancarioAndFechaOperacion(boolean estado,
+			MovimientoBancario movimientoBancario, Date fechaOperacion, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return detalleMovimientoBancarioRepository.findByEstadoAndMovimientoBancarioAndFechaOperacion(estado, movimientoBancario, fechaOperacion, pageable); 
 	}
 
 	

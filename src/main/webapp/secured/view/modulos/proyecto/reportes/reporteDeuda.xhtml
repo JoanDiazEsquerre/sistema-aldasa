@@ -217,6 +217,8 @@
 					<f:facet name="header">
 						<div class="p-d-flex p-ai-center p-jc-between">
 							<span>Lista de Contratos #{reporteDeudaBean.estadoDeudaGrafico}</span>
+							<p:commandButton style="margin-left: 20px" actionListener="#{reporteDeudaBean.actualizarCuotasAtrasadas}" icon="pi pi-refresh" title="ACTUALIZAR CUOTAS ATRASADAS" update="idTableContratoGrafico" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+							
 						</div>
 					</f:facet>
 		
@@ -248,7 +250,7 @@
 						<p:outputLabel value="#{contrato.cuotaEspecial eq true?'SI':'NO'}"/>
 					</p:column>
 					
-					<p:column style="text-align:center" >
+					<p:column style="text-align:center" sortBy="#{contrato.cuotasAtrasadas}" >
 						<f:facet name="header">
 							Cuotas Atrasadas
 				        	<p:selectOneMenu value="#{reporteDeudaBean.busquedaCuotasAtrasadas}" style="margin:5px; width:100%" >

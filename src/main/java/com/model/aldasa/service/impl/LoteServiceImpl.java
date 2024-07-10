@@ -55,11 +55,6 @@ public class LoteServiceImpl implements LoteService {
 	}
 
 	@Override
-	public Page<Lote> findAllByNumberLoteLikeAndManzanaNameLikeAndStatusLike(String numberLote,  String nameManzana, String status,Pageable pageable){
-		return loteRepository.findAllByNumberLoteLikeAndManzanaNameLikeAndStatusLike(numberLote, nameManzana, status, pageable);
-	}
-
-	@Override
 	public List<Lote> findByProjectAndManzanaAndStatusLikeOrderByManzanaNameAscNumberLoteAsc(Project project, Manzana manzana, String status) {
 		return loteRepository.findByProjectAndManzanaAndStatusLikeOrderByManzanaNameAscNumberLoteAsc(project, manzana,status);
 	}
@@ -83,19 +78,6 @@ public class LoteServiceImpl implements LoteService {
 	}
 
 	@Override
-	public Page<Lote> findAllByStatusAndFechaVencimientoBetween(String status, Date fechaIni, Date fechaFin,
-			Pageable pageable) {
-		// TODO Auto-generated method stub
-		return loteRepository.findAllByStatusAndFechaVencimientoBetween(status, fechaIni, fechaFin, pageable);
-	}
-
-	@Override
-	public Page<Lote> findAllByStatusAndFechaVencimientoLessThan(String status, Date fechaIni, Pageable pageable) {
-		// TODO Auto-generated method stub
-		return loteRepository.findAllByStatusAndFechaVencimientoLessThan(status, fechaIni, pageable);
-	}
-
-	@Override
 	public List<Lote> findByStatusAndPersonAssessorDniAndTipoPagoAndFechaVendidoBetween(String Status, String dniAsesor,
 			String tipoPago, Date fechaIni, Date fechaFin) {
 		// TODO Auto-generated method stub
@@ -103,11 +85,9 @@ public class LoteServiceImpl implements LoteService {
 	}
 
 	@Override
-	public Page<Lote> findAllByNumberLoteLikeAndManzanaNameLikeAndProjectNameLikeAndStatusLikeAndProjectSucursal(
-			String numberLote, String nameManzana, String projectName, String status, Sucursal sucursal,
-			Pageable pageable) {
+	public Page<Lote> findByNumberLoteLikeAndStatusLikeAndProjectSucursal(String numberLote, String status, Sucursal sucursal, Pageable pageable) {
 		// TODO Auto-generated method stub
-		return loteRepository.findAllByNumberLoteLikeAndManzanaNameLikeAndProjectNameLikeAndStatusLikeAndProjectSucursal(numberLote, nameManzana, projectName, status, sucursal, pageable);
+		return loteRepository.findByNumberLoteLikeAndStatusLikeAndProjectSucursal(numberLote, status, sucursal, pageable);
 	}
 
 	@Override
@@ -136,6 +116,27 @@ public class LoteServiceImpl implements LoteService {
 			String proyecto, Project project, Pageable pageable) {
 		// TODO Auto-generated method stub
 		return loteRepository.findByStatusAndProjectSucursalAndRealizoContratoAndNumberLoteLikeAndManzanaNameLikeAndProjectNameLikeAndProject(status, sucursal, realizoContrato, numberLote, nameManzana, proyecto, project, pageable);
+	}
+
+	@Override
+	public Page<Lote> findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndManzana(String numberLote, String status,
+			Sucursal sucursal, Manzana manzana, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return loteRepository.findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndManzana(numberLote, status, sucursal, manzana, pageable); 
+	}
+
+	@Override
+	public Page<Lote> findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndProject(String numberLote, String status,
+			Sucursal sucursal, Project project, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return loteRepository.findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndProject(numberLote, status, sucursal, project, pageable);
+	}
+
+	@Override
+	public Page<Lote> findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndManzanaAndProject(String numberLote,
+			String status, Sucursal sucursal, Manzana manzana, Project project, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return loteRepository.findByNumberLoteLikeAndStatusLikeAndProjectSucursalAndManzanaAndProject(numberLote, status, sucursal, manzana, project, pageable);
 	}
 
 

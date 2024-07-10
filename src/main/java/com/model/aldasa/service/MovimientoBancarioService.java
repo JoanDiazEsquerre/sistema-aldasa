@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.model.aldasa.entity.MovimientoBancario;
+import com.model.aldasa.entity.Sucursal;
 
 public interface MovimientoBancarioService {
 
@@ -14,5 +15,5 @@ public interface MovimientoBancarioService {
 	MovimientoBancario save(MovimientoBancario entity);
 	void delete(MovimientoBancario entity);
 	
-	Page<MovimientoBancario> findByEstadoAndMesLikeAndAnioLike(boolean estado, String mes, String anio, Pageable pageable);
+	Page<MovimientoBancario> findByEstadoAndMesLikeAndAnioLikeAndCuentaBancariaNumeroLikeAndCuentaBancariaSucursal(boolean estado, String mes, String anio, String cuentaBanc,Sucursal sucursal, Pageable pageable); 
 }

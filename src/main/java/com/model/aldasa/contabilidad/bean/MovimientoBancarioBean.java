@@ -97,7 +97,7 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	private LazyDataModel<DetalleMovimientoBancario> lstDetalleMovimientoBancLazy;
 	
 	private List<DetalleMovimientoBancario> lstDetMovBancSelected, lstDetalleImportar;
-	private List<CuentaBancaria> lstCuentaBancaria = new ArrayList<>();
+	private List<CuentaBancaria> lstCuentaBancaria, lstCuentaBancariaAll;
 	private List<TipoMovimiento> lstTipoMovEntrada, lstTipoMovSalida;
 	private List<Project> lstProyectos;
 	private List<Manzana> lstManzanas;
@@ -107,10 +107,12 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	private Project proyectoMov;	
 	private Manzana manzanaMov;
 	private DetalleMovimientoBancario detalleMovimientoSelected;
+	private CuentaBancaria cuentaBancariaFilter;
 	
 	private boolean estado = true;
 	private String tituloDialog;
 	private BigDecimal saldoFinalMovimiento, dineroActualCuenta, dineroTemporalCuenta;
+	private Date fechaDetalleFilter;
 	
 	private UploadedFile file;
 	private StreamedContent fileFormato;
@@ -121,7 +123,8 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	@PostConstruct
 	public void init() {
 		iniciarLazy();
-		lstCuentaBancaria=cuentaBancariaService.findByEstado(true);
+		lstCuentaBancaria=cuentaBancariaService.findByEstadoAndSucursal(true, navegacionBean.getSucursalLogin());
+		lstCuentaBancariaAll = cuentaBancariaService.findBySucursal(navegacionBean.getSucursalLogin());
 		
 		lstTipoMovEntrada = tipoMovimientoService.findByEstadoAndTipoOrderByNombreAsc(true, "E");
 		lstTipoMovSalida = tipoMovimientoService.findByEstadoAndTipoOrderByNombreAsc(true, "S");
@@ -231,6 +234,9 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	
 	public void verDetalles() {
 		saldoFinalMovimiento = detalleMovimientoBancarioService.totalImporteMovimiento(movimientoBancarioSelected.getId());
+		if(saldoFinalMovimiento == null) {
+			saldoFinalMovimiento = BigDecimal.ZERO;
+		}
 		saldoFinalMovimiento = movimientoBancarioSelected.getSaldoInicial().add(saldoFinalMovimiento);
 		iniciarLazyDetalle();
 	}
@@ -254,6 +260,9 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 		lstDetalleImportar = new ArrayList<>();
 		
 		dineroActualCuenta = detalleMovimientoBancarioService.totalImporteMovimiento(movimientoBancarioSelected.getId()).add(movimientoBancarioSelected.getSaldoInicial());
+		if(dineroActualCuenta==null) {
+			dineroActualCuenta = BigDecimal.ZERO;
+		}
 		dineroTemporalCuenta = dineroActualCuenta;
 	}
 	
@@ -288,12 +297,65 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
                     	
                     	switch(cont) {
                     	  case 0:
+                    		  String[] parts = cellValue.split("/");
+                    		  String part1 = parts[0]; // 123 
+                    		  String part2 = parts[1]; // 654321
+                    		  String part3 = parts[2]; // 654321
+                    		  
+                    		  boolean valida = false;
+                    		  if(part1.length()==1) {
+                    			  part1 = "0"+part1;
+                    			  valida = true;
+                    		  }
+                    		  if(part2.length()==1) {
+                    			  part2 = "0"+part2;
+                    			  valida = true;
+                    		  }
+                    		  if(part3.length()==2) {
+                    			  part3 = "20"+part3;
+                    			  valida = true;
+                    		  }
+                    		  
+                    		  if(!valida) {
+                    			  cellValue = part1+"/"+part2+"/"+part3; 
+                    		  }else {
+                    			  cellValue = part2+"/"+part1+"/"+part3;
+                    		  }
+                    		  
+                    		  
+                    		  
                     	    nuevoDetalle.setFechaOperacion(sdf.parse(cellValue));
                     	    break;
                     	  case 1:
                     		  if(cellValue.equals("-")) {
                     			  nuevoDetalle.setFechaProceso(null); 
                     		  }else {
+                    			  String[] partsPro = cellValue.split("/");
+                        		  String part1Pro = partsPro[0]; // 123 
+                        		  String part2Pro = partsPro[1]; // 654321
+                        		  String part3Pro = partsPro[2]; // 654321
+                        		  
+                        		  boolean validaPro = false;
+                        		  if(part1Pro.length()==1) {
+                        			  part1Pro = "0"+part1Pro;
+                        			  validaPro = true;
+                        		  }
+                        		  if(part2Pro.length()==1) {
+                        			  part2Pro = "0"+part2Pro;
+                        			  validaPro = true;
+                        		  }
+                        		  if(part3Pro.length()==2) {
+                        			  part3Pro = "20"+part3Pro;
+                        			  validaPro = true;
+                        		  }
+                        		  
+                        		  if(!validaPro) {
+                        			  cellValue = part1Pro+"/"+part2Pro+"/"+part3Pro;
+                        		  }else {
+                        			  cellValue = part2Pro+"/"+part1Pro+"/"+part3Pro;
+                        		  }
+                        		  
+                    			  
                     			  nuevoDetalle.setFechaProceso(sdf.parse(cellValue));
                     		  }
                     		  break;
@@ -319,6 +381,9 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
                     	  case 5:
                     		  
                     		  cellValue = cellValue.replace(",", "");
+                    		  cellValue = cellValue.replace(" ", "");
+                    		  cellValue = cellValue.replace("/", "");
+                    		  cellValue = cellValue.replace("S", "");
                     		  nuevoDetalle.setImporte(new BigDecimal(cellValue));
                     		  
                     		  dineroTemporalCuenta = dineroTemporalCuenta.add(nuevoDetalle.getImporte());
@@ -349,7 +414,6 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
         }
     }
 
-	
 	public List<TipoMovimiento> listarTipoMovimiento(DetalleMovimientoBancario detalle){
 		if(detalle.getImporte().compareTo(BigDecimal.ZERO)==1) { 				
 			return lstTipoMovEntrada;
@@ -430,6 +494,11 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
                
 				String mes = "%" + (filterBy.get("mes") != null ? filterBy.get("mes").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
 				String anio = "%" + (filterBy.get("anio") != null ? filterBy.get("anio").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
+				
+				String cuentaBanc = "%%";
+				if(cuentaBancariaFilter != null) {
+					cuentaBanc = "%"+cuentaBancariaFilter.getNumero()+"%";
+				}
 
                 Sort sort=Sort.by("id").descending();
                 if(sortBy!=null) {
@@ -447,7 +516,7 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
                 Page<MovimientoBancario> pageProfile=null;
                
                 
-                pageProfile= movimientoBancarioService.findByEstadoAndMesLikeAndAnioLike(estado, mes, anio, pageable);
+                pageProfile= movimientoBancarioService.findByEstadoAndMesLikeAndAnioLikeAndCuentaBancariaNumeroLikeAndCuentaBancariaSucursal(estado, mes, anio, cuentaBanc, navegacionBean.getSucursalLogin(), pageable);
                 
                 setRowCount((int) pageProfile.getTotalElements());
                 return datasource = pageProfile.getContent();
@@ -488,8 +557,9 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 			@Override
 			public List<DetalleMovimientoBancario> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
                
-				String mes = "%" + (filterBy.get("mes") != null ? filterBy.get("mes").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
-				String anio = "%" + (filterBy.get("anio") != null ? filterBy.get("anio").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
+//				String mes = "%" + (filterBy.get("mes") != null ? filterBy.get("mes").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
+//				String anio = "%" + (filterBy.get("anio") != null ? filterBy.get("anio").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
+				
 
                 Sort sort=Sort.by("id").descending();
                 if(sortBy!=null) {
@@ -506,8 +576,14 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
                
                 Page<DetalleMovimientoBancario> pageProfile=null;
                
+                if(fechaDetalleFilter == null) {
+                	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancario(true, movimientoBancarioSelected, pageable);
+				}else {
+					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacion(true, movimientoBancarioSelected, fechaDetalleFilter, pageable);
+				}
+
                 
-                pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancario(true, movimientoBancarioSelected, pageable);
+                
                 
                 setRowCount((int) pageProfile.getTotalElements());
                 return datasource = pageProfile.getContent();
@@ -662,6 +738,34 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
                     return "";
                 } else {
                     return ((Lote) value).getId() + "";
+                }
+            }
+        };
+    }
+	
+	public Converter getConversorCuentaBancariaAll() {
+        return new Converter() {
+            @Override
+            public Object getAsObject(FacesContext context, UIComponent component, String value) {
+                if (value.trim().equals("") || value == null || value.trim().equals("null")) {
+                    return null;
+                } else {
+                	CuentaBancaria c = null;
+                    for (CuentaBancaria si : lstCuentaBancariaAll) {
+                        if (si.getId().toString().equals(value)) {
+                            c = si;
+                        }
+                    }
+                    return c;
+                }
+            }
+
+            @Override
+            public String getAsString(FacesContext context, UIComponent component, Object value) {
+                if (value == null || value.equals("")) {
+                    return "";
+                } else {
+                    return ((CuentaBancaria) value).getId() + "";
                 }
             }
         };
@@ -856,5 +960,24 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	public void setDineroTemporalCuenta(BigDecimal dineroTemporalCuenta) {
 		this.dineroTemporalCuenta = dineroTemporalCuenta;
 	}
+	public List<CuentaBancaria> getLstCuentaBancariaAll() {
+		return lstCuentaBancariaAll;
+	}
+	public void setLstCuentaBancariaAll(List<CuentaBancaria> lstCuentaBancariaAll) {
+		this.lstCuentaBancariaAll = lstCuentaBancariaAll;
+	}
+	public CuentaBancaria getCuentaBancariaFilter() {
+		return cuentaBancariaFilter;
+	}
+	public void setCuentaBancariaFilter(CuentaBancaria cuentaBancariaFilter) {
+		this.cuentaBancariaFilter = cuentaBancariaFilter;
+	}
+	public Date getFechaDetalleFilter() {
+		return fechaDetalleFilter;
+	}
+	public void setFechaDetalleFilter(Date fechaDetalleFilter) {
+		this.fechaDetalleFilter = fechaDetalleFilter;
+	}
+	
 	
 }

@@ -21,17 +21,17 @@
 		<p:panelGrid style="margin-bottom: 20px" id="grdLotes" columns="5" layout="grid">
 			<p:outputLabel value="No se ha registrado lotes" rendered="#{mapeoLoteBean.cantidadLotes eq 0}"  />
 			<p:repeat value="#{mapeoLoteBean.lstLotes}" var="lote">
-          			<p:button value="#{lote.manzana.name}-#{lote.numberLote}" rendered="#{lote.numberLote ne 'x'}" disabled="true" style="background:#{lote.status eq 'Vendido'?'red':lote.status eq 'Separado'?'blue':lote.status eq 'Disponible'?'green':'black'}"> </p:button>
+          			<p:button value="#{lote.manzana.name}-#{lote.numberLote}" rendered="#{lote.numberLote ne 'x'}" style="color: black;background:#{lote.status eq 'Vendido'?'red':lote.status eq 'Separado'?'blue':lote.status eq 'Disponible'?'green':'black'}"> </p:button>
        			<p:separator rendered="#{lote.numberLote eq 'x'}"/>
        		</p:repeat>
 		</p:panelGrid>
 		
 		Leyenda:
 		<p:panelGrid  columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"> 
-			<p:button value="Disponible" style="background: green" disabled="true"/>
-			<p:button value="Separado" style="background: blue" disabled="true"/>
-			<p:button value="Vendido" style="background: red" disabled="true"/>
-			<p:button value="Inactivo" style="background: black" disabled="true"/>
+			<p:button value="Disponible" style="background: green; color: black;" />
+			<p:button value="Separado" style="background: blue; color: black;" />
+			<p:button value="Vendido" style="background: red; color: black;" />
+			<p:button value="Inactivo" style="background: black; color: white;" />
 		</p:panelGrid>
 		
 

@@ -54,6 +54,8 @@ public class Usuario {
 	@Column(name="modolecturamantvoucher")
 	private boolean modoLecturaMantVoucher;
 	
+	@Column(name="modificarmovimientocargo")
+	private boolean modificarMovimientoCargo;
 	
 	
 	public Integer getId() {
@@ -140,6 +142,12 @@ public class Usuario {
 	public void setModoLecturaMantVoucher(boolean modoLecturaMantVoucher) {
 		this.modoLecturaMantVoucher = modoLecturaMantVoucher;
 	}
-	
+	public boolean isModificarMovimientoCargo() {
+		return modificarMovimientoCargo;
+	}
+	public void setModificarMovimientoCargo(boolean modificarMovimientoCargo) {
+		this.modificarMovimientoCargo = modificarMovimientoCargo;
+	}
+
 	
 }

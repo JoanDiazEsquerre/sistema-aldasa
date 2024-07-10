@@ -13,5 +13,6 @@ public interface CuentaBancariaRepository  extends JpaRepository<CuentaBancaria,
 
 	List<CuentaBancaria> findByEstado(boolean estado);
 	List<CuentaBancaria> findByEstadoAndSucursal(boolean estado, Sucursal sucursal);
+	List<CuentaBancaria> findBySucursal(Sucursal sucursal);
 
 }

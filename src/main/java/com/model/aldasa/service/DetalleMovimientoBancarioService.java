@@ -1,6 +1,7 @@
 package com.model.aldasa.service;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +18,7 @@ public interface DetalleMovimientoBancarioService {
 	void delete(DetalleMovimientoBancario entity);
 	
 	Page<DetalleMovimientoBancario> findByEstadoAndMovimientoBancario(boolean estado, MovimientoBancario movimientoBancario, Pageable pageable);
+	Page<DetalleMovimientoBancario> findByEstadoAndMovimientoBancarioAndFechaOperacion(boolean estado, MovimientoBancario movimientoBancario, Date fechaOperacion, Pageable pageable);
 	
 	BigDecimal totalImporteMovimiento(int idMovimientoBancario);
 }
