@@ -14,12 +14,16 @@
 			<p:tab title="Lista de Req. de Separación">
 				<p:selectOneButton value="#{requerimientoSeparacionBean.estado}" unselectable="false">
 					<f:selectItem itemLabel="Pendientes" itemValue="Pendiente"/>
-					<f:selectItem itemLabel="Aprobado" itemValue="Aprobado"/>
+					<f:selectItem itemLabel="En Proceso" itemValue="En Proceso"/>
+					<f:selectItem itemLabel="Vencidos" itemValue="Vencido"/>
+					<f:selectItem itemLabel="Terminados" itemValue="Terminado"/>
+					<f:selectItem itemLabel="Sin Asignar" itemValue="Sin Asignar"/>
 					<f:selectItem itemLabel="Rechazados" itemValue="Rechazado"/>
 					<f:selectItem itemLabel="Anulados" itemValue="Anulado"/>
 					
-					<p:ajax update=":form:tabView:idTableReqsep" />
+					<p:ajax update=":form:tabView:idTableReqsep :form:tabView:menuTablaPrinc" />
 				</p:selectOneButton>
+				
 				<p:dataTable var="req" id="idTableReqsep" value="#{requerimientoSeparacionBean.lstReqSepLazy}" rowIndexVar="row" paginator="true" rows="20" size="small" style="width: 120%"
 				emptyMessage="No se encontraron requerimientos de separación." paginatorPosition="bottom" rowKey="#{req.id}" selection="#{requerimientoSeparacionBean.requerimientoSeparacionSelected}" 
 				selectionMode="single"> 
@@ -62,12 +66,20 @@
 						<h:outputText value="#{req.lote.project.name}" style="font-size: 14px;"/>
 					</p:column>
 					
-					<p:column headerText="Manzana" sortBy="#{req.lote.manzana.name}" filterBy="#{req.lote.manzana.name}" filterMatchMode="contains">
+					<p:column headerText="Manzana" sortBy="#{req.lote.manzana.name}" filterBy="#{req.lote.manzana.name}" filterMatchMode="contains" style="text-align: center">
 						<h:outputText value="#{req.lote.manzana.name}" />
 					</p:column>
 					
-					<p:column headerText="Lote" sortBy="#{req.lote.numberLote}" filterBy="#{req.lote.numberLote}" filterMatchMode="contains">
+					<p:column headerText="Lote" sortBy="#{req.lote.numberLote}" filterBy="#{req.lote.numberLote}" filterMatchMode="contains" style="text-align: center">
 						<h:outputText value="#{req.lote.numberLote}" />
+					</p:column>
+					
+					<p:column headerText="Monto" filterMatchMode="contains" sortBy="#{req.monto}" style="text-align: center">
+						<h:outputText value="#{req.monto}" />
+					</p:column>
+					
+					<p:column headerText="Monto Adicional" sortBy="#{req.montoAdicional}" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{req.montoAdicional}" />
 					</p:column>
 					
 					<p:column headerText="Asesor" sortBy="#{req.personAsesor.surnames}" filterBy="#{req.personAsesor.surnames}" filterMatchMode="contains">
@@ -88,11 +100,11 @@
 						</h:outputText>
 					</p:column>
 					
-					<p:column headerText="Usuario Aprobación" sortBy="#{req.usuarioAprueba.username}" rendered="#{requerimientoSeparacionBean.estado eq 'Aprobado'}" filterMatchMode="contains">
+					<p:column headerText="Usuario Aprobación" sortBy="#{req.usuarioAprueba.username}" rendered="#{requerimientoSeparacionBean.estado eq 'En Proceso'}" filterMatchMode="contains">
 						<h:outputText value="#{req.usuarioAprueba.username}" />
 					</p:column>
 					
-					<p:column headerText="Fecha Aprobación" sortBy="#{req.fechaAprueba}" rendered="#{requerimientoSeparacionBean.estado eq 'Aprobado'}" filterMatchMode="contains">
+					<p:column headerText="Fecha Aprobación" sortBy="#{req.fechaAprueba}" rendered="#{requerimientoSeparacionBean.estado eq 'En Proceso'}" filterMatchMode="contains">
 						<h:outputText value="#{requerimientoSeparacionBean.convertirHoraFull(req.fechaAprueba)}" />
 					</p:column>
 					
@@ -115,10 +127,12 @@
 						<h:outputText value="#{req.observacion} " />
 					</p:column>
 										
-				</p:dataTable>
+				</p:dataTable> 
 				
-				<p:contextMenu for="idTableReqsep">
+				<p:contextMenu for="idTableReqsep" id="menuTablaPrinc">					
 					<p:menuitem value="Cambiar Lote" update="formCambioLote" action="#{requerimientoSeparacionBean.iniciarVariablesCambioLote}" icon="pi pi-pencil" onclick="PF('cambiarLoteDialog').show();"/>
+					<p:menuitem value="Cambiar Fecha Vencimiento" update="formCambiarFechaVenc" actionListener="#{requerimientoSeparacionBean.opcionCambiarFechaVencimiento()}" rendered="#{requerimientoSeparacionBean.estado eq 'Vencido'}" icon="pi pi-pencil" onclick="PF('cambiarFechaVencDialog').show();"/>
+					<p:menuitem value="Pasar a Sin Asignar" icon="pi pi-pencil" update="menuTablaPrinc" onclick="PF('sinAsignarRequerimiento').show();" rendered="#{requerimientoSeparacionBean.estado eq 'En Proceso' or requerimientoSeparacionBean.estado eq 'Vencido'}"/> 
 		            <p:menuitem value="Anular" update="idTableReqsep" icon="pi pi-times" action="#{requerimientoSeparacionBean.validarAnulacion}"/>
 		        </p:contextMenu>
 				
@@ -207,7 +221,7 @@
 	
 	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="dialogPlantilla" header="REQUERIMIENTO SEPARACIÓN" widgetVar="plantillaNewDialog" resizable="false" closable="true"
 		appendTo="@(body)"  width="50%" height="500px">
-		<h:form id="formPlantillaDialog">
+		<h:form id="formPlantillaDialog" enctype="multipart/form-data">
 			<p:tabView id="tabPlantilla">
 				<p:tab title="Aprobación"> 
 					<p:commandButton value="APROBAR" actionListener="#{requerimientoSeparacionBean.aprobarRequerimiento}" rendered="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.estado eq 'Pendiente' and navegacionBean.usuarioLogin.aprobarRequerimientoSeparacion}" process="@this" update=":form:tabView:idTableReqsep" style="margin:10px" styleClass="ui-button-success"/>
@@ -244,7 +258,50 @@
 		        		<h:outputLabel value="Observación: " style="font-weight:bold"/>
 						<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.observacion}" style="font-weight:bold; color: green"/> 
 					</h:panelGrid>
-					<h:panelGrid columns="5" > 
+					
+					<p:dataTable var="req" id="idTableDetalleSep" value="#{requerimientoSeparacionBean.lstDetalleRequerimientoSeparacionSelected}" rowIndexVar="row" paginator="true" size="small" 
+						emptyMessage="No se encontraron detalles de separación." paginatorPosition="bottom" rowKey="#{req.id}" 
+						selectionMode="single"> 
+												
+					
+						<f:facet name="header">
+							<div class="p-d-flex p-ai-center p-jc-between">
+								<span>Lista de Detalles del Requerimiento</span>
+							</div>
+						</f:facet>
+			
+						<p:column style="width:42px;">
+							<f:facet name="header">
+							N°
+							</f:facet>
+						</p:column>
+			
+						<p:column width="25px">
+			                   		#{row +1}
+			     		</p:column>
+			     	
+						<p:column headerText="Monto" filterMatchMode="contains" sortBy="#{req.monto}" style="text-align: center">
+							<h:outputText value="#{req.monto}" />
+						</p:column>
+						
+						<p:column headerText="Fecha" sortBy="#{req.fecha}" style="text-align: center" filterMatchMode="contains">
+							<h:outputText value="#{req.fecha}" > 
+								<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+							
+						</p:column>
+						
+						<p:column headerText="Pago Total" filterMatchMode="contains" sortBy="#{req.pagoTotal}" style="text-align: center">
+							<h:outputText value="#{req.pagoTotal eq 'S' ? 'SI' : 'NO'}" /> 
+						</p:column>
+						
+						<p:column>
+							<p:commandButton icon="pi pi-trash" styleClass="rounded-button ui-button-danger" ac/>xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+						</p:column>		
+					</p:dataTable> 
+					
+					
+					<h:panelGrid columns="5" id="gridBotonesImagen"> 
 					
 						<p:commandButton value="IMAGEN 1" update=":formPlantillaDialog:tabPlantilla:imagenLoad" process="@this" disabled="#{requerimientoSeparacionBean.imagen1 eq ''}" >
 							<f:setPropertyActionListener value="#{requerimientoSeparacionBean.imagen1}" target="#{loadImageBean.nombreArchivo}"  />
@@ -361,6 +418,19 @@
 					</p:dataTable>
 				
 				</p:tab>
+				
+				<p:tab title="Agregar más Efectivo"> 
+					<h:panelGrid columns="4">
+						<h:outputLabel value="Monto:" />
+						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{requerimientoSeparacionBean.montoAgregar}" id="montoAdicional"/>
+						<p:commandButton value="Guardar" action="#{requerimientoSeparacionBean.saveDetalleRequerimientoSeparacion}" update=":formPlantillaDialog:tabPlantilla:idTableDetalleSep :formPlantillaDialog:tabPlantilla:gridBotonesImagen :formPlantillaDialog:tabPlantilla:montoAdicional" />
+						
+						<p:fileUpload value="#{requerimientoSeparacionBean.file1Add}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>
+					</h:panelGrid>
+					 
+						
+				
+				</p:tab>
 			</p:tabView>
 			
 		</h:form>
@@ -407,6 +477,36 @@
 					</p:selectOneMenu>
 					
 					<p:commandButton value="Guardar" action="#{requerimientoSeparacionBean.saveCambioLote}" update=":form:tabView:idTableReqsep"/>
+		        
+		        </h:panelGrid>
+		    </p:panel>
+		
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog modal="true" dynamic="true" closeOnEscape="true" id="cambiarFechaVencDialog" header="CAMBIAR FECHA DE VENCIMIENTO" widgetVar="cambiarFechaVencDialog" resizable="false" closable="true"
+		appendTo="@(body)">
+		<h:form id="formCambiarFechaVenc">
+			<p:panel header="INF. DE LOTE" style="margin: 20px;">
+		        <h:panelGrid columns="2">
+		        	<p:outputLabel value="Proyecto: "/>
+					<p:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.project.name}"/>
+					
+					<p:outputLabel value="Manzana: "/>
+					<p:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.manzana.name}"/>
+					
+					<p:outputLabel value="Número del lote: "/>
+					<p:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.lote.numberLote}"/>
+			
+		        </h:panelGrid>
+		    </p:panel>
+		    
+		    <p:panel header="NUEVA FECHA VENCIMIENTO:" style="margin: 20px;">
+		        <h:panelGrid columns="2">
+					<h:outputLabel value="Fecha de Vencimiento: " />
+					<p:datePicker value="#{requerimientoSeparacionBean.fechaCambio}" />
+
+					<p:commandButton value="Guardar" action="#{requerimientoSeparacionBean.cambiarFechaVencimiento}" update=":form:tabView:idTableReqsep"/>
 		        
 		        </h:panelGrid>
 		    </p:panel>
@@ -477,5 +577,95 @@
             
         </h:form>
     </p:confirmDialog>
+    
+    
+    <pe:blockUI target="sinAsignarRequerimiento" widgetVar="blockUIWidgetSinAsignar">
+          <h:form style="background: white"> 
+          <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
+          </h:form>
+    </pe:blockUI>
+    <p:confirmDialog id="sinAsignarRequerimiento" message="¿Está seguro de pasar a Sin Asignar la separación?" header="Confirmación" severity="alert" widgetVar="sinAsignarRequerimiento" appendTo="@(body)">
+        <h:form >
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetSinAsignar').block();" oncomplete="PF('blockUIWidgetSinAsignar').unblock();PF('sinAsignarRequerimiento').hide()"  action="#{requerimientoSeparacionBean.pasarSinAsignarRequerimiento()}" 
+            update=":form:tabView:idTableReqsep :form:tabView:idPanelPlantilla  :form:tabView:pnlCond"/>
+            <p:commandButton value="NO" oncomplete="PF('sinAsignarRequerimiento').hide()"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    
+    
+    
+    
+    <script>
+	    PrimeFaces.locales['es'] = {
+	        monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+	        monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+	        dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+	        dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+	        dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+	        weekHeader: 'Semana',
+	        firstDay: 1,
+	        isRTL: false,
+	        showMonthAfterYear: false,
+	        yearSuffix: '',
+	        timeOnlyTitle: 'Sólo hora',
+	        timeText: 'Tiempo',
+	        hourText: 'Hora',
+	        minuteText: 'Minuto',
+	        secondText: 'Segundo',
+	        millisecondText: 'Milisegundo',
+	        ampm: false,
+	        month: 'Mes',
+	        week: 'Semana',
+	        day: 'Día',
+	        allDayText: 'Todo el día',
+	        today: 'Hoy',
+	        now: 'Ahora',
+	        clear: 'Limpiar',
+	        aria: {
+	           close: 'Cerrar',
+	           previous: 'Anterior',
+	           next: 'Siguiente',
+	       }
+	    };
+	    PrimeFaces.locales ['de'] = {
+	        monthNames: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+	        monthNamesShort: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+	        dayNames: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+	        dayNamesShort: ['Son', 'Mon', 'Die', 'Mit', 'Don', 'Fre', 'Sam'],
+	        dayNamesMin: ['S', 'M', 'D', 'M ', 'D', 'F ', 'S'],
+	        weekHeader: 'Woche',
+	        firstDay: 1,
+	        isRTL: false,
+	        showMonthAfterYear: false,
+	        yearSuffix: '',
+	        timeOnlyTitle: 'Nur Zeit',
+	        timeText: 'Zeit',
+	        hourText: 'Stunde',
+	        minuteText: 'Minute',
+	        secondText: 'Sekunde',
+	        today: 'Aktuelles Datum',
+	        now: 'Jetzt',
+	        ampm: false,
+	        month: 'Monat',
+	        week: 'Woche',
+	        day: 'Tag',
+	        allDayText: 'Ganzer Tag',
+	        aria: {
+	           close: 'Schließen',
+	           previous: 'Zurück',
+	           next: 'Weiter',
+	       }
+	    };
+	</script>
+
+	<script>
+	    //<![CDATA[
+	    function dateTemplateFunc(date) {
+	        return '<span style="background-color:' + ((date.day < 21 && date.day > 10) ? '#81C784' : 'inherit') + ';border-radius:50%;width: 2.5rem;height: 2.5rem;line-height: 2.5rem;display: flex;align-items: center;justify-content: center;">' + date.day + '</span>';
+	    }
+	
+	    //]]>
+	</script>
 
 </ui:composition>

@@ -196,19 +196,19 @@
 				<p:tab title="Límites" > 
 					<h:panelGrid id="gridLimites" columns="2">
 						<h:outputLabel value="Límite frontal: " for="limiteFrontal" />
-						<p:inputText id="limiteFrontal" value="#{loteBean.loteSelected.limiteFrontal}" modifyValueOnWheel="false" maxlength="45" />  
+						<p:inputText id="limiteFrontal" value="#{loteBean.loteSelected.limiteFrontal}" modifyValueOnWheel="false" maxlength="200" />  
 						
 						<h:outputLabel value="Límite costado derecho (ML): " for="limiteCostDerecho" />
-						<p:inputText id="limiteCostDerecho" value="#{loteBean.loteSelected.limiteDerecha}" modifyValueOnWheel="false" maxlength="45" /> 		
+						<p:inputText id="limiteCostDerecho" value="#{loteBean.loteSelected.limiteDerecha}" modifyValueOnWheel="false" maxlength="200" /> 		
 						
 						<h:outputLabel value="Límite costado izquierdo (ML): " for="limiteCostIzq" />
-						<p:inputText id="limiteCostIzq" value="#{loteBean.loteSelected.limiteIzquierda}" modifyValueOnWheel="false" maxlength="45" /> 
+						<p:inputText id="limiteCostIzq" value="#{loteBean.loteSelected.limiteIzquierda}" modifyValueOnWheel="false" maxlength="200" /> 
 						
 						<h:outputLabel value="Límite fondo (ML): " for="limiteFondo" />
-						<p:inputText id="limiteFondo" value="#{loteBean.loteSelected.limiteFondo}" modifyValueOnWheel="false" maxlength="45" /> 
+						<p:inputText id="limiteFondo" value="#{loteBean.loteSelected.limiteFondo}" modifyValueOnWheel="false" maxlength="200" /> 
 						
 						<h:outputLabel value="Comentario: " for="comentario" />
-						<p:inputText id="comentario" value="#{loteBean.loteSelected.comentario}" modifyValueOnWheel="false" maxlength="50" /> 
+						<p:inputText id="comentario" value="#{loteBean.loteSelected.comentario}" modifyValueOnWheel="false" maxlength="100" /> 
 					</h:panelGrid>
 				</p:tab>
 				<p:tab title="Datos de venta" rendered="#{loteBean.loteSelected.status eq 'Vendido'}">

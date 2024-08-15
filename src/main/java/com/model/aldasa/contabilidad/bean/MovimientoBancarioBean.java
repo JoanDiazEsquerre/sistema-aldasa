@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,7 +31,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import com.model.aldasa.entity.Contrato;
 import com.model.aldasa.entity.CuentaBancaria;
+import com.model.aldasa.entity.Cuota;
 import com.model.aldasa.entity.DetalleMovimientoBancario;
 import com.model.aldasa.entity.Lote;
 import com.model.aldasa.entity.Manzana;
@@ -47,6 +51,7 @@ import com.model.aldasa.service.MovimientoBancarioService;
 import com.model.aldasa.service.ProjectService;
 import com.model.aldasa.service.TipoMovimientoService;
 import com.model.aldasa.util.BaseBean;
+import com.model.aldasa.util.EstadoContrato;
 import com.model.aldasa.util.UtilXls;
 
 import org.apache.poi.ss.usermodel.*;
@@ -110,18 +115,22 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	private CuentaBancaria cuentaBancariaFilter;
 	
 	private boolean estado = true;
-	private String tituloDialog;
-	private BigDecimal saldoFinalMovimiento, dineroActualCuenta, dineroTemporalCuenta;
+	private String tituloDialog, busquedaPor;
+	private BigDecimal saldoFinalMovimiento, dineroActualCuenta, dineroTemporalCuenta, totalAbonoIdent, totalCargoIdent, totalAbonoSinIdent, totalCargoSinIdent;
 	private Date fechaDetalleFilter;
 	
 	private UploadedFile file;
 	private StreamedContent fileFormato;
+	private StreamedContent fileDes;
 	
 	SimpleDateFormat sdfYear = new SimpleDateFormat("yyyy");
 	SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+	SimpleDateFormat sdfQuery = new SimpleDateFormat("yyyy-mm-dd");
 	
 	@PostConstruct
 	public void init() {
+		busquedaPor = "todos";
+		
 		iniciarLazy();
 		lstCuentaBancaria=cuentaBancariaService.findByEstadoAndSucursal(true, navegacionBean.getSucursalLogin());
 		lstCuentaBancariaAll = cuentaBancariaService.findBySucursal(navegacionBean.getSucursalLogin());
@@ -129,6 +138,140 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 		lstTipoMovEntrada = tipoMovimientoService.findByEstadoAndTipoOrderByNombreAsc(true, "E");
 		lstTipoMovSalida = tipoMovimientoService.findByEstadoAndTipoOrderByNombreAsc(true, "S");
 		lstProyectos = projectService.findByStatusOrderByNameAsc(true);
+	}
+	
+	public void calcularMontosIdentificados() {
+		totalAbonoIdent = BigDecimal.ZERO;
+		totalCargoIdent = BigDecimal.ZERO;
+		totalAbonoSinIdent = BigDecimal.ZERO;
+		totalCargoSinIdent = BigDecimal.ZERO;
+		
+		if(busquedaPor.equals("abonosIdentificados")) {
+			totalAbonoIdent = detalleMovimientoBancarioService.totalImporteAbonoIdentificado(movimientoBancarioSelected.getId());			
+        
+		}else if(busquedaPor.equals("cargosIdentificados")) {
+        	totalCargoIdent = detalleMovimientoBancarioService.totalImporteCargoIdentificado(movimientoBancarioSelected.getId());			
+        	
+        }else if(busquedaPor.equals("abonosCargosIdentificados")) {
+        	totalAbonoIdent = detalleMovimientoBancarioService.totalImporteAbonoIdentificado(movimientoBancarioSelected.getId());
+        	totalCargoIdent = detalleMovimientoBancarioService.totalImporteCargoIdentificado(movimientoBancarioSelected.getId());			
+   	
+        } 
+		
+		if(busquedaPor.equals("abonosSinIdentificar")) {
+        	totalAbonoSinIdent = detalleMovimientoBancarioService.totalImporteAbonoSinIdentificar(movimientoBancarioSelected.getId());
+		
+		}else if(busquedaPor.equals("cargosSinIdentificar")) {
+	    	totalCargoSinIdent = detalleMovimientoBancarioService.totalImporteCargoSinIdentificar(movimientoBancarioSelected.getId());
+	    
+		}else if(busquedaPor.equals("abonosCargosSinIdentificar")) {
+        	totalAbonoSinIdent = detalleMovimientoBancarioService.totalImporteAbonoSinIdentificar(movimientoBancarioSelected.getId());
+	    	totalCargoSinIdent = detalleMovimientoBancarioService.totalImporteCargoSinIdentificar(movimientoBancarioSelected.getId());
+
+        }
+	}
+	
+	public void procesarExcel() {		
+		XSSFWorkbook workbook = new XSSFWorkbook();
+		XSSFSheet sheet = workbook.createSheet("Reporte Contratos");
+
+		CellStyle styleBorder = UtilXls.styleCell(workbook, 'B');
+		CellStyle styleTitulo = UtilXls.styleCell(workbook, 'A');
+		
+		Row rowSubTitulo = sheet.createRow(0);
+		Cell cellSub1 = null;
+		cellSub1 = rowSubTitulo.createCell(0);cellSub1.setCellValue("FECHA OPERACIÓN");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(1);cellSub1.setCellValue("FECHA PROCESO");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(2);cellSub1.setCellValue("HORA");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(3);cellSub1.setCellValue("NUMERO OPERACIÓN");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(4);cellSub1.setCellValue("DESCRIPCION / REFERENCIA");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(5);cellSub1.setCellValue("TIPO MOVIMIENTO");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(6);cellSub1.setCellValue("CARGO");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(7);cellSub1.setCellValue("ABONO");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(8);cellSub1.setCellValue("OBSERVACION");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(9);cellSub1.setCellValue("LOTE-MANZANA / PROYECTO");cellSub1.setCellStyle(styleTitulo);
+		
+		List<DetalleMovimientoBancario> lstDetalleMovimientoBancarios = new ArrayList<>();
+		
+		if(busquedaPor.equals("todos")) {
+			lstDetalleMovimientoBancarios = detalleMovimientoBancarioService.findByEstadoAndMovimientoBancario(true, movimientoBancarioSelected);
+			
+        }else if(busquedaPor.equals("abonosIdentificados")) {
+    		lstDetalleMovimientoBancarios= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndObservacionIsNotAndImporteGreaterThanAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, "", BigDecimal.ZERO );
+			
+        }else if(busquedaPor.equals("cargosIdentificados")) {
+        	lstDetalleMovimientoBancarios= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndObservacionIsNotAndImporteLessThanAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, "", BigDecimal.ZERO );
+			
+        	
+        }else if(busquedaPor.equals("abonosCargosIdentificados")) {
+        	lstDetalleMovimientoBancarios= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndObservacionIsNotAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, "");
+			
+        }else if(busquedaPor.equals("abonosSinIdentificar")) {
+        	lstDetalleMovimientoBancarios= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndImporteGreaterThanAndObservacionOrTipoMovimientoIsNull(movimientoBancarioSelected.getId());
+        }
+        else if(busquedaPor.equals("cargosSinIdentificar")) {
+        	lstDetalleMovimientoBancarios= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndImporteLessThanAndObservacionOrTipoMovimientoIsNull(movimientoBancarioSelected.getId());
+        }
+        else if(busquedaPor.equals("abonosCargosSinIdentificar")) {
+        	lstDetalleMovimientoBancarios= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndObservacionOrTipoMovimientoIsNull(movimientoBancarioSelected.getId());
+        }
+		
+		
+		int index = 1;
+		BigDecimal sumaAbono = BigDecimal.ZERO, sumaCargo = BigDecimal.ZERO;
+		
+		
+		if (!lstDetalleMovimientoBancarios.isEmpty()){
+			for(DetalleMovimientoBancario c : lstDetalleMovimientoBancarios) {				
+				rowSubTitulo = sheet.createRow(index);
+				cellSub1 = rowSubTitulo.createCell(0);cellSub1.setCellValue(c.getFechaOperacion() == null ? "": sdf.format(c.getFechaOperacion()));cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(1);cellSub1.setCellValue(c.getFechaProceso() == null ? "": sdf.format(c.getFechaProceso()));cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(2);cellSub1.setCellValue(c.getHora() == null ? "" : c.getHora());cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(3);cellSub1.setCellValue(c.getNumeroOperacion() == null ? "" : c.getNumeroOperacion());cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(4);cellSub1.setCellValue(c.getDescripcion() == null ? "" : c.getDescripcion());cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(5);cellSub1.setCellValue(c.getTipoMovimiento() == null ? "" : c.getTipoMovimiento().getNombre());cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(6);cellSub1.setCellValue(c.getImporte().compareTo(BigDecimal.ZERO)>0 ? "" : c.getImporte()+"");cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(7);cellSub1.setCellValue(c.getImporte().compareTo(BigDecimal.ZERO)<0 ? "" : c.getImporte()+"");cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(8);cellSub1.setCellValue(c.getObservacion() == null ? "" : c.getObservacion());cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(9);cellSub1.setCellValue(c.getLote() == null ? "" : c.getLote().getNumberLote()+"-"+c.getLote().getManzana().getName()+" / "+c.getLote().getProject().getName());cellSub1.setCellStyle(styleBorder);
+				
+				
+				if(c.getImporte().compareTo(BigDecimal.ZERO)>0) {
+					sumaAbono = sumaAbono.add(c.getImporte());
+				}else {
+					sumaCargo = sumaCargo.add(c.getImporte());
+				}
+
+				index++;
+			}
+		}
+		
+		rowSubTitulo = sheet.createRow(index);
+		cellSub1 = rowSubTitulo.createCell(6);cellSub1.setCellValue(sumaCargo+"");cellSub1.setCellStyle(styleBorder);
+		cellSub1 = rowSubTitulo.createCell(7);cellSub1.setCellValue(sumaAbono+"");cellSub1.setCellStyle(styleBorder);
+		
+		
+		for (int j = 0; j <= 9; j++) {
+			sheet.autoSizeColumn(j);
+			
+		}
+		try {
+			ServletContext scontext = (ServletContext) FacesContext.getCurrentInstance().getExternalContext()
+					.getContext();
+			String filePath = scontext.getRealPath("/WEB-INF/fileAttachments/" + "Reporte Movimientos.xlsx");
+			File file = new File(filePath);
+			FileOutputStream out = new FileOutputStream(file);
+			workbook.write(out);
+			out.close();
+			fileDes = DefaultStreamedContent.builder().name("Reporte Movimientos.xlsx").contentType("aplication/xls")
+					.stream(() -> FacesContext.getCurrentInstance().getExternalContext()
+							.getResourceAsStream("/WEB-INF/fileAttachments/" + "Reporte Movimientos.xlsx"))
+					.build();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void modificarLoteDetalle() {
@@ -201,8 +344,7 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 		}
 
 	}
-	
-	
+		
 	public void listarLotes() {
 		if(manzanaMov != null) {
 			lstLotes = loteService.findByProjectAndManzanaAndStatusLikeOrderByManzanaNameAscNumberLoteAsc(proyectoMov, manzanaMov, "%%");
@@ -238,7 +380,23 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 			saldoFinalMovimiento = BigDecimal.ZERO;
 		}
 		saldoFinalMovimiento = movimientoBancarioSelected.getSaldoInicial().add(saldoFinalMovimiento);
+		
+		fechaDetalleFilter = null;
+		busquedaPor = "todos";
 		iniciarLazyDetalle();
+	}
+	
+	public BigDecimal obtenerSaldoFinalCabecera(MovimientoBancario movimientoBancario) {
+		BigDecimal saldoFinal = BigDecimal.ZERO;
+		
+		saldoFinal = detalleMovimientoBancarioService.totalImporteMovimiento(movimientoBancario.getId());
+		if(saldoFinal == null) {
+			saldoFinal = BigDecimal.ZERO;
+		}
+		saldoFinal = movimientoBancario.getSaldoInicial().add(saldoFinal);
+		
+		
+		return saldoFinal;
 	}
 	
 	public void importarDetallesMovimientos() {
@@ -576,11 +734,61 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
                
                 Page<DetalleMovimientoBancario> pageProfile=null;
                
-                if(fechaDetalleFilter == null) {
-                	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancario(true, movimientoBancarioSelected, pageable);
-				}else {
-					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacion(true, movimientoBancarioSelected, fechaDetalleFilter, pageable);
-				}
+                if(busquedaPor.equals("todos")) {
+                	if(fechaDetalleFilter == null) {
+                    	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancario(true, movimientoBancarioSelected, pageable);
+    				}else {
+    					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacion(true, movimientoBancarioSelected, fechaDetalleFilter, pageable);
+    				}
+                }else if(busquedaPor.equals("abonosIdentificados")) {
+                	if(fechaDetalleFilter == null) {
+                    	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndObservacionIsNotAndImporteGreaterThanAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, "", BigDecimal.ZERO ,pageable);
+    				}else {
+    					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacionAndObservacionIsNotAndImporteGreaterThanAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, fechaDetalleFilter, "", BigDecimal.ZERO, pageable);
+    				}
+                	
+                }else if(busquedaPor.equals("cargosIdentificados")) {
+                	if(fechaDetalleFilter == null) {
+                    	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndObservacionIsNotAndImporteLessThanAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, "", BigDecimal.ZERO ,pageable);
+    				}else {
+    					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacionAndObservacionIsNotAndImporteLessThanAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, fechaDetalleFilter, "", BigDecimal.ZERO, pageable);
+    				}
+                	
+                }else if(busquedaPor.equals("abonosCargosIdentificados")) {
+                	if(fechaDetalleFilter == null) {
+                    	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndObservacionIsNotAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, "" ,pageable);
+    				}else {
+    					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacionAndObservacionIsNotAndTipoMovimientoIsNotNull(true, movimientoBancarioSelected, fechaDetalleFilter, "", pageable);
+    				}
+                	
+                	
+                	
+                	
+                	
+                	
+                	
+                }else if(busquedaPor.equals("abonosSinIdentificar")) {	
+                	if(fechaDetalleFilter == null) {
+                    	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndImporteGreaterThanAndObservacionOrTipoMovimientoIsNull(true, movimientoBancarioSelected.getId(), pageable);
+    				}else {
+    					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacionAndImporteGreaterThanAndObservacionOrTipoMovimientoIsNull(true, movimientoBancarioSelected.getId(), sdfQuery.format(fechaDetalleFilter), pageable);
+    				}
+                	
+                }else if(busquedaPor.equals("cargosSinIdentificar")) {
+                	if(fechaDetalleFilter == null) {
+                    	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndImporteLessThanAndObservacionOrTipoMovimientoIsNull(true, movimientoBancarioSelected.getId(), pageable);
+    				}else {
+    					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacionAndImporteLessThanAndObservacionOrTipoMovimientoIsNull(true, movimientoBancarioSelected.getId(), sdfQuery.format(fechaDetalleFilter), pageable);
+    				}
+                	
+                }else if(busquedaPor.equals("abonosCargosSinIdentificar")) {
+                	if(fechaDetalleFilter == null) {
+                    	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndObservacionOrTipoMovimientoIsNull(true, movimientoBancarioSelected.getId() ,pageable);
+    				}else {
+    					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacionAndObservacionOrTipoMovimientoIsNull(true, movimientoBancarioSelected.getId(), sdfQuery.format(fechaDetalleFilter), pageable);
+    				}
+                }
+                
 
                 
                 
@@ -978,6 +1186,43 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	public void setFechaDetalleFilter(Date fechaDetalleFilter) {
 		this.fechaDetalleFilter = fechaDetalleFilter;
 	}
+	public String getBusquedaPor() {
+		return busquedaPor;
+	}
+	public void setBusquedaPor(String busquedaPor) {
+		this.busquedaPor = busquedaPor;
+	}
+	public StreamedContent getFileDes() {
+		return fileDes;
+	}
+	public void setFileDes(StreamedContent fileDes) {
+		this.fileDes = fileDes;
+	}
+	public BigDecimal getTotalAbonoIdent() {
+		return totalAbonoIdent;
+	}
+	public void setTotalAbonoIdent(BigDecimal totalAbonoIdent) {
+		this.totalAbonoIdent = totalAbonoIdent;
+	}
+	public BigDecimal getTotalCargoIdent() {
+		return totalCargoIdent;
+	}
+	public void setTotalCargoIdent(BigDecimal totalCargoIdent) {
+		this.totalCargoIdent = totalCargoIdent;
+	}
+	public BigDecimal getTotalAbonoSinIdent() {
+		return totalAbonoSinIdent;
+	}
+	public void setTotalAbonoSinIdent(BigDecimal totalAbonoSinIdent) {
+		this.totalAbonoSinIdent = totalAbonoSinIdent;
+	}
+	public BigDecimal getTotalCargoSinIdent() {
+		return totalCargoSinIdent;
+	}
+	public void setTotalCargoSinIdent(BigDecimal totalCargoSinIdent) {
+		this.totalCargoSinIdent = totalCargoSinIdent;
+	}
+	
 	
 	
 }

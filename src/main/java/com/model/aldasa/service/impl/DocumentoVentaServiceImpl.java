@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.model.aldasa.entity.Contrato;
 import com.model.aldasa.entity.Cuota;
 import com.model.aldasa.entity.DetalleDocumentoVenta;
 import com.model.aldasa.entity.DocumentoVenta;
@@ -30,6 +31,7 @@ import com.model.aldasa.repository.RequerimientoSeparacionRepository;
 import com.model.aldasa.repository.SerieDocumentoRepository;
 import com.model.aldasa.repository.VoucherRepository;
 import com.model.aldasa.service.DocumentoVentaService;
+import com.model.aldasa.util.EstadoContrato;
 import com.model.aldasa.util.TipoProductoType;
 
 @Service("documentoVentaService")
@@ -119,7 +121,12 @@ public class DocumentoVentaServiceImpl implements DocumentoVentaService{
 						d.getCuota().setAdelanto(cuota2);
 					}
 					
-					cuotaRepository.save(d.getCuota()); 
+					cuotaRepository.save(d.getCuota());
+					
+					//PARA ACTUALIZAR LAS CUOTAS ATRASADAS
+					if(d.getCuota().getContrato()!=null) {
+						actualizarCuotasAtrasadas(d.getCuota().getContrato()); 
+					}
 				}
 				if(d.getCuota().getNroCuota()==0 && d.getCuota().getContrato().getTipoPago().equals("Contado") && d.getCuota().getPagoTotal().equals("S")) {
 					d.getCuota().getContrato().setCancelacionTotal(true);							
@@ -136,6 +143,11 @@ public class DocumentoVentaServiceImpl implements DocumentoVentaService{
 			if(d.getCuotaPrepago()!=null) {
 				d.getCuotaPrepago().setPagoTotal("S");
 				cuotaRepository.save(d.getCuotaPrepago());
+				
+				//PARA ACTUALIZAR LAS CUOTAS ATRASADAS
+				if(d.getCuotaPrepago().getContrato()!=null) {
+					actualizarCuotasAtrasadas(d.getCuotaPrepago().getContrato()); 
+				}
 			}
 				
 		}  
@@ -148,6 +160,37 @@ public class DocumentoVentaServiceImpl implements DocumentoVentaService{
 		return entity;
 
 		
+	}
+	
+	public void actualizarCuotasAtrasadas(Contrato c) {
+		Optional<Contrato> cn = contratoRepository.findById(c.getId());
+		c.setCuotasAtrasadas(cn.get().getCuotasAtrasadas()); 
+		
+		int numCuotasAtrasadas=0;
+		
+		List<Cuota> lstcuotas = cuotaRepository.findByContratoAndEstado(c, true);
+		if(!lstcuotas.isEmpty()) {
+			for(Cuota cuota : lstcuotas) {
+				if(cuota.getNroCuota()!=0) { 
+					if(cuota.getPagoTotal().equals("N") && !cuota.isPrepago()) {	
+						if(cuota.getFechaPago().before(new Date())) {
+							numCuotasAtrasadas++;
+							
+						}
+					}
+				}
+			
+			}
+		}
+		
+		if(numCuotasAtrasadas != c.getCuotasAtrasadas()) {
+			c.setCuotasAtrasadas(numCuotasAtrasadas);
+			contratoRepository.save(c);
+		}
+		
+			
+		
+ 		
 	}
 
 	@Override

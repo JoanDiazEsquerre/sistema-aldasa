@@ -27,6 +27,8 @@ public interface ContratoService {
 	List<Contrato> findByEstadoAndLoteProjectSucursalAndTipoPagoAndCancelacionTotal(String status, Sucursal sucursal, String tipoPago, boolean cancelacionTotal);
 	List<Contrato> findByEstado(String estado);
 	
+	
+	
 	List<Contrato> findByEstadoAndFechaVentaYear(String estado, int year);
 	List<Contrato> findByEstadoAndFechaVentaMonth(String estado, int month);
 	List<Contrato> findByEstadoAndFechaVentaYearAndFechaVentaMonth(String estado, int year, int month);
@@ -44,9 +46,13 @@ public interface ContratoService {
 	int totalCuotasEspeciales(String estado);
 	
 	
-	Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String personVenta, String proyecto, String manzana, String lote, Pageable pageable);
-	Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String proyecto, String manzana, String lote,Pageable pageable);
-	Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String proyecto, String manzana, String lote,Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String personVenta, String manzana, String lote, Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote,Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote,Pageable pageable);
+	
+	Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(String estado, int cuotasAtrasadas, String personVenta, String manzana, String lote, Project proyecto, Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote, Project proyecto,Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote, Project proyecto, Pageable pageable);
 	
 //	Page<Contrato> findByConMora(String fecha, String estadoContrato, int cuotasAtrasadas, Pageable pageable);
 //	Page<Contrato> findByAlDia(String fecha, String estadoContrato, int cuotasAtrasadas, Pageable pageable);
@@ -54,8 +60,12 @@ public interface ContratoService {
 //	List<Contrato> findByConMora(String fecha, String estadoContrato);
 //	List<Contrato> findByAlDia(String fecha, String estadoContrato);
 	
+	long countByEstado(String estado);
+	long countByEstadoAndCuotasAtrasadas(String estado, int cuotasAtrasadas);
+	long countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(String estado, int cuotasAtrasadas, String compromisoPago);
 	
-	List<Contrato> findByEstadoAndCuotasAtrasadas(String estado, int cuotasAtrasadas);
-	List<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(String estado, int cuotasAtrasadas, String compromisoPago);
+	long countByEstadoAndLoteProject(String estado, Project project);
+	long countByEstadoAndCuotasAtrasadasAndLoteProject(String estado, int cuotasAtrasadas, Project project);
+	long countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndLoteProject(String estado, int cuotasAtrasadas, String compromisoPago, Project project);
 
 }

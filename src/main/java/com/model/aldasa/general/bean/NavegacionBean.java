@@ -2,6 +2,10 @@ package com.model.aldasa.general.bean;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.PostConstruct;
@@ -14,9 +18,14 @@ import org.apache.commons.fileupload.RequestContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.model.aldasa.entity.ModuloSistema;
+import com.model.aldasa.entity.RequerimientoSeparacion;
 import com.model.aldasa.entity.Sucursal;
 import com.model.aldasa.entity.Usuario;
+import com.model.aldasa.service.LoteService;
+import com.model.aldasa.service.RequerimientoSeparacionService;
 import com.model.aldasa.service.UsuarioService;
+import com.model.aldasa.util.EstadoLote;
+import com.model.aldasa.util.EstadoRequerimientoSeparacionType;
 import com.model.aldasa.util.Perfiles;
 
 import org.primefaces.PrimeFaces;
@@ -29,6 +38,12 @@ public class NavegacionBean implements Serializable  {
 	
 	@ManagedProperty(value = "#{usuarioService}")
 	private UsuarioService usuarioService;
+	
+	@ManagedProperty(value = "#{requerimientoSeparacionService}")
+	private RequerimientoSeparacionService requerimientoSeparacionService;
+	
+	@ManagedProperty(value = "#{loteService}")
+	private LoteService loteService;
 	
 	private String ruta, rutaLogo;
 	private String username;                              
@@ -63,6 +78,7 @@ public class NavegacionBean implements Serializable  {
 			return;
 			
 		}
+		
 		
 		ruta = "modulos/general/mantenimientos/inicio.xhtml";
 		username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -114,6 +130,44 @@ public class NavegacionBean implements Serializable  {
 			rutaLogo = "/recursos/images/LOGO_CONSORCIO.png";
 		}else {
 			rutaLogo = "/recursos/images/LOGO_ALDASA_BIENES_RAICES.png";
+		}
+		
+		if(usuarioLogin.getProfile().getId().equals(20)) {
+			ruta = "modulos/proyecto/mantenimientos/mapeoLote.xhtml";
+		}
+		
+		
+		try {
+			actualizarPlantillaSeparacion();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	public void actualizarPlantillaSeparacion() throws ParseException {
+		List<RequerimientoSeparacion> lstSeparacionesPendientes = requerimientoSeparacionService.findByEstado(EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion());
+		
+		SimpleDateFormat sdfQuery = new SimpleDateFormat("yyyy-MM-dd");  
+		String fechaHoyText = sdfQuery.format(new Date());
+		
+		Date fechaHoy = sdfQuery.parse(fechaHoyText);
+		
+		
+		for(RequerimientoSeparacion req : lstSeparacionesPendientes) {
+			String fechaReqText = sdfQuery.format(req.getFechaVencimiento());
+			Date fechaReq = sdfQuery.parse(fechaReqText);
+			
+			if(fechaHoy.after(fechaReq)) {
+				req.setEstado(EstadoRequerimientoSeparacionType.VENCIDO.getDescripcion());
+				requerimientoSeparacionService.save(req);
+				
+				req.getLote().setStatus(EstadoLote.DISPONIBLE.getName());
+				loteService.save(req.getLote()); 
+				
+			}
+			
 		}
 	}
 	
@@ -974,6 +1028,18 @@ public class NavegacionBean implements Serializable  {
 	}
 	public void setPermisoMovimientoBanc(int[] permisoMovimientoBanc) {
 		this.permisoMovimientoBanc = permisoMovimientoBanc;
+	}
+	public RequerimientoSeparacionService getRequerimientoSeparacionService() {
+		return requerimientoSeparacionService;
+	}
+	public void setRequerimientoSeparacionService(RequerimientoSeparacionService requerimientoSeparacionService) {
+		this.requerimientoSeparacionService = requerimientoSeparacionService;
+	}
+	public LoteService getLoteService() {
+		return loteService;
+	}
+	public void setLoteService(LoteService loteService) {
+		this.loteService = loteService;
 	}
 
 	

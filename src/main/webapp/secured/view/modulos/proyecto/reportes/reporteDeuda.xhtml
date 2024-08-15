@@ -187,20 +187,23 @@
 			</p:tab>
 			
 			<p:tab title="Reporte Gráfico de Contratos" > 
-				<p:selectOneButton value="#{reporteDeudaBean.estadoGrafico}" unselectable="false">
-					<f:selectItem itemLabel="Activos" itemValue="Activo" />
-					<f:selectItem itemLabel="Terminados" itemValue="Terminado" />
-					<f:selectItem itemLabel="Resueltos" itemValue="Resuelto" />
-					<f:selectItem itemLabel="Anulados" itemValue="Anulado" />
-					<p:ajax  update="idTableContratoGrafico, donutChart" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
-				</p:selectOneButton>
+				<h:panelGrid columns="4">
+					<p:outputLabel value="Proyecto:"/>
+					<p:selectOneMenu value="#{reporteDeudaBean.projectContratoFilter}" converter="#{reporteDeudaBean.conversorProject}" >
+						<f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
+						<f:selectItems value="#{reporteDeudaBean.lstProject}" var="project" itemLabel="#{project.name}" itemValue="#{project}"/>
+						<p:ajax listener="#{reporteDeudaBean.actualizarDonut()}" update="idTableContratoGrafico, donutChart" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
+					</p:selectOneMenu>
+					
+					<p:selectOneButton value="#{reporteDeudaBean.estadoDeudaGrafico}" unselectable="false" style="margin-left: 30px">
+						<f:selectItem itemLabel="Al día" itemValue="al Dia" />
+						<f:selectItem itemLabel="Atrasados" itemValue="Atrasados" />
+						<f:selectItem itemLabel="Con compromiso" itemValue="Compromiso" />   
+						<f:selectItem itemLabel="Terminados" itemValue="terminado" /> 
+						<p:ajax  update="idTableContratoGrafico, donutChart" listener="#{reporteDeudaBean.actualizarDonut()}" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/> 
+					</p:selectOneButton>
+				</h:panelGrid>
 				
-				<p:selectOneButton value="#{reporteDeudaBean.estadoDeudaGrafico}" unselectable="false" style="margin-left: 30px">
-					<f:selectItem itemLabel="Al día" itemValue="al Dia" />
-					<f:selectItem itemLabel="Atrasados" itemValue="Atrasados" />
-					<f:selectItem itemLabel="Con compromiso" itemValue="Compromiso" />
-					<p:ajax  update="idTableContratoGrafico, donutChart" onstart="PF('blockUIWidgetGeneral').block();" oncomplete="PF('blockUIWidgetGeneral').unblock();"/>
-				</p:selectOneButton>
 				
 				<div class="grid" style="width: 40%; text-align: center">
 				    <div class="col-12 lg:col-6 xl:col-4">
@@ -226,7 +229,7 @@
 			                      #{row +1}
 			        </p:column>
 			        
-					<p:column headerText="Proyecto" style="text-align:center;" filterBy="#{contrato.lote.project.name}" sortBy="#{contrato.lote.project.name}">	
+					<p:column headerText="Proyecto" style="text-align:center;" sortBy="#{contrato.lote.project.name}">	
 						<h:outputText value="#{contrato.lote.project.name}"/>
 					</p:column>
 					

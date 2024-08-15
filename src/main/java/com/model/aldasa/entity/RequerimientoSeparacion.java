@@ -53,6 +53,16 @@ public class RequerimientoSeparacion {
 	
 	private BigDecimal monto;
 	
+	@Column(name="montoadicional")
+	private BigDecimal montoAdicional;
+	
+	@Column(name="pagototal")
+	private String pagoTotal;
+	
+	@ManyToOne
+	@JoinColumn(name="idcontrato")
+	private Contrato idContrato;
+	
 	@Column(name="generadocumento")
 	private boolean generaDocumento;
 	
@@ -71,6 +81,10 @@ public class RequerimientoSeparacion {
 	private Date fechaRechaza;
 	
 	private String observacion;
+	
+	@ManyToOne
+	@JoinColumn(name="idsucursal")
+	private Sucursal sucursal;
 	
 	public Integer getId() {
 		return id;
@@ -173,6 +187,30 @@ public class RequerimientoSeparacion {
 	}
 	public void setFechaVencimiento(Date fechaVencimiento) {
 		this.fechaVencimiento = fechaVencimiento;
+	}
+	public BigDecimal getMontoAdicional() {
+		return montoAdicional;
+	}
+	public void setMontoAdicional(BigDecimal montoAdicional) {
+		this.montoAdicional = montoAdicional;
+	}
+	public String getPagoTotal() {
+		return pagoTotal;
+	}
+	public void setPagoTotal(String pagoTotal) {
+		this.pagoTotal = pagoTotal;
+	}
+	public Contrato getIdContrato() {
+		return idContrato;
+	}
+	public void setIdContrato(Contrato idContrato) {
+		this.idContrato = idContrato;
+	}
+	public Sucursal getSucursal() {
+		return sucursal;
+	}
+	public void setSucursal(Sucursal sucursal) {
+		this.sucursal = sucursal;
 	}
 	
 	

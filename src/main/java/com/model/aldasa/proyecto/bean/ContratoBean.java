@@ -673,8 +673,8 @@ public class ContratoBean extends BaseBean implements Serializable{
 				cellSub1 = rowSubTitulo.createCell(3);cellSub1.setCellValue(sdf.format(d.getFechaVenta()));cellSub1.setCellStyle(styleBorder);
 				cellSub1 = rowSubTitulo.createCell(4);cellSub1.setCellValue(d.getTipoPago());cellSub1.setCellStyle(styleBorder);
 				cellSub1 = rowSubTitulo.createCell(5);cellSub1.setCellValue(d.getMontoVenta()+"");cellSub1.setCellStyle(styleBorder);
-				cellSub1 = rowSubTitulo.createCell(6);cellSub1.setCellValue(d.getMontoInicial()+"");cellSub1.setCellStyle(styleBorder);
-				cellSub1 = rowSubTitulo.createCell(7);cellSub1.setCellValue(d.getNumeroCuota());cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(6);cellSub1.setCellValue(d.getMontoInicial() == null ? "" : d.getMontoInicial()+"");cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(7);cellSub1.setCellValue(d.getNumeroCuota() == null ? "" : d.getNumeroCuota()+"");cellSub1.setCellStyle(styleBorder);
 				
 				String nomClientes = d.getPersonVenta().getSurnames()+" "+d.getPersonVenta().getNames()+" \n";
 				if(d.getPersonVenta2() != null) nomClientes = nomClientes+ d.getPersonVenta2().getSurnames()+" "+d.getPersonVenta2().getNames()+" \n";
@@ -927,10 +927,11 @@ public class ContratoBean extends BaseBean implements Serializable{
 		cellSub1 = rowSubTitulo.createCell(13);cellSub1.setCellValue("MONTO CUOTAS ATRASADAS");cellSub1.setCellStyle(styleTitulo);
 		cellSub1 = rowSubTitulo.createCell(14);cellSub1.setCellValue("SALDO PENDIENTE");cellSub1.setCellStyle(styleTitulo); 
 		cellSub1 = rowSubTitulo.createCell(15);cellSub1.setCellValue("ASESOR COBRANZA");cellSub1.setCellStyle(styleTitulo);
-		cellSub1 = rowSubTitulo.createCell(16);cellSub1.setCellValue("MINUTA LEGALIZADA");cellSub1.setCellStyle(styleTitulo);
-		cellSub1 = rowSubTitulo.createCell(17);cellSub1.setCellValue("MINUTA AUTORIZADA");cellSub1.setCellStyle(styleTitulo);
-		cellSub1 = rowSubTitulo.createCell(18);cellSub1.setCellValue("ESCRITURA");cellSub1.setCellStyle(styleTitulo);
-		cellSub1 = rowSubTitulo.createCell(19);cellSub1.setCellValue("INDEPENDIZACION");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(16);cellSub1.setCellValue("FIRMA");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(17);cellSub1.setCellValue("MINUTA LEGALIZADA");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(18);cellSub1.setCellValue("MINUTA AUTORIZADA");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(19);cellSub1.setCellValue("ESCRITURA");cellSub1.setCellStyle(styleTitulo);
+		cellSub1 = rowSubTitulo.createCell(20);cellSub1.setCellValue("INDEPENDIZACION");cellSub1.setCellStyle(styleTitulo);
 
 		List<Contrato> lstContratos = contratoService.findByEstadoAndLoteProjectSucursalAndTipoPagoAndCancelacionTotal(EstadoContrato.ACTIVO.getName(), navegacionBean.getSucursalLogin(), "Crédito", false); 
 		
@@ -1017,10 +1018,11 @@ public class ContratoBean extends BaseBean implements Serializable{
 				cellSub1 = rowSubTitulo.createCell(14);cellSub1.setCellValue(montoPendiente.doubleValue());cellSub1.setCellStyle(styleBorder);
 				cellSub1 = rowSubTitulo.createCell(15);cellSub1.setCellValue(c.getUsuarioCobranza() == null? "": c.getUsuarioCobranza().getUsername());cellSub1.setCellStyle(styleBorder);
 					
-				cellSub1 = rowSubTitulo.createCell(16);cellSub1.setCellValue(c.isMinutaLegalizada()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
-				cellSub1 = rowSubTitulo.createCell(17);cellSub1.setCellValue(c.isMinutaAutorizada()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
-				cellSub1 = rowSubTitulo.createCell(18);cellSub1.setCellValue(c.isEscritura()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
-				cellSub1 = rowSubTitulo.createCell(19);cellSub1.setCellValue(c.isIndependizacion()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(16);cellSub1.setCellValue(c.isFirma()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(17);cellSub1.setCellValue(c.isMinutaLegalizada()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(18);cellSub1.setCellValue(c.isMinutaAutorizada()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(19);cellSub1.setCellValue(c.isEscritura()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
+				cellSub1 = rowSubTitulo.createCell(20);cellSub1.setCellValue(c.isIndependizacion()?"SI":"NO");cellSub1.setCellStyle(styleBorder);
 
 				index++;
 			}
@@ -1030,7 +1032,7 @@ public class ContratoBean extends BaseBean implements Serializable{
 		cellSub1 = rowSubTitulo.createCell(14);cellSub1.setCellValue(total.doubleValue());cellSub1.setCellStyle(styleBorder);
 		
 		
-		for (int j = 0; j <= 19; j++) {
+		for (int j = 0; j <= 20; j++) {
 			sheet.autoSizeColumn(j);
 			
 		}
@@ -1381,11 +1383,17 @@ public class ContratoBean extends BaseBean implements Serializable{
 		
 		for(Cuota c:lstCuotaVista) {
 			if(c.getNroCuota()!=0 && c.isPrepago()==false) {
+				
 				sumaCuotaSI = sumaCuotaSI.add(c.getCuotaSI());
 				sumaInteres = sumaInteres.add(c.getInteres());
 				sumaCuotaTotal = sumaCuotaTotal.add(c.getCuotaTotal());
 			}
 			
+			if(c.isPrepago()) {
+				sumaCuotaSI = sumaCuotaSI.add(c.getCuotaSI());
+				sumaInteres = sumaInteres.add(c.getInteres());
+				sumaCuotaTotal = sumaCuotaTotal.add(c.getCuotaTotal());
+			}
 		}
 		
 	}

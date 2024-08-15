@@ -28,6 +28,10 @@ public class ImagenRequerimientoSeparacion {
 	@JoinColumn(name="idrequerimientoseparacion")
 	private RequerimientoSeparacion requerimientoSeparacion;
 	
+	@ManyToOne
+	@JoinColumn(name="iddetallerequerimientoseparacion")
+	private DetalleRequerimientoSeparacion detalleRequerimientoSeparacion;
+	
 	
 	public Integer getId() {
 		return id;
@@ -58,6 +62,12 @@ public class ImagenRequerimientoSeparacion {
 	}
 	public void setRequerimientoSeparacion(RequerimientoSeparacion requerimientoSeparacion) {
 		this.requerimientoSeparacion = requerimientoSeparacion;
+	}
+	public DetalleRequerimientoSeparacion getDetalleRequerimientoSeparacion() {
+		return detalleRequerimientoSeparacion;
+	}
+	public void setDetalleRequerimientoSeparacion(DetalleRequerimientoSeparacion detalleRequerimientoSeparacion) {
+		this.detalleRequerimientoSeparacion = detalleRequerimientoSeparacion;
 	}
 
 	

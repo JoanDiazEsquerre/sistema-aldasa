@@ -66,7 +66,14 @@
 				<h:outputText value="#{mov.cuentaBancaria.numero}" />
 			</p:column>
 			<p:column headerText="Saldo Inicial" sortBy="#{mov.saldoInicial}" filterMatchMode="contains">
-				<h:outputText value="#{mov.saldoInicial}" />
+				<h:outputText value="#{mov.saldoInicial}" > 
+					<f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Saldo Final">
+				<h:outputText value="#{movimientoBancarioBean.obtenerSaldoFinalCabecera(mov)}" > 
+					<f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
+				</h:outputText>
 			</p:column>
 			<p:column headerText="Tipo Moneda" sortBy="#{mov.cuentaBancaria.moneda}" filterMatchMode="contains">
 				<h:outputText value="#{mov.cuentaBancaria.moneda eq 'D' ? 'Dólares' : 'Soles'}" />
@@ -148,6 +155,49 @@
 			    <f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
 			</h:outputText>
 			
+			<h:outputText value="Busqueda Por: " style="font-weight:bold; font-size: 25px; margin-left: 40px"/>
+			<p:selectOneMenu value="#{movimientoBancarioBean.busquedaPor}"  > 
+				<f:selectItem itemLabel="[-TODOS-]" itemValue="todos" />
+				<f:selectItem itemLabel="Abonos Identidificados" itemValue="abonosIdentificados" />
+				<f:selectItem itemLabel="Cargos Identificados" itemValue="cargosIdentificados" />
+				<f:selectItem itemLabel="Abonos y Cargos Identificados" itemValue="abonosCargosIdentificados" />
+				<p:divider styleClass="mt-0" />
+				
+				<f:selectItem itemLabel="Abonos Sin Identificar" itemValue="abonosSinIdentificar" />
+				<f:selectItem itemLabel="Cargos Sin Identificar" itemValue="cargosSinIdentificar" />
+				<f:selectItem itemLabel="Abonos y Cargos Sin Identificar" itemValue="abonosCargosSinIdentificar" />
+				<p:ajax update="idTableDetalle, gridAbonoCargo" listener="#{movimientoBancarioBean.calcularMontosIdentificados}"/>
+			</p:selectOneMenu>
+			
+			<p:commandButton value="Descargar" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{movimientoBancarioBean.procesarExcel}" icon="pi pi-file-excel" styleClass="ui-button-success" style="margin-left:20px">
+	           <p:fileDownload value="#{movimientoBancarioBean.fileDes}"/> 
+	      	</p:commandButton>
+			
+			<h:panelGrid columns="8" id="gridAbonoCargo">
+				<h:outputText value="Total Abono Identificado:" style="font-weight:bold; font-size: 25px; margin-left: 40px" rendered="#{movimientoBancarioBean.busquedaPor eq 'abonosIdentificados' or movimientoBancarioBean.busquedaPor eq 'abonosCargosIdentificados'}"/>
+				<h:outputText  value="#{movimientoBancarioBean.totalAbonoIdent}" style="font-weight:bold; font-size: 25px; color: green" rendered="#{movimientoBancarioBean.busquedaPor eq 'abonosIdentificados' or movimientoBancarioBean.busquedaPor eq 'abonosCargosIdentificados'}" >
+				    <f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
+				</h:outputText>
+				
+				<h:outputText value="Total Cargo Identificado:" style="font-weight:bold; font-size: 25px; margin-left: 40px" rendered="#{movimientoBancarioBean.busquedaPor eq 'cargosIdentificados' or movimientoBancarioBean.busquedaPor eq 'abonosCargosIdentificados'}"/>
+				<h:outputText  value="#{movimientoBancarioBean.totalCargoIdent}" style="font-weight:bold; font-size: 25px; color: green" rendered="#{movimientoBancarioBean.busquedaPor eq 'cargosIdentificados' or movimientoBancarioBean.busquedaPor eq 'abonosCargosIdentificados'}">
+				    <f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
+				</h:outputText>
+				
+				<h:outputText value="Total Abono Sin Identificar:" style="font-weight:bold; font-size: 25px; margin-left: 40px" rendered="#{movimientoBancarioBean.busquedaPor eq 'abonosSinIdentificar' or movimientoBancarioBean.busquedaPor eq 'abonosCargosSinIdentificar'}"/>
+				<h:outputText  value="#{movimientoBancarioBean.totalAbonoSinIdent}" style="font-weight:bold; font-size: 25px; color: green" rendered="#{movimientoBancarioBean.busquedaPor eq 'abonosSinIdentificar' or movimientoBancarioBean.busquedaPor eq 'abonosCargosSinIdentificar'}" >
+				    <f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
+				</h:outputText>
+				
+				<h:outputText value="Total Cargo Sin Identificar:" style="font-weight:bold; font-size: 25px; margin-left: 40px" rendered="#{movimientoBancarioBean.busquedaPor eq 'cargosSinIdentificar' or movimientoBancarioBean.busquedaPor eq 'abonosCargosSinIdentificar'}"/>
+				<h:outputText  value="#{movimientoBancarioBean.totalCargoSinIdent}" style="font-weight:bold; font-size: 25px; color: green" rendered="#{movimientoBancarioBean.busquedaPor eq 'cargosSinIdentificar' or movimientoBancarioBean.busquedaPor eq 'abonosCargosSinIdentificar'}">
+				    <f:convertNumber type="currency" currencySymbol="S/" pattern="#,##0.00"/>
+				</h:outputText>
+			</h:panelGrid>
+			
+			
+			
+			
 			<p:dataTable var="detalle" id="idTableDetalle" value="#{movimientoBancarioBean.lstDetalleMovimientoBancLazy}" widgetVar="detalleTable" rowIndexVar="row" paginator="true" rows="25" size="small"
 					emptyMessage="No se encontraron detalles." editable="true" editMode="cell" paginatorPosition="bottom" rowKey="#{detalle.id}" 
 					selection="#{movimientoBancarioBean.detalleMovimientoSelected}" selectionMode="single" style="width: 120%;" >
@@ -166,7 +216,7 @@
 				<p:column headerText="Fecha Operación" filterMatchMode="contains" sortBy="#{detalle.fechaOperacion}" >
 					<f:facet name="header">
 						Fecha Operación
-						<p:datePicker value="#{movimientoBancarioBean.fechaDetalleFilter}" > 
+						<p:datePicker value="#{movimientoBancarioBean.fechaDetalleFilter}"> 
 							<p:ajax update="idTableDetalle"></p:ajax>
 						</p:datePicker>
 					</f:facet>

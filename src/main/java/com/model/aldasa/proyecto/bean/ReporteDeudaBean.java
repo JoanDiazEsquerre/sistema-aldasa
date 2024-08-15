@@ -179,7 +179,7 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
 	private Project projectFilter, projectGrafico, projectContratoFilter;
 	private Manzana manzanaContratoFilter;
 	
-	String estadoFilter, manzanaFilter="", loteFilter="", surnamesFilter="", dniFilter="", estadoGrafico;
+	String estadoFilter, manzanaFilter="", loteFilter="", surnamesFilter="", dniFilter="";
 	int year, month, yearGrafico, busquedaCuotasAtrasadas = 0;
 	BigDecimal total = BigDecimal.ZERO;
 	private String estadoDeudaGrafico;
@@ -212,7 +212,6 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
 		
 		createBarModel2();
 		
-		estadoGrafico = EstadoContrato.ACTIVO.getName();
 		estadoDeudaGrafico= "al Dia";
 //		busquedaDatosGrafico();
 		crearDonut();
@@ -279,6 +278,12 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
 	public void actualizarUsuarioCobranza(Contrato contrato) {
         contratoService.save(contrato);
         addInfoMessage("Se actualizó el Usuario de Cobranza correctamente.");
+        crearDonut();
+    }
+	
+	
+	public void actualizarDonut() {
+        crearDonut();
     }
 	
 	
@@ -289,9 +294,23 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
         DonutChartDataSet dataSet = new DonutChartDataSet();
         List<Number> values = new ArrayList<>();
         
-        List<Contrato> alDia = contratoService.findByEstadoAndCuotasAtrasadas(estadoGrafico, 0);
-        List<Contrato> conMora = contratoService.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(estadoGrafico, 0, "NO");
-        List<Contrato> conCompromiso = contratoService.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(estadoGrafico, 0, "SI");
+        long alDia = 0;
+        long conMora=0;
+        long conCompromiso =0;
+        long  terminados = 0;
+        
+        if(projectContratoFilter==null) {
+        	alDia = contratoService.countByEstadoAndCuotasAtrasadas(EstadoContrato.ACTIVO.getName(), 0);
+            conMora = contratoService.countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(EstadoContrato.ACTIVO.getName(), 0, "NO");
+            conCompromiso = contratoService.countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(EstadoContrato.ACTIVO.getName(), 0, "SI");
+            terminados = contratoService.countByEstado(EstadoContrato.TERMINADO.getName());
+        }else {
+        	alDia = contratoService.countByEstadoAndCuotasAtrasadasAndLoteProject(EstadoContrato.ACTIVO.getName(), 0, projectContratoFilter);
+            conMora = contratoService.countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndLoteProject(EstadoContrato.ACTIVO.getName(), 0, "NO", projectContratoFilter);
+            conCompromiso = contratoService.countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndLoteProject(EstadoContrato.ACTIVO.getName(), 0, "SI", projectContratoFilter);
+            terminados = contratoService.countByEstadoAndLoteProject(EstadoContrato.TERMINADO.getName(), projectContratoFilter);
+        }
+        
         
 //        List<Contrato> lstcompromiso = new ArrayList<>();
 //		
@@ -306,10 +325,10 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
 		
 	
         
-        values.add(conMora.size());
-        values.add(alDia.size());
-        values.add(conCompromiso.size());
-//        values.add(lstcompromiso.size());
+        values.add(conMora);
+        values.add(alDia);
+        values.add(conCompromiso);
+        values.add(terminados);
       
         dataSet.setData(values);
 
@@ -317,6 +336,7 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
         bgColors.add("rgb(255, 99, 132)");
         bgColors.add("rgb(54, 162, 235)");
         bgColors.add("rgb(25, 229, 28)");
+        bgColors.add("rgb(255, 249, 51)");
        
         dataSet.setBackgroundColor(bgColors);
 
@@ -326,6 +346,7 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
         labels.add("Atrasados");
         labels.add("Al Día");
         labels.add("Con Compromiso");
+        labels.add("Terminados");
         data.setLabels(labels);
 
         donutModel.setData(data);
@@ -552,7 +573,6 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
 			public List<Contrato> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
 				
 				String personaVenta = "%" + (filterBy.get("personVenta.surnames") != null ? filterBy.get("personVenta.surnames").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
-				String proyecto = "%" + (filterBy.get("lote.project.name") != null ? filterBy.get("lote.project.name").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
 				String manzana = "%" + (filterBy.get("lote.manzana.name") != null ? filterBy.get("lote.manzana.name").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
 				String numLote = "%" + (filterBy.get("lote.numberLote") != null ? filterBy.get("lote.numberLote").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
 				
@@ -573,20 +593,42 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
                
                 Page<Contrato> pageCuota=null;
                 
-                if(estadoDeudaGrafico.equals("al Dia")) { 
-                	pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estadoGrafico, 0,personaVenta,proyecto,manzana, numLote, pageable);
-                }else if(estadoDeudaGrafico.equals("Atrasados")) { 
-                	if(busquedaCuotasAtrasadas == 0) {
-                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estadoGrafico, 0, "NO",personaVenta,proyecto,manzana, numLote, pageable) ; 
-                	}else {
-                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estadoGrafico, busquedaCuotasAtrasadas, "NO", personaVenta,proyecto,manzana, numLote,pageable);
-                	}
+                if(projectContratoFilter==null) {
+	                if(estadoDeudaGrafico.equals("al Dia")) { 
+	                	pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(EstadoContrato.ACTIVO.getName(), 0,personaVenta, manzana, numLote, pageable);
+	                }else if(estadoDeudaGrafico.equals("Atrasados")) { 
+	                	if(busquedaCuotasAtrasadas == 0) {
+	                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(EstadoContrato.ACTIVO.getName(), 0, "NO",personaVenta,manzana, numLote, pageable) ; 
+	                	}else {
+	                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(EstadoContrato.ACTIVO.getName(), busquedaCuotasAtrasadas, "NO", personaVenta,manzana, numLote,pageable);
+	                	}
+	                }else if(estadoDeudaGrafico.equals("Compromiso")) { 
+	                	if(busquedaCuotasAtrasadas == 0) {
+	                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(EstadoContrato.ACTIVO.getName(), 0, "SI",personaVenta,manzana, numLote, pageable) ; 
+	                	}else {
+	                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(EstadoContrato.ACTIVO.getName(), busquedaCuotasAtrasadas, "SI",personaVenta,manzana, numLote, pageable);
+	                	}
+	                }else if(estadoDeudaGrafico.equals("terminado")) { 
+	                	pageCuota = contratoService.findByEstado(EstadoContrato.TERMINADO.getName(), pageable);
+	                }
                 }else {
-                	if(busquedaCuotasAtrasadas == 0) {
-                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estadoGrafico, 0, "SI",personaVenta,proyecto,manzana, numLote, pageable) ; 
-                	}else {
-                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estadoGrafico, busquedaCuotasAtrasadas, "SI",personaVenta,proyecto,manzana, numLote, pageable);
-                	}
+                	if(estadoDeudaGrafico.equals("al Dia")) { 
+	                	pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(EstadoContrato.ACTIVO.getName(), 0,personaVenta, manzana, numLote, projectContratoFilter, pageable);
+	                }else if(estadoDeudaGrafico.equals("Atrasados")) { 
+	                	if(busquedaCuotasAtrasadas == 0) {
+	                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(EstadoContrato.ACTIVO.getName(), 0, "NO",personaVenta,manzana, numLote,projectContratoFilter, pageable) ; 
+	                	}else {
+	                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(EstadoContrato.ACTIVO.getName(), busquedaCuotasAtrasadas, "NO", personaVenta,manzana, numLote,projectContratoFilter,pageable);
+	                	}
+	                }else if(estadoDeudaGrafico.equals("Compromiso")) { 
+	                	if(busquedaCuotasAtrasadas == 0) {
+	                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(EstadoContrato.ACTIVO.getName(), 0, "SI",personaVenta,manzana, numLote,projectContratoFilter, pageable) ; 
+	                	}else {
+	                		pageCuota = contratoService.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(EstadoContrato.ACTIVO.getName(), busquedaCuotasAtrasadas, "SI",personaVenta,manzana, numLote,projectContratoFilter, pageable);
+	                	}
+	                }else if(estadoDeudaGrafico.equals("terminado")) { 
+	                	pageCuota = contratoService.findByEstado(EstadoContrato.TERMINADO.getName(), pageable);
+	                }
                 }
              	
                      	
@@ -810,12 +852,7 @@ public class ReporteDeudaBean extends BaseBean implements Serializable{
 	public void setLstObservacionContrato(List<ObservacionContrato> lstObservacionContrato) {
 		this.lstObservacionContrato = lstObservacionContrato;
 	}
-	public String getEstadoGrafico() {
-		return estadoGrafico;
-	}
-	public void setEstadoGrafico(String estadoGrafico) {
-		this.estadoGrafico = estadoGrafico;
-	}
+	
 	public ContratoService getContratoService() {
 		return contratoService;
 	}

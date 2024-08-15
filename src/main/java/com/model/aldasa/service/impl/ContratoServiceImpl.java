@@ -183,146 +183,6 @@ public class ContratoServiceImpl implements ContratoService{
 		return contratoRepository.totalCuotasEspeciales(estado); 
 	}
 
-//	@Override
-//	public List<Contrato> findByConMora(String fecha, String estadoContrato) {
-//		// TODO Auto-generated method stub
-//		List<Contrato> lstContrato = contratoRepository.findByConMora(fecha, estadoContrato);
-//	
-//	
-//	
-//		for (Contrato c : lstContrato) {
-//	    	
-//	    	int numCuotasAtrasadas=0;
-//			
-//			List<Cuota> lstcuotas = cuotaRepository.findByContratoAndEstado(c, true);
-//			if(!lstcuotas.isEmpty()) {
-//				for(Cuota cuota : lstcuotas) {
-//	//				if(cuota.getNroCuota()!=0) { 
-//						if(cuota.getPagoTotal().equals("N")) {	
-//							if(cuota.getFechaPago().before(new Date())) {
-//								numCuotasAtrasadas++;
-//								
-//							}
-//						}
-//	//				}
-//				
-//				}
-//			}
-//			
-//			c.setCuotasAtrasadas(numCuotasAtrasadas);
-//	    }
-//		
-//		
-//		return lstContrato; 
-//	}
-//
-//	@Override
-//	public List<Contrato> findByAlDia(String fecha, String estadoContrato) {
-//		// TODO Auto-generated method stub
-//		List<Contrato> lstContrato = contratoRepository.findByAlDia(fecha, estadoContrato);
-//		
-//		for (Contrato c : lstContrato) {
-//        	
-//        	int numCuotasAtrasadas=0;
-//			
-//    		List<Cuota> lstcuotas = cuotaRepository.findByContratoAndEstado(c, true);
-//    		if(!lstcuotas.isEmpty()) {
-//    			for(Cuota cuota : lstcuotas) {
-////    				if(cuota.getNroCuota()!=0) { 
-//    					if(cuota.getPagoTotal().equals("N")) {	
-//    						if(cuota.getFechaPago().before(new Date())) {
-//    							numCuotasAtrasadas++;
-//    							
-//    						}
-//    					}
-////    				}
-//    			
-//    			}
-//    		}
-//    		
-//    		c.setCuotasAtrasadas(numCuotasAtrasadas);
-//        }
-//		
-//		
-//		return lstContrato; 
-//	}
-
-//	@Override
-//	public Page<Contrato> findByConMora(String fecha, String estadoContrato, int cuotasAtrasadas, Pageable pageable) {
-//		// TODO Auto-generated method stub
-//		Page<Contrato> contratosPage = contratoRepository.findByConMora(fecha, estadoContrato, pageable);
-//	    
-//	    List<Contrato> lstContratos = new ArrayList<>(contratosPage.getContent());
-//	    
-//	    List<Contrato> lstNuevaLista = new ArrayList<>();
-//	    
-//	    // Asignar valor a la variable transient
-//	    for (Contrato contrato : lstContratos) {
-//	        int numCuotasAtrasadas = 0;
-//	        
-//	        List<Cuota> lstCuotas = cuotaRepository.findByContratoAndEstado(contrato, true);
-//	        if (!lstCuotas.isEmpty()) {
-//	            for (Cuota cuota : lstCuotas) {
-//	                if ("N".equals(cuota.getPagoTotal()) && cuota.getFechaPago().before(new Date())) {
-//	                    numCuotasAtrasadas++;
-//	                }
-//	            }
-//	        }
-//	        
-//	        contrato.setCuotasAtrasadas(numCuotasAtrasadas);
-//	        
-//	        if (cuotasAtrasadas == 0 || cuotasAtrasadas == numCuotasAtrasadas) {
-//	            lstNuevaLista.add(contrato);
-//	        }
-//	    }
-//	    
-//	    Page<Contrato> newContratosPage = new PageImpl<>(lstNuevaLista, pageable, contratosPage.getTotalElements());
-//	    
-//	    return newContratosPage;
-//	}
-
-//	@Override
-//	public Page<Contrato> findByAlDia(String fecha, String estadoContrato, int cuotasAtrasadas, Pageable pageable) {
-//		// TODO Auto-generated method stub
-//		Page<Contrato> contratosPage = contratoRepository.findByAlDia(fecha, estadoContrato, pageable); 
-//		
-//		List<Contrato> lstNuevaLista = new ArrayList<>();
-//		 // Asignar valor a la variable transient
-//        for (Contrato c : contratosPage.getContent()) {
-//        	
-//        	int numCuotasAtrasadas=0;
-//			
-//    		List<Cuota> lstcuotas = cuotaRepository.findByContratoAndEstado(c, true);
-//    		if(!lstcuotas.isEmpty()) {
-//    			for(Cuota cuota : lstcuotas) {
-////    				if(cuota.getNroCuota()!=0) { 
-//    					if(cuota.getPagoTotal().equals("N")) {	
-//    						if(cuota.getFechaPago().before(new Date())) {
-//    							numCuotasAtrasadas++;
-//    							
-//    						}
-//    					}
-////    				}
-//    			
-//    			}
-//    		}
-//        	
-//        	
-//    		c.setCuotasAtrasadas(numCuotasAtrasadas);
-//    		
-//    		if(cuotasAtrasadas == 0) {
-//    			lstNuevaLista.add(c);
-//    		}else {
-//    			if(cuotasAtrasadas== numCuotasAtrasadas) {
-//    				lstNuevaLista.add(c);
-//    			}
-//    		}
-//        }
-//        
-//        Page<Contrato> newContratosPage = new PageImpl<>(lstNuevaLista, pageable, contratosPage.getTotalElements());
-//		
-//		return newContratosPage;
-//	}
 
 	@Override
 	public List<Contrato> findByEstado(String estado) {
@@ -331,40 +191,38 @@ public class ContratoServiceImpl implements ContratoService{
 	}
 
 	@Override
-	public List<Contrato> findByEstadoAndCuotasAtrasadas(String estado, int cuotasAtrasadas) {
+	public long countByEstadoAndCuotasAtrasadas(String estado, int cuotasAtrasadas) {
 		// TODO Auto-generated method stub
-		return contratoRepository.findByEstadoAndCuotasAtrasadas(estado, cuotasAtrasadas);
+		return contratoRepository.countByEstadoAndCuotasAtrasadas(estado, cuotasAtrasadas);
 	}
 
 	@Override
-	public List<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(String estado, int cuotasAtrasadas,
+	public long countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(String estado, int cuotasAtrasadas,
 			String compromisoPago) {
 		// TODO Auto-generated method stub
-		return contratoRepository.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(estado, cuotasAtrasadas, compromisoPago); 
+		return contratoRepository.countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(estado, cuotasAtrasadas, compromisoPago); 
 	}
 
 	@Override
-	public Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(
-			String estado, int cuotasAtrasadas, String personVenta, String proyecto, String manzana, String lote,
+	public Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(
+			String estado, int cuotasAtrasadas, String personVenta, String manzana, String lote,
 			Pageable pageable) {
 		// TODO Auto-generated method stub
-		return contratoRepository.findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estado, cuotasAtrasadas, personVenta, proyecto, manzana, lote, pageable);
+		return contratoRepository.findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estado, cuotasAtrasadas, personVenta, manzana, lote, pageable);
 	}
 
 	@Override
-	public Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(
-			String estado, int cuotasAtrasadas, String compromisoPago, String personVenta, String proyecto,
-			String manzana, String lote, Pageable pageable) {
+	public Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(
+			String estado, int cuotasAtrasadas, String compromisoPago, String personVenta, String manzana, String lote, Pageable pageable) {
 		// TODO Auto-generated method stub
-		return contratoRepository.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estado, cuotasAtrasadas, compromisoPago, personVenta, proyecto, manzana, lote, pageable);
+		return contratoRepository.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estado, cuotasAtrasadas, compromisoPago, personVenta, manzana, lote, pageable);
 	}
 
 	@Override
-	public Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(
-			String estado, int cuotasAtrasadas, String compromisoPago, String personVenta, String proyecto,
-			String manzana, String lote, Pageable pageable) {
+	public Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(
+			String estado, int cuotasAtrasadas, String compromisoPago, String personVenta, String manzana, String lote, Pageable pageable) {
 		// TODO Auto-generated method stub
-		return contratoRepository.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estado, cuotasAtrasadas, compromisoPago, personVenta, proyecto, manzana, lote, pageable);
+		return contratoRepository.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(estado, cuotasAtrasadas, compromisoPago, personVenta, manzana, lote, pageable);
 	}
 
 	@Override
@@ -383,6 +241,55 @@ public class ContratoServiceImpl implements ContratoService{
 	public List<Contrato> findByEstadoAndFechaVentaYearAndFechaVentaMonth(String estado, int year, int month) {
 		// TODO Auto-generated method stub
 		return contratoRepository.findByEstadoAndFechaVentaYearAndFechaVentaMonth(estado, year, month); 
+	}
+
+	@Override
+	public long countByEstado(String estado) {
+		// TODO Auto-generated method stub
+		return contratoRepository.countByEstado(estado);
+	}
+
+	@Override
+	public Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(
+			String estado, int cuotasAtrasadas, String personVenta, String manzana, String lote, Project proyecto,
+			Pageable pageable) {
+		// TODO Auto-generated method stub
+		return contratoRepository.findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(estado, cuotasAtrasadas, personVenta, manzana, lote, proyecto, pageable);
+	}
+
+	@Override
+	public Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(
+			String estado, int cuotasAtrasadas, String compromisoPago, String personVenta, String manzana, String lote,
+			Project proyecto, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return contratoRepository.findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(estado, cuotasAtrasadas, compromisoPago, personVenta, manzana, lote, proyecto, pageable);
+	}
+
+	@Override
+	public Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(
+			String estado, int cuotasAtrasadas, String compromisoPago, String personVenta, String manzana, String lote,
+			Project proyecto, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return contratoRepository.findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(estado, cuotasAtrasadas, compromisoPago, personVenta, manzana, lote, proyecto, pageable);
+	}
+
+	@Override
+	public long countByEstadoAndLoteProject(String estado, Project project) {
+		// TODO Auto-generated method stub
+		return contratoRepository.countByEstadoAndLoteProject(estado, project); 
+	}
+
+	@Override
+	public long countByEstadoAndCuotasAtrasadasAndLoteProject(String estado, int cuotasAtrasadas, Project project) {
+		// TODO Auto-generated method stub
+		return contratoRepository.countByEstadoAndCuotasAtrasadasAndLoteProject(estado, cuotasAtrasadas, project);
+	}
+
+	@Override
+	public long countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndLoteProject(String estado,
+			int cuotasAtrasadas, String compromisoPago, Project project) {
+		// TODO Auto-generated method stub
+		return contratoRepository.countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndLoteProject(estado, cuotasAtrasadas, compromisoPago, project); 
 	}
 
 

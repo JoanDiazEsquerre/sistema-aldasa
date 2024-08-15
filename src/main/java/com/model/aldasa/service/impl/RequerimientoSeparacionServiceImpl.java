@@ -77,6 +77,25 @@ public class RequerimientoSeparacionServiceImpl implements RequerimientoSeparaci
 		return requerimientoSeparacionRepository.findAllByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(estado, sucursal, proyecto, manzana, numLote, person, asesor, supervisor, pageable);
 	}
 
+	@Override
+	public List<RequerimientoSeparacion> findByEstado(String estado) {
+		// TODO Auto-generated method stub 
+		return requerimientoSeparacionRepository.findByEstado(estado);
+	}
+
+	@Override
+	public Page<RequerimientoSeparacion> findAllByEstadoAndSucursalAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(
+			String estado, Sucursal sucursal, String person, String asesor, String supervisor, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return requerimientoSeparacionRepository.findAllByEstadoAndSucursalAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(estado, sucursal, person, asesor, supervisor, pageable); 
+	}
+
+	@Override
+	public List<RequerimientoSeparacion> findByLote(Lote lote) {
+		// TODO Auto-generated method stub
+		return requerimientoSeparacionRepository.findByLote(lote);
+	}
+
 
 
 

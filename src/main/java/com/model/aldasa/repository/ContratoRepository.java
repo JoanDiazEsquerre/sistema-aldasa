@@ -37,13 +37,17 @@ public interface ContratoRepository extends PagingAndSortingRepository<Contrato,
     int totalCuotasEspeciales(String estado);
 		
 	
-	Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String personVenta, String proyecto, String manzana, String lote, Pageable pageable);
-	Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String proyecto, String manzana, String lote,Pageable pageable);
-	Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteProjectNameLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String proyecto, String manzana, String lote,Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String personVenta, String manzana, String lote, Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote,Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLike(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote,Pageable pageable);
+	
+	Page<Contrato> findByEstadoAndCuotasAtrasadasAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(String estado, int cuotasAtrasadas, String personVenta, String manzana, String lote, Project proyecto, Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote, Project proyecto,Pageable pageable);
+	Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote, Project proyecto, Pageable pageable);
 	
 	
-	List<Contrato> findByEstadoAndCuotasAtrasadas(String estado, int cuotasAtrasadas);
-	List<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(String estado, int cuotasAtrasadas, String compromisoPago);
+	long countByEstadoAndCuotasAtrasadas(String estado, int cuotasAtrasadas);
+	long countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(String estado, int cuotasAtrasadas, String compromisoPago);
 	
 //	@Query(value = "SELECT DISTINCT cc.* FROM cuota c " +
 //	        "LEFT JOIN contrato cc ON cc.id = c.idContrato " +
@@ -97,4 +101,10 @@ public interface ContratoRepository extends PagingAndSortingRepository<Contrato,
 	
 	@Query(nativeQuery = true,value = "SELECT c.* FROM contrato c WHERE c.estado = :estado AND YEAR(c.fechaVenta) = :year AND MONTH(c.fechaVenta) = :month")
 	List<Contrato> findByEstadoAndFechaVentaYearAndFechaVentaMonth(String estado, int year, int month);
+	
+	long countByEstado(String estado);
+	
+	long countByEstadoAndLoteProject(String estado, Project project);
+	long countByEstadoAndCuotasAtrasadasAndLoteProject(String estado, int cuotasAtrasadas, Project project);
+	long countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndLoteProject(String estado, int cuotasAtrasadas, String compromisoPago, Project project);
 }

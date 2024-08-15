@@ -3,6 +3,7 @@ package com.model.aldasa.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.model.aldasa.entity.DetalleRequerimientoSeparacion;
 import com.model.aldasa.entity.ImagenRequerimientoSeparacion;
 import com.model.aldasa.entity.RequerimientoSeparacion;
 
@@ -13,5 +14,6 @@ public interface ImagenRequerimientoSeparacionService {
 	void delete(ImagenRequerimientoSeparacion entity);
 	
 	List<ImagenRequerimientoSeparacion> findByRequerimientoSeparacionAndEstado(RequerimientoSeparacion requerimientoSeparacion, boolean estado);
+	List<ImagenRequerimientoSeparacion> findByDetalleRequerimientoSeparacionAndEstado(DetalleRequerimientoSeparacion detalleRequerimientoSeparacion, boolean estado);
 
 }

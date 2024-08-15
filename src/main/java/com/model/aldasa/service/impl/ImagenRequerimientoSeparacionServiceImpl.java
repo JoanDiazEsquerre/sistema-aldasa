@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.model.aldasa.entity.DetalleRequerimientoSeparacion;
 import com.model.aldasa.entity.ImagenRequerimientoSeparacion;
 import com.model.aldasa.entity.PlantillaVenta;
 import com.model.aldasa.entity.RequerimientoSeparacion;
@@ -41,5 +42,12 @@ public class ImagenRequerimientoSeparacionServiceImpl implements ImagenRequerimi
 	public List<ImagenRequerimientoSeparacion> findByRequerimientoSeparacionAndEstado(RequerimientoSeparacion requerimiento, boolean estado) {
 		// TODO Auto-generated method stub
 		return imagenRequerimientoSeparacionRepository.findByRequerimientoSeparacionAndEstado(requerimiento, estado);
+	}
+
+	@Override
+	public List<ImagenRequerimientoSeparacion> findByDetalleRequerimientoSeparacionAndEstado(
+			DetalleRequerimientoSeparacion detalleRequerimientoSeparacion, boolean estado) {
+		// TODO Auto-generated method stub
+		return imagenRequerimientoSeparacionRepository.findByDetalleRequerimientoSeparacionAndEstado(detalleRequerimientoSeparacion, estado); 
 	}
 }

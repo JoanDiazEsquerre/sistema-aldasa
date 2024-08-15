@@ -13,6 +13,7 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 
+import org.primefaces.PrimeFaces;
 
 import com.model.aldasa.entity.Lote;
 import com.model.aldasa.entity.Manzana;
@@ -47,15 +48,19 @@ public class MapeoLoteBean extends BaseBean implements Serializable{
 	
 	private Project projectFilter;
 	private Manzana manzanaFilterMapeo;
+	private Lote loteSelected;
 
 	private int cantidadLotes=0;
 	
 	@PostConstruct
 	public void init() {
-		lstProject= projectService.findByStatusAndSucursalOrderByNameAsc(true, navegacionBean.getSucursalLogin());
+		lstProject= projectService.findByStatusOrderByNameAsc(true);
 		projectFilter = lstProject.get(0);
 		listarLotes();
 	}
+	
+	
+	
 	
 	public void listarLotes(){	
 		listarManzanas();
@@ -183,6 +188,12 @@ public class MapeoLoteBean extends BaseBean implements Serializable{
 	}
 	public void setCantidadLotes(int cantidadLotes) {
 		this.cantidadLotes = cantidadLotes;
+	}
+	public Lote getLoteSelected() {
+		return loteSelected;
+	}
+	public void setLoteSelected(Lote loteSelected) {
+		this.loteSelected = loteSelected;
 	}	
 	
 }

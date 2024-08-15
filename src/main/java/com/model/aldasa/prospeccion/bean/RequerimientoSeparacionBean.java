@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -23,6 +24,7 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 
+import org.aspectj.weaver.NewParentTypeMunger;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
@@ -36,6 +38,7 @@ import org.springframework.data.domain.Sort;
 import com.model.aldasa.entity.Action;
 import com.model.aldasa.entity.Banco;
 import com.model.aldasa.entity.CuentaBancaria;
+import com.model.aldasa.entity.DetalleRequerimientoSeparacion;
 import com.model.aldasa.entity.DocumentoVenta;
 import com.model.aldasa.entity.Empleado;
 import com.model.aldasa.entity.Imagen;
@@ -57,6 +60,7 @@ import com.model.aldasa.general.bean.NavegacionBean;
 import com.model.aldasa.service.ActionService;
 import com.model.aldasa.service.BancoService;
 import com.model.aldasa.service.CuentaBancariaService;
+import com.model.aldasa.service.DetalleRequerimientoSeparacionService;
 import com.model.aldasa.service.DocumentoVentaService;
 import com.model.aldasa.service.EmpleadoService;
 import com.model.aldasa.service.ImagenRequerimientoSeparacionService;
@@ -138,6 +142,9 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	@ManagedProperty(value = "#{voucherTempService}")
 	private VoucherTempService voucherTempService;
 	
+	@ManagedProperty(value = "#{detalleRequerimientoSeparacionService}")
+	private DetalleRequerimientoSeparacionService detalleRequerimientoSeparacionService;
+	
 	
 	private LazyDataModel<RequerimientoSeparacion> lstReqSepLazy;
 
@@ -150,14 +157,14 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	private Project projectFilter, proyectoCambio;
 	private Lote loteCambio;
 	
-	private String estado = "Pendiente";
+	private String estado = EstadoRequerimientoSeparacionType.PENDIENTE.getDescripcion();
 	private String tipoTransaccion="";
 	private String numeroTransaccion="";
 	private String imagen1, imagen2, imagen3, imagen4, imagen5, imagen6, imagen7, imagen8, imagen9, imagen10;
 	private boolean valida;
 	private int cantidad=0;
-	private BigDecimal monto;
-	private Date fechaOperacion = new Date() ;
+	private BigDecimal monto, montoAgregar;
+	private Date fechaOperacion = new Date(), fechaCambio ;
 	
 	private List<CuentaBancaria> lstCuentaBancaria = new ArrayList<>();
 	private List<Lote> lstLoteReq = new ArrayList<>();
@@ -168,8 +175,11 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	private List<Manzana> lstManzanaReq, lstManzanasCambio;
 	private List<VoucherTemp> lstVoucherTemporal;
 	private List<Lote> lstLotesCambio;
+	private List<ImagenRequerimientoSeparacion> lstImagenRequerimientoSeparacion;
+	private List<DetalleRequerimientoSeparacion> lstDetalleRequerimientoSeparacionSelected;
 	
 	private UploadedFile file1,file2,file3,file4,file5,file6,file7,file8,file9,file10;
+	private UploadedFile file1Add;
 
 	SimpleDateFormat sdfFull = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss a");
 	SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -186,6 +196,298 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 		
 		iniciarLazy();
 		iniciarDatosRequerimiento();
+	}
+	
+	public void eliminarDetalleRequerimiento(DetalleRequerimientoSeparacion detalle) {
+		List<ImagenRequerimientoSeparacion> lstImagen = imagenRequerimientoSeparacionService.findByDetalleRequerimientoSeparacionAndEstado(detalle, true);
+		
+		if(!lstImagen.isEmpty()) {
+			for(ImagenRequerimientoSeparacion imagen : lstImagen) {
+				imagen.setEstado(false);
+				imagenRequerimientoSeparacionService.save(imagen);
+			}
+			
+			detalle.setEstado(false); 
+			detalleRequerimientoSeparacionService.save(detalle);
+			
+			addInfoMessage("Se eliminó correctamente el detalle");
+			verVoucher();
+		}else {
+			addErrorMessage("No se puede eliminar el detalle.");
+		}
+		
+	}
+	
+	public void saveDetalleRequerimientoSeparacion() {
+		if(montoAgregar == null) {
+			addErrorMessage("Ingresar un monto.");
+			return;
+		}
+		
+		if(montoAgregar.compareTo(BigDecimal.ZERO) <=0) {
+			addErrorMessage("El monto debe ser mayor que cero.");
+			return;
+		}
+		
+		if(file1Add == null) {
+			addErrorMessage("Debes seleccionar un voucher.");
+			return;
+		}
+		
+		DetalleRequerimientoSeparacion newDetalle =  new DetalleRequerimientoSeparacion();
+		newDetalle.setRequerimientoSeparacion(requerimientoSeparacionSelected);
+		newDetalle.setMonto(montoAgregar);
+		newDetalle.setPagoTotal("N");
+		newDetalle.setEstado(true);
+		newDetalle.setFecha(new Date());
+		
+		newDetalle = detalleRequerimientoSeparacionService.save(newDetalle);
+		if(newDetalle != null) {
+			
+			requerimientoSeparacionSelected.setMontoAdicional(requerimientoSeparacionSelected.getMontoAdicional().add(montoAgregar));
+			requerimientoSeparacionSelected.setPagoTotal("N");
+			requerimientoSeparacionService.save(requerimientoSeparacionSelected);
+			
+			
+			
+			
+			subirImagenesAgregar(requerimientoSeparacionSelected.getId() + "", newDetalle);
+			addInfoMessage("Se guardo correctamente.");
+		}
+		
+		verVoucher();
+		
+		montoAgregar = BigDecimal.ZERO;
+		file1Add = null;
+		
+		
+	}
+	
+	public void subirImagenesAgregar(String idReq, DetalleRequerimientoSeparacion detalleRequerimientoSeparacion) {
+		int num = lstImagenRequerimientoSeparacion.size()+1;
+		
+		String rename = idReq +"_"+num + "." + getExtension(file1Add.getFileName()); 
+		ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+		registroImagen.setNombre(rename);
+		registroImagen.setCarpeta("IMG-SEPARACIONES");
+		registroImagen.setEstado(true);
+		registroImagen.setRequerimientoSeparacion(detalleRequerimientoSeparacion.getRequerimientoSeparacion());
+		registroImagen.setDetalleRequerimientoSeparacion(detalleRequerimientoSeparacion);
+		imagenRequerimientoSeparacionService.save(registroImagen);
+		
+        subirArchivo(rename, file1Add);
+	}
+	
+	public void subirImagenes(String idReq, DetalleRequerimientoSeparacion detallerequerimientoSeparacion) {
+		if(file1 != null) {
+			String rename = idReq +"_1" + "." + getExtension(file1.getFileName()); 
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file1);
+		}
+		if(file2 != null) {
+			String rename = idReq +"_2" + "." + getExtension(file2.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file2);
+		}
+		if(file3 != null) {
+			String rename = idReq +"_3" + "." + getExtension(file3.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file3);
+		}
+		if(file4 != null) {
+			String rename = idReq +"_4" + "." + getExtension(file4.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file4);
+		}
+		if(file5 != null) {
+			String rename = idReq +"_5" + "." + getExtension(file5.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file5);
+		}
+		if(file6 != null) {
+			String rename = idReq +"_6" + "." + getExtension(file6.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file6);
+		}
+		if(file7 != null) {
+			String rename = idReq +"_7" + "." + getExtension(file7.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file7);
+		}
+		if(file8 != null) {
+			String rename = idReq +"_8" + "." + getExtension(file8.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file8);
+		}
+		if(file9 != null) {
+			String rename = idReq +"_9" + "." + getExtension(file9.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file9);
+		}
+		if(file10 != null) {
+			String rename = idReq +"_10" + "." + getExtension(file10.getFileName());
+			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
+			registroImagen.setNombre(rename);
+			registroImagen.setCarpeta("IMG-SEPARACIONES");
+			registroImagen.setEstado(true);
+			registroImagen.setRequerimientoSeparacion(detallerequerimientoSeparacion.getRequerimientoSeparacion());
+			imagenRequerimientoSeparacionService.save(registroImagen);
+			
+            subirArchivo(rename, file10);
+		}
+	}
+	
+	public void subirArchivo(String nombre, UploadedFile file) {
+		//  File result = new File("/home/imagen/IMG-DOCUMENTO-VENTA/" + nombre);
+		//  File result = new File("C:\\IMG-DOCUMENTO-VENTA\\" + nombre);
+	  File result = new File(navegacionBean.getSucursalLogin().getEmpresa().getRutaVoucher() + nombre);
+	
+		  try {
+		
+		      FileOutputStream fileOutputStream = new FileOutputStream(result);
+		
+		      byte[] buffer = new byte[1024];
+		
+		      int bulk;
+		
+		      // Here you get uploaded picture bytes, while debugging you can see that 34818
+		      InputStream inputStream = file.getInputStream();
+		
+		      while (true) {
+		
+		          bulk = inputStream.read(buffer);
+		
+		          if (bulk < 0) {
+		
+		              break;
+		
+		          } //end of if
+		
+		          fileOutputStream.write(buffer, 0, bulk);
+		          fileOutputStream.flush();
+		
+		      } //end fo while(true)
+		
+		      fileOutputStream.close();
+		      inputStream.close();
+		
+		      FacesMessage msg = new FacesMessage("El archivo subió correctamente.");
+		      FacesContext.getCurrentInstance().addMessage(null, msg);
+		
+		  } catch (IOException e) {
+		      e.printStackTrace();
+		      FacesMessage error = new FacesMessage("The files were not uploaded!");
+		      FacesContext.getCurrentInstance().addMessage(null, error);
+		  }
+	}
+	
+	public void opcionCambiarFechaVencimiento() {
+		fechaCambio = requerimientoSeparacionSelected.getFechaVencimiento();
+	}
+	
+	public void cambiarFechaVencimiento() {
+		if(fechaCambio == null) {
+			addErrorMessage("Debe seleccionar una fecha."); 
+			return;
+		}
+		
+
+		SimpleDateFormat sdfQuery = new SimpleDateFormat("yyyy-MM-dd");  
+		String fechaHoyText = sdfQuery.format(new Date());
+		Date fechaHoy = null;
+		try {
+			fechaHoy = sdfQuery.parse(fechaHoyText);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String fechaReqText = sdfQuery.format(fechaCambio);
+		Date fechaReq=null;
+		try {
+			fechaReq = sdfQuery.parse(fechaReqText);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+		if(fechaHoy.after(fechaReq) || fechaHoy.equals(fechaReq) ) { 
+			addErrorMessage("La fecha de vencimiento tiene que ser mayor a la fecha actual.");
+			return;
+		}
+		
+		requerimientoSeparacionSelected.setFechaVencimiento(fechaCambio);
+		requerimientoSeparacionSelected.setEstado(EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion());
+		requerimientoSeparacionService.save(requerimientoSeparacionSelected);
+		
+		requerimientoSeparacionSelected.getLote().setStatus(EstadoLote.SEPARADO.getName());
+		loteService.save(requerimientoSeparacionSelected.getLote());
+		
+		PrimeFaces.current().executeScript("PF('cambiarFechaVencDialog').hide();");
+		
+	}
+	
+	public void pasarSinAsignarRequerimiento() {
+		requerimientoSeparacionSelected.setSucursal(navegacionBean.getSucursalLogin()); 
+		requerimientoSeparacionSelected.setLote(null);
+		requerimientoSeparacionSelected.setEstado(EstadoRequerimientoSeparacionType.SIN_ASIGNAR.getDescripcion());
+		requerimientoSeparacionService.save(requerimientoSeparacionSelected);
+		
+		addInfoMessage("Se pasó correctamente la separacion."); 
 	}
 	
 	public void listarManzanas() {
@@ -264,65 +566,114 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	}
 	
 	public void saveCambioLote() {
-		
+	
 		if(loteCambio== null) {
 			addErrorMessage("Debes seleccionar un lote.");
 			return;
 		}
 		
-		if(requerimientoSeparacionSelected.getLote().getId().equals(loteCambio.getId())) {
-			addErrorMessage("Has seleccionado el mismo lote."); 
-			return;
-		}
+		if(requerimientoSeparacionSelected.getLote() != null) {
+			if(requerimientoSeparacionSelected.getLote().getId().equals(loteCambio.getId())) {
+				addErrorMessage("Has seleccionado el mismo lote."); 
+				return;
+			}
+			
+			if(!loteCambio.getProject().getSucursal().getId().equals(requerimientoSeparacionSelected.getLote().getProject().getSucursal().getId()) && requerimientoSeparacionSelected.getDocumentoVenta()!=null) {
+				addErrorMessage("Primero debe anular o generar nota de credito del documento de venta.");
+				return;
+			}
+			
+			RequerimientoSeparacion reqBusquedaPendiente = requerimientoSeparacionService.findAllByLoteAndEstado(loteCambio, EstadoRequerimientoSeparacionType.PENDIENTE.getDescripcion());
+			RequerimientoSeparacion reqBusquedaAprobado = requerimientoSeparacionService.findAllByLoteAndEstado(loteCambio, EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion());
+			
+			if(reqBusquedaAprobado != null || reqBusquedaPendiente != null) {
+				addErrorMessage("Ya existe una separacion el lote seleccionado.");
+				return;
+			}
+			
 		
-		if(!loteCambio.getProject().getSucursal().getId().equals(requerimientoSeparacionSelected.getLote().getProject().getSucursal().getId()) && requerimientoSeparacionSelected.getDocumentoVenta()!=null) {
-			addErrorMessage("Primero debe anular o generar nota de credito del documento de venta.");
-			return;
-		}
-		
-		RequerimientoSeparacion reqBusquedaPendiente = requerimientoSeparacionService.findAllByLoteAndEstado(loteCambio, EstadoRequerimientoSeparacionType.PENDIENTE.getDescripcion());
-		RequerimientoSeparacion reqBusquedaAprobado = requerimientoSeparacionService.findAllByLoteAndEstado(loteCambio, EstadoRequerimientoSeparacionType.APROBADO.getDescripcion());
-		
-		if(reqBusquedaAprobado != null || reqBusquedaPendiente != null) {
-			addErrorMessage("Ya existe una separacion el lote seleccionado.");
-			return;
-		}
-		
+			Lote loteNuevo = loteService.findById(loteCambio.getId());
+			Lote loteAnterior = loteService.findById(requerimientoSeparacionSelected.getLote().getId());
+			
+			if(loteNuevo.getStatus().equals(EstadoLote.SEPARADO.getName()) || loteNuevo.getStatus().equals(EstadoLote.VENDIDO.getName())) {
+				addErrorMessage("El lote al que deseas cambiar ya se encuentra "+ loteNuevo.getStatus().toUpperCase()); 
+				return;
+			}
+			
+			if(loteAnterior.getStatus().equals(EstadoLote.SEPARADO.getName())) {
+				loteAnterior.setStatus(EstadoLote.DISPONIBLE.getName()); 
+				loteService.save(loteAnterior);
+			}
+			
+			
+			
+			requerimientoSeparacionSelected.setLote(loteCambio);
+			
+			requerimientoSeparacionService.save(requerimientoSeparacionSelected);
+			
+			addInfoMessage("Se cambio de lote correctamente.");
 	
-		Lote loteNuevo = loteService.findById(loteCambio.getId());
-		Lote loteAnterior = loteService.findById(requerimientoSeparacionSelected.getLote().getId());
-		
-		if(loteNuevo.getStatus().equals(EstadoLote.SEPARADO.getName()) || loteNuevo.getStatus().equals(EstadoLote.VENDIDO.getName())) {
-			addErrorMessage("El lote al que deseas cambiar ya se encuentra "+ loteNuevo.getStatus().toUpperCase()); 
-			return;
+			PrimeFaces.current().executeScript("PF('cambiarLoteDialog').hide();");
+		}else {
+			List<RequerimientoSeparacion> lstReqByLote = requerimientoSeparacionService.findByLote(loteCambio);
+			for(RequerimientoSeparacion req : lstReqByLote) {
+				if(!req.getEstado().equals(EstadoRequerimientoSeparacionType.ANULADO.getDescripcion()) && !req.getEstado().equals(EstadoRequerimientoSeparacionType.RECHAZADO.getDescripcion())) {
+					addErrorMessage("Ya existe una separacion "+req.getEstado().toUpperCase()+" con el mismo lote.");
+					return;
+				}
+			}
+			
+			
+			
+			
+			SimpleDateFormat sdfQuery = new SimpleDateFormat("yyyy-MM-dd");  
+			String fechaHoyText = sdfQuery.format(new Date());
+			Date fechaHoy = null;
+			try {
+				fechaHoy = sdfQuery.parse(fechaHoyText);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			String fechaReqText = sdfQuery.format(requerimientoSeparacionSelected.getFechaVencimiento());
+			Date fechaReq=null;
+			try {
+				fechaReq = sdfQuery.parse(fechaReqText);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+				
+			if(fechaHoy.after(fechaReq)) {
+				requerimientoSeparacionSelected.setEstado(EstadoRequerimientoSeparacionType.VENCIDO.getDescripcion());
+				requerimientoSeparacionService.save(requerimientoSeparacionSelected);
+				
+				loteCambio.setStatus(EstadoLote.DISPONIBLE.getName());
+				loteService.save(loteCambio); 
+			}else {
+				requerimientoSeparacionSelected.setEstado(EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion());
+				requerimientoSeparacionService.save(requerimientoSeparacionSelected);
+				
+				loteCambio.setStatus(EstadoLote.SEPARADO.getName());
+				loteService.save(loteCambio);
+			}
+				
+				
+			
+			
+			
+			requerimientoSeparacionSelected.setLote(loteCambio);
+			requerimientoSeparacionService.save(requerimientoSeparacionSelected);
+			addInfoMessage("Se cambio de lote correctamente.");
+			
+			PrimeFaces.current().executeScript("PF('cambiarLoteDialog').hide();");
 		}
-		
-		if(loteAnterior.getStatus().equals(EstadoLote.SEPARADO.getName())) {
-			loteAnterior.setStatus(EstadoLote.DISPONIBLE.getName()); 
-			loteService.save(loteAnterior);
-		}
-		
-		
-		
-		requerimientoSeparacionSelected.setLote(loteCambio);
-		loteCambio.setStatus(EstadoLote.SEPARADO.getName());
-		loteService.save(loteCambio);
-		requerimientoSeparacionService.save(requerimientoSeparacionSelected);
-		
-		
-		
-		
-		addInfoMessage("Se cambio de lote correctamente.");
-		
-		
-		
-
-		PrimeFaces.current().executeScript("PF('cambiarLoteDialog').hide();");
 		
 	}
 	
 	public void anularRequerimiento() {
-		requerimientoSeparacionSelected.setEstado("Anulado");
+		requerimientoSeparacionSelected.setEstado(EstadoRequerimientoSeparacionType.ANULADO.getDescripcion());
 		requerimientoSeparacionService.save(requerimientoSeparacionSelected);
 		
 		if(requerimientoSeparacionSelected.getLote().getStatus().equals(EstadoLote.SEPARADO.getName())) {
@@ -369,7 +720,7 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 		Lote lote = loteService.findById(requerimientoSeparacionSelected.getLote().getId());
 		if(lote.getStatus().equals(EstadoLote.DISPONIBLE.getName())) {
 			
-			requerimientoSeparacionSelected.setEstado("Aprobado");
+			requerimientoSeparacionSelected.setEstado(EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion());
 			requerimientoSeparacionSelected.setUsuarioAprueba(navegacionBean.getUsuarioLogin());
 			requerimientoSeparacionSelected.setFechaAprueba(new Date());
 			requerimientoSeparacionSelected.setFechaVencimiento(sumarRestarFecha(requerimientoSeparacionSelected.getFecha(), 7));
@@ -438,6 +789,7 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	public void verVoucher() {
 		listarDatosTemporales();
 		valida=false;
+		montoAgregar = BigDecimal.ZERO;
 		
 		cuentaBancariaSelected = null;
 		monto = null;
@@ -459,9 +811,11 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 		
 //		String nombreBusqueda = "%"+plantillaVentaSelected.getId() +"_%";
 		
-		List<ImagenRequerimientoSeparacion> lstImagenPlantilla = imagenRequerimientoSeparacionService.findByRequerimientoSeparacionAndEstado(requerimientoSeparacionSelected, true);
+		lstDetalleRequerimientoSeparacionSelected = detalleRequerimientoSeparacionService.findByEstadoAndRequerimientoSeparacion(true, requerimientoSeparacionSelected);
+		
+		lstImagenRequerimientoSeparacion = imagenRequerimientoSeparacionService.findByRequerimientoSeparacionAndEstado(requerimientoSeparacionSelected, true);
 		int contador = 1;
-		for(ImagenRequerimientoSeparacion i:lstImagenPlantilla) {
+		for(ImagenRequerimientoSeparacion i:lstImagenRequerimientoSeparacion) {
 			if(contador==1) {
 				imagen1 = i.getNombre();
 			}
@@ -501,178 +855,35 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	public void saveRequerimientoSeparacion() {
 		requerimientoSeparacionNew.setFecha(new Date());
 		requerimientoSeparacionNew.setPersonSupervisor(team.getPersonSupervisor());
-		requerimientoSeparacionNew.setEstado("Pendiente");
+		requerimientoSeparacionNew.setEstado(EstadoRequerimientoSeparacionType.PENDIENTE.getDescripcion());
 		requerimientoSeparacionNew.setGeneraDocumento(false);
+		requerimientoSeparacionNew.setPagoTotal("N");
+		requerimientoSeparacionNew.setMontoAdicional(BigDecimal.ZERO); 
 		
-		RequerimientoSeparacion req= requerimientoSeparacionService.save(requerimientoSeparacionNew);
+		requerimientoSeparacionNew= requerimientoSeparacionService.save(requerimientoSeparacionNew); 
 		
-		if(req == null) {
+		if(requerimientoSeparacionNew == null) {
 			addErrorMessage("No se pudo guardar.");
 			return;
 		}else {
-			subirImagenes(req.getId() + "", req);
+			DetalleRequerimientoSeparacion newDetalle =  new DetalleRequerimientoSeparacion();
+			newDetalle.setRequerimientoSeparacion(requerimientoSeparacionNew);
+			newDetalle.setMonto(montoAgregar);
+			newDetalle.setPagoTotal("N");
+			newDetalle.setEstado(true);
+			newDetalle.setFecha(new Date()); 
+			
+			newDetalle = detalleRequerimientoSeparacionService.save(newDetalle);
+			
+			
+			subirImagenes(requerimientoSeparacionNew.getId() + "", newDetalle);
 			addInfoMessage("Se guardo correctamente.");
 			iniciarDatosRequerimiento();
 			
 		}
 	}
 	
-	public void subirImagenes(String idReq, RequerimientoSeparacion requerimientoSeparacion) {
-		if(file1 != null) {
-			String rename = idReq +"_1" + "." + getExtension(file1.getFileName()); 
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file1);
-		}
-		if(file2 != null) {
-			String rename = idReq +"_2" + "." + getExtension(file2.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file2);
-		}
-		if(file3 != null) {
-			String rename = idReq +"_3" + "." + getExtension(file3.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file3);
-		}
-		if(file4 != null) {
-			String rename = idReq +"_4" + "." + getExtension(file4.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file4);
-		}
-		if(file5 != null) {
-			String rename = idReq +"_5" + "." + getExtension(file5.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file5);
-		}
-		if(file6 != null) {
-			String rename = idReq +"_6" + "." + getExtension(file6.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file6);
-		}
-		if(file7 != null) {
-			String rename = idReq +"_7" + "." + getExtension(file7.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file7);
-		}
-		if(file8 != null) {
-			String rename = idReq +"_8" + "." + getExtension(file8.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file8);
-		}
-		if(file9 != null) {
-			String rename = idReq +"_9" + "." + getExtension(file9.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file9);
-		}
-		if(file10 != null) {
-			String rename = idReq +"_10" + "." + getExtension(file10.getFileName());
-			ImagenRequerimientoSeparacion registroImagen = new ImagenRequerimientoSeparacion();
-			registroImagen.setNombre(rename);
-			registroImagen.setCarpeta("IMG-SEPARACIONES");
-			registroImagen.setEstado(true);
-			registroImagen.setRequerimientoSeparacion(requerimientoSeparacion);
-			imagenRequerimientoSeparacionService.save(registroImagen);
-			
-            subirArchivo(rename, file10);
-		}
-	}
 	
-	public void subirArchivo(String nombre, UploadedFile file) {
-		//  File result = new File("/home/imagen/IMG-DOCUMENTO-VENTA/" + nombre);
-		//  File result = new File("C:\\IMG-DOCUMENTO-VENTA\\" + nombre);
-	  File result = new File(navegacionBean.getSucursalLogin().getEmpresa().getRutaVoucher() + nombre);
-	
-		  try {
-		
-		      FileOutputStream fileOutputStream = new FileOutputStream(result);
-		
-		      byte[] buffer = new byte[1024];
-		
-		      int bulk;
-		
-		      // Here you get uploaded picture bytes, while debugging you can see that 34818
-		      InputStream inputStream = file.getInputStream();
-		
-		      while (true) {
-		
-		          bulk = inputStream.read(buffer);
-		
-		          if (bulk < 0) {
-		
-		              break;
-		
-		          } //end of if
-		
-		          fileOutputStream.write(buffer, 0, bulk);
-		          fileOutputStream.flush();
-		
-		      } //end fo while(true)
-		
-		      fileOutputStream.close();
-		      inputStream.close();
-		
-		      FacesMessage msg = new FacesMessage("El archivo subió correctamente.");
-		      FacesContext.getCurrentInstance().addMessage(null, msg);
-		
-		  } catch (IOException e) {
-		      e.printStackTrace();
-		      FacesMessage error = new FacesMessage("The files were not uploaded!");
-		      FacesContext.getCurrentInstance().addMessage(null, error);
-		  }
-	}
 		
 	public void iniciarDatosRequerimiento() {
 		requerimientoSeparacionNew = new RequerimientoSeparacion();
@@ -731,7 +942,7 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 			return;
 		}else {
 			Lote lote = loteService.findById(requerimientoSeparacionNew.getLote().getId());
-			if(lote.getStatus().equals("Vendido") || lote.getStatus().equals("Separado")) {
+			if(lote.getStatus().equals(EstadoLote.VENDIDO.getName()) || lote.getStatus().equals(EstadoLote.SEPARADO.getName())) {
 				addErrorMessage("El lote se encuentra "+lote.getStatus());
 				return;
 			}
@@ -892,13 +1103,19 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 				
 				Page<RequerimientoSeparacion> pageReqSep=null;
 				
-				if(projectFilter!=null) {
-					pageReqSep= requerimientoSeparacionService.findAllByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(estado, navegacionBean.getSucursalLogin(), projectFilter, manzana,numLote, persona, asesor, supervisor, pageable);
-                }else {
-    				pageReqSep= requerimientoSeparacionService.findAllByEstadoAndLoteProjectSucursalAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(estado, navegacionBean.getSucursalLogin(),manzana,numLote, persona, asesor, supervisor, pageable);
+				if(estado.equals(EstadoRequerimientoSeparacionType.SIN_ASIGNAR.getDescripcion())) { 
+					pageReqSep= requerimientoSeparacionService.findAllByEstadoAndSucursalAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(estado, navegacionBean.getSucursalLogin(), persona, asesor, supervisor, pageable);
+				}else {
+					if(projectFilter!=null) {
+						pageReqSep= requerimientoSeparacionService.findAllByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(estado, navegacionBean.getSucursalLogin(), projectFilter, manzana,numLote, persona, asesor, supervisor, pageable);
+	                }else {
+	    				pageReqSep= requerimientoSeparacionService.findAllByEstadoAndLoteProjectSucursalAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(estado, navegacionBean.getSucursalLogin(),manzana,numLote, persona, asesor, supervisor, pageable);
 
-                }
+	                }
+
+				}
 				
+								
 				
 				
 				setRowCount((int) pageReqSep.getTotalElements());
@@ -1658,6 +1875,44 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	}
 	public void setLstLotesCambio(List<Lote> lstLotesCambio) {
 		this.lstLotesCambio = lstLotesCambio;
+	}
+	public Date getFechaCambio() {
+		return fechaCambio;
+	}
+	public void setFechaCambio(Date fechaCambio) {
+		this.fechaCambio = fechaCambio;
+	}
+	public UploadedFile getFile1Add() {
+		return file1Add;
+	}
+	public void setFile1Add(UploadedFile file1Add) {
+		this.file1Add = file1Add;
+	}
+	public BigDecimal getMontoAgregar() {
+		return montoAgregar;
+	}
+	public void setMontoAgregar(BigDecimal montoAgregar) {
+		this.montoAgregar = montoAgregar;
+	}
+	public DetalleRequerimientoSeparacionService getDetalleRequerimientoSeparacionService() {
+		return detalleRequerimientoSeparacionService;
+	}
+	public void setDetalleRequerimientoSeparacionService(
+			DetalleRequerimientoSeparacionService detalleRequerimientoSeparacionService) {
+		this.detalleRequerimientoSeparacionService = detalleRequerimientoSeparacionService;
+	}
+	public List<ImagenRequerimientoSeparacion> getLstImagenRequerimientoSeparacion() {
+		return lstImagenRequerimientoSeparacion;
+	}
+	public void setLstImagenRequerimientoSeparacion(List<ImagenRequerimientoSeparacion> lstImagenRequerimientoSeparacion) {
+		this.lstImagenRequerimientoSeparacion = lstImagenRequerimientoSeparacion;
+	}
+	public List<DetalleRequerimientoSeparacion> getLstDetalleRequerimientoSeparacionSelected() {
+		return lstDetalleRequerimientoSeparacionSelected;
+	}
+	public void setLstDetalleRequerimientoSeparacionSelected(
+			List<DetalleRequerimientoSeparacion> lstDetalleRequerimientoSeparacionSelected) {
+		this.lstDetalleRequerimientoSeparacionSelected = lstDetalleRequerimientoSeparacionSelected;
 	}
 	
 

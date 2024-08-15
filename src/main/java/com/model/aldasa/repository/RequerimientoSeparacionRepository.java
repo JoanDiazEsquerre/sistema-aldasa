@@ -17,12 +17,15 @@ public interface RequerimientoSeparacionRepository extends JpaRepository<Requeri
 	RequerimientoSeparacion findAllByLoteAndEstado(Lote lote, String estado);
 	
 	List<RequerimientoSeparacion> findByProspection(Prospection prostection);
+	List<RequerimientoSeparacion> findByEstado(String estado);
+	List<RequerimientoSeparacion> findByLote(Lote lote);
 	
 	Page<RequerimientoSeparacion> findAllByEstadoAndLoteProjectSucursalAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(String estado, Sucursal sucursal, String manzana, String numLote, String person, String asesor, String supervisor,Pageable pageable);
 	Page<RequerimientoSeparacion> findAllByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(String estado, Sucursal sucursal,Project proyecto, String manzana, String numLote, String person, String asesor, String supervisor,Pageable pageable);
 	
 	Page<RequerimientoSeparacion> findAllByEstadoAndLoteProjectSucursalAndGeneraDocumento(String estado, Sucursal sucursal, boolean generaDocuento,Pageable pageable);
 
+	Page<RequerimientoSeparacion> findAllByEstadoAndSucursalAndPersonSurnamesLikeAndPersonAsesorSurnamesLikeAndPersonSupervisorSurnamesLike(String estado, Sucursal sucursal, String person, String asesor, String supervisor,Pageable pageable);
 
 
 }

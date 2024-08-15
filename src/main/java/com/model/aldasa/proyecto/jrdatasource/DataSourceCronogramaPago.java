@@ -33,10 +33,12 @@ public class DataSourceCronogramaPago implements JRDataSource{
             }else if ("INTERES".equals(jrf.getName())){
                 valor =lstCuota.get(indice).getInteres(); 
             }else if ("CUOTATOTAL".equals(jrf.getName())){
-                valor = lstCuota.get(indice).getCuotaTotal(); 
+            	valor = lstCuota.get(indice).getCuotaTotal().subtract(lstCuota.get(indice).getAdelanto()); 
             } else if ("ESTADOPAGO".equals(jrf.getName())){
                 valor = lstCuota.get(indice).isPrepago()==true?"PREPAGO" : lstCuota.get(indice).getPagoTotal().equals("S")?"PAGADO":"PENDIENTE";
-            }  
+            } else if ("ADELANTO".equals(jrf.getName())){
+                valor = lstCuota.get(indice).getAdelanto(); 
+            }
             return valor; 
     }
     

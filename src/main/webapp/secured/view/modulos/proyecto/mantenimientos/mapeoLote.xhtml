@@ -12,7 +12,7 @@
 		
 			
 		<p:outputLabel for="optionProject" value="Proyecto: " />
-		<p:selectOneMenu id="optionProject" value="#{mapeoLoteBean.projectFilter}" converter="#{mapeoLoteBean.conversorProject}" >
+		<p:selectOneMenu id="optionProject" value="#{mapeoLoteBean.projectFilter}" style="font-size: 35px" converter="#{mapeoLoteBean.conversorProject}" >
 			<f:selectItems value="#{mapeoLoteBean.lstProject}" var="proy" itemLabel="#{proy.name}" itemValue="#{proy}"/>
 			<p:ajax update=":form" listener="#{mapeoLoteBean.listarLotes}" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();"/>
 		</p:selectOneMenu>
@@ -20,8 +20,10 @@
 		
 		<p:panelGrid style="margin-bottom: 20px" id="grdLotes" columns="5" layout="grid">
 			<p:outputLabel value="No se ha registrado lotes" rendered="#{mapeoLoteBean.cantidadLotes eq 0}"  />
-			<p:repeat value="#{mapeoLoteBean.lstLotes}" var="lote">
-          			<p:button value="#{lote.manzana.name}-#{lote.numberLote}" rendered="#{lote.numberLote ne 'x'}" style="color: black;background:#{lote.status eq 'Vendido'?'red':lote.status eq 'Separado'?'blue':lote.status eq 'Disponible'?'green':'black'}"> </p:button>
+			<p:repeat value="#{mapeoLoteBean.lstLotes}" var="lote"> 
+          			<p:commandButton value="#{lote.manzana.name}-#{lote.numberLote}" onclick="PF('datosLote').show()" update="formDatos" rendered="#{lote.numberLote ne 'x'}" style=" font-size: 22px; width: 110px; height:100px;color: black;background:#{lote.status eq 'Vendido'?'red':lote.status eq 'Separado'?'blue':lote.status eq 'Disponible'?'green':'black'}" > 
+          				<f:setPropertyActionListener value="#{lote}" target="#{mapeoLoteBean.loteSelected}"  />
+          			</p:commandButton> 
        			<p:separator rendered="#{lote.numberLote eq 'x'}"/>
        		</p:repeat>
 		</p:panelGrid>
@@ -43,6 +45,26 @@
           <h:outputText value="Cargando, espere..." style="white-space: nowrap; font-weight:bold; color: #036fab; background: white"/> 
           </h:form>
     </pe:blockUI>
+    
+    <p:dialog id="datosLote" header="Datos del Lote" widgetVar="datosLote" appendTo="@(body)" dynamic="true" modal="true">
+        <h:form id="formDatos" >
+        	<h:panelGrid columns="1">
+				<p:outputLabel value="Proyecto: #{mapeoLoteBean.loteSelected.project.name}" style="font-size: 35px"/>
+				
+				<p:outputLabel value="Manzana: #{mapeoLoteBean.loteSelected.manzana.name}" style="font-size: 35px"/>
+				
+				<p:outputLabel value="Número del lote: #{mapeoLoteBean.loteSelected.numberLote}" style="font-size: 35px"/>
+				
+				<p:outputLabel value="Área: #{mapeoLoteBean.loteSelected.area}" style="font-size: 35px"/>
+				
+				<p:outputLabel value="Perímetro: #{mapeoLoteBean.loteSelected.perimetro}" style="font-size: 35px"/>
+				
+	        </h:panelGrid>
+        
+        
+            <p:commandButton value="OK" oncomplete="PF('datosLote').hide()" style="font-size: 22px; width: 110px; height:100px;"/>
+        </h:form>
+    </p:dialog>
     
    
 

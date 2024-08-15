@@ -44,6 +44,14 @@
 			<property-name>usuarioService</property-name>
 			<value>#{usuarioService}</value>
 		</managed-property>
+		<managed-property>
+			<property-name>requerimientoSeparacionService</property-name>
+			<value>#{requerimientoSeparacionService}</value>
+		</managed-property>
+		<managed-property>
+			<property-name>loteService</property-name>
+			<value>#{loteService}</value>
+		</managed-property>
 	</managed-bean>
 
 	<managed-bean>
@@ -763,6 +771,10 @@
 		<managed-property>
 			<property-name>voucherTempService</property-name>
 			<value>#{voucherTempService}</value>
+		</managed-property>
+		<managed-property>
+			<property-name>detalleRequerimientoSeparacionService</property-name>
+			<value>#{detalleRequerimientoSeparacionService}</value>
 		</managed-property>
 	</managed-bean>
 	
