@@ -54,7 +54,8 @@ public class Cliente {
 	@Column(name="email3fe")
 	private String email3Fe;
 
-	
+	@Column(name="existeusuario")
+	private boolean existeUsuario;
 	
 
 	public Integer getId() {
@@ -141,5 +142,12 @@ public class Cliente {
 	public void setDni(String dni) {
 		this.dni = dni;
 	}
+	public boolean isExisteUsuario() {
+		return existeUsuario;
+	}
+	public void setExisteUsuario(boolean existeUsuario) {
+		this.existeUsuario = existeUsuario;
+	}
+
 	
 }

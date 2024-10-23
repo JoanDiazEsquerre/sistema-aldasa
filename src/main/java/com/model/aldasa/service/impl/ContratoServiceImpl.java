@@ -126,16 +126,16 @@ public class ContratoServiceImpl implements ContratoService{
 		return contratoRepository.findByEstado(status, pageable);
 	}
 
-	@Override
-	public Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCuotaEspecialAndCompromisoPagoLike(String status, Sucursal sucursal,Project project, String manzana, String numeroLote, String personVenta, boolean cuotaEspecial, String compromisoPago,Pageable pageable) {
+	@Override 
+	public Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCuotaEspecialAndCompromisoPagoLike(String status, Sucursal sucursal,Project project, String manzana, String numeroLote, String person, boolean cuotaEspecial, String compromisoPago,Pageable pageable) {
 		// TODO Auto-generated method stub
-		return contratoRepository.findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCuotaEspecialAndCompromisoPagoLike(status, sucursal, project, manzana, numeroLote, personVenta, cuotaEspecial, compromisoPago,pageable);
+		return contratoRepository.findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCuotaEspecialAndCompromisoPagoLike(status, sucursal, project, manzana, numeroLote, person, cuotaEspecial, compromisoPago, pageable);
 	}
 	
 	@Override
-	public Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCompromisoPagoLike(String status, Sucursal sucursal,Project project, String manzana, String numeroLote, String personVenta,String compromisoPago, Pageable pageable) {
+	public Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCompromisoPagoLike(String status, Sucursal sucursal,Project project, String manzana, String numeroLote, String person, String compromisoPago, Pageable pageable) {
 		// TODO Auto-generated method stub
-		return contratoRepository.findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCompromisoPagoLike(status, sucursal, project, manzana, numeroLote, personVenta, compromisoPago, pageable);
+		return contratoRepository.findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCompromisoPagoLike(status, sucursal, project, manzana, numeroLote, person, compromisoPago, pageable);
 	}
 
 	@Override
@@ -290,6 +290,13 @@ public class ContratoServiceImpl implements ContratoService{
 			int cuotasAtrasadas, String compromisoPago, Project project) {
 		// TODO Auto-generated method stub
 		return contratoRepository.countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndLoteProject(estado, cuotasAtrasadas, compromisoPago, project); 
+	}
+
+	@Override
+	public Page<Contrato> findByCliente(String estado, Sucursal sucursal, String manzana, String lote, Person person,
+			Pageable pageable) {
+		// TODO Auto-generated method stub
+		return contratoRepository.findContratosByMultipleCriteria(estado, sucursal, manzana, lote, person, pageable);
 	}
 
 

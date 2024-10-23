@@ -26,8 +26,10 @@ import org.springframework.data.domain.Sort;
 import com.model.aldasa.entity.Cliente;
 import com.model.aldasa.entity.Empleado;
 import com.model.aldasa.entity.Person;
+import com.model.aldasa.entity.UsuarioCliente;
 import com.model.aldasa.service.ClienteService;
 import com.model.aldasa.service.PersonService;
+import com.model.aldasa.service.UsuarioClienteService;
 import com.model.aldasa.util.BaseBean;
 
 @ManagedBean
@@ -42,6 +44,9 @@ public class ClienteBean extends BaseBean implements Serializable{
 	
 	@ManagedProperty(value = "#{navegacionBean}")
 	private NavegacionBean navegacionBean; 
+	
+	@ManagedProperty(value = "#{usuarioClienteService}")
+	private UsuarioClienteService usuarioClienteService;
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -69,6 +74,32 @@ public class ClienteBean extends BaseBean implements Serializable{
 	public void init() {
 		lstPerson=personService.findByStatus(true);
 		iniciarLazy();
+		
+	}
+	
+	public void generarUsuario() {
+		if(clienteSelected.isExisteUsuario()) {
+			addErrorMessage("Ya se generó usuario para el cliente seleccionado. ");
+			return;
+		}
+		
+		
+		UsuarioCliente usuCliente = new UsuarioCliente();
+		if(clienteSelected.isPersonaNatural()) {
+			usuCliente.setUsername(clienteSelected.getDni());
+			usuCliente.setPassword(clienteSelected.getDni());
+		}else {
+			usuCliente.setUsername(clienteSelected.getRuc());
+			usuCliente.setPassword(clienteSelected.getRuc());
+		}
+		usuCliente.setCliente(clienteSelected);
+		usuCliente.setEstado(true);
+		usuarioClienteService.save(usuCliente);
+		
+		clienteSelected.setExisteUsuario(true);
+		clienteService.save(clienteSelected);
+		
+		addInfoMessage("Se generó correctamente el usuario para el cliente seleccionado."); 
 		
 	}
 	
@@ -449,6 +480,12 @@ public class ClienteBean extends BaseBean implements Serializable{
 	}
 	public void setBloqueo(boolean bloqueo) {
 		this.bloqueo = bloqueo;
+	}
+	public UsuarioClienteService getUsuarioClienteService() {
+		return usuarioClienteService;
+	}
+	public void setUsuarioClienteService(UsuarioClienteService usuarioClienteService) {
+		this.usuarioClienteService = usuarioClienteService;
 	}
 	
 	

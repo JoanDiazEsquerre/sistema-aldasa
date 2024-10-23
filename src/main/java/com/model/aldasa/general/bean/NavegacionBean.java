@@ -137,39 +137,38 @@ public class NavegacionBean implements Serializable  {
 		}
 		
 		
-		try {
-			actualizarPlantillaSeparacion();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			actualizarPlantillaSeparacion();
+//		} catch (ParseException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 	
-	
-	public void actualizarPlantillaSeparacion() throws ParseException {
-		List<RequerimientoSeparacion> lstSeparacionesPendientes = requerimientoSeparacionService.findByEstado(EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion());
-		
-		SimpleDateFormat sdfQuery = new SimpleDateFormat("yyyy-MM-dd");  
-		String fechaHoyText = sdfQuery.format(new Date());
-		
-		Date fechaHoy = sdfQuery.parse(fechaHoyText);
-		
-		
-		for(RequerimientoSeparacion req : lstSeparacionesPendientes) {
-			String fechaReqText = sdfQuery.format(req.getFechaVencimiento());
-			Date fechaReq = sdfQuery.parse(fechaReqText);
-			
-			if(fechaHoy.after(fechaReq)) {
-				req.setEstado(EstadoRequerimientoSeparacionType.VENCIDO.getDescripcion());
-				requerimientoSeparacionService.save(req);
-				
-				req.getLote().setStatus(EstadoLote.DISPONIBLE.getName());
-				loteService.save(req.getLote()); 
-				
-			}
-			
-		}
-	}
+//	public void actualizarPlantillaSeparacion() throws ParseException {
+//		List<RequerimientoSeparacion> lstSeparacionesPendientes = requerimientoSeparacionService.findByEstado(EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion());
+//		
+//		SimpleDateFormat sdfQuery = new SimpleDateFormat("yyyy-MM-dd");  
+//		String fechaHoyText = sdfQuery.format(new Date());
+//		
+//		Date fechaHoy = sdfQuery.parse(fechaHoyText);
+//		
+//		
+//		for(RequerimientoSeparacion req : lstSeparacionesPendientes) {
+//			String fechaReqText = sdfQuery.format(req.getFechaVencimiento());
+//			Date fechaReq = sdfQuery.parse(fechaReqText);
+//			
+//			if(fechaHoy.after(fechaReq)) {
+//				req.setEstado(EstadoRequerimientoSeparacionType.VENCIDO.getDescripcion());
+//				requerimientoSeparacionService.save(req);
+//				
+//				req.getLote().setStatus(EstadoLote.DISPONIBLE.getName());
+//				loteService.save(req.getLote()); 
+//				
+//			}
+//			
+//		}
+//	}
 	
 	public int[] obtenerPermisosPorPerfil(int idModuloSistema) {
 		int[] ids= {};

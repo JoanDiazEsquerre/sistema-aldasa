@@ -10,10 +10,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import com.model.aldasa.entity.DetalleMovimientoBancario;
+import com.model.aldasa.entity.Imagen;
 import com.model.aldasa.entity.MovimientoBancario;
 
 
 public interface DetalleMovimientoBancarioRepository extends JpaRepository<DetalleMovimientoBancario, Integer> {
+	
+	DetalleMovimientoBancario findByEstadoAndImagen(boolean estado, Imagen imagen);
 	
 	//TODOS
 	Page<DetalleMovimientoBancario> findByEstadoAndMovimientoBancario(boolean estado, MovimientoBancario movimientoBancario, Pageable pageable);

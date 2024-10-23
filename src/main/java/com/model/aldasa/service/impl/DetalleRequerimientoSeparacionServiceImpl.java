@@ -50,6 +50,12 @@ public class DetalleRequerimientoSeparacionServiceImpl implements DetalleRequeri
 		return detalleRequerimientoSeparacionRepository.findByEstadoAndRequerimientoSeparacion(estado, requerimientoSeparacion); 
 	}
 
+	@Override
+	public Page<DetalleRequerimientoSeparacion> findByEstadoAndRequerimientoSeparacionLoteProjectSucursalAndBoleteoTotal(boolean estado, Sucursal sucursal, String boleteoTotal, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return detalleRequerimientoSeparacionRepository.findByEstadoAndRequerimientoSeparacionLoteProjectSucursalAndBoleteoTotal(estado, sucursal,boleteoTotal, pageable); 
+	}
+
 
 
 

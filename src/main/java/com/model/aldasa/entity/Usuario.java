@@ -57,6 +57,9 @@ public class Usuario {
 	@Column(name="modificarmovimientocargo")
 	private boolean modificarMovimientoCargo;
 	
+	@Column(name="verificardatosvoucher")
+	private boolean verificarDatosVoucher;
+	
 	
 	public Integer getId() {
 		return id;
@@ -147,6 +150,12 @@ public class Usuario {
 	}
 	public void setModificarMovimientoCargo(boolean modificarMovimientoCargo) {
 		this.modificarMovimientoCargo = modificarMovimientoCargo;
+	}
+	public boolean isVerificarDatosVoucher() {
+		return verificarDatosVoucher;
+	}
+	public void setVerificarDatosVoucher(boolean verificarDatosVoucher) {
+		this.verificarDatosVoucher = verificarDatosVoucher;
 	}
 
 	

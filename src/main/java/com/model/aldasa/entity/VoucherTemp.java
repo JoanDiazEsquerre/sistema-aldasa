@@ -28,6 +28,10 @@ public class VoucherTemp {
 	@JoinColumn(name="idrequerimientoseparacion")
 	private RequerimientoSeparacion requerimientoSeparacion;
 	
+	@ManyToOne
+	@JoinColumn(name="iddetallerequerimientoseparacion")
+	private DetalleRequerimientoSeparacion detalleRequerimientoSeparacion;
+	
 	private BigDecimal monto;
 	
 	@Column(name="tipotransaccion") 
@@ -103,8 +107,15 @@ public class VoucherTemp {
 	public void setEstado(boolean estado) {
 		this.estado = estado;
 	}
-
-
+	public DetalleRequerimientoSeparacion getDetalleRequerimientoSeparacion() {
+		return detalleRequerimientoSeparacion;
+	}
+	public void setDetalleRequerimientoSeparacion(DetalleRequerimientoSeparacion detalleRequerimientoSeparacion) {
+		this.detalleRequerimientoSeparacion = detalleRequerimientoSeparacion;
+	}
+	
+	
+	
 	@Override
     public boolean equals(Object other) {
         return (other instanceof VoucherTemp) && (id != null)

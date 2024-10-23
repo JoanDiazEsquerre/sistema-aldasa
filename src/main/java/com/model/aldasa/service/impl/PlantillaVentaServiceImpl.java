@@ -28,7 +28,9 @@ import com.model.aldasa.repository.DetalleComisionesRepository;
 import com.model.aldasa.repository.EmpleadoRepository;
 import com.model.aldasa.repository.LoteRepository;
 import com.model.aldasa.repository.PlantillaVentaRepository;
+import com.model.aldasa.repository.RequerimientoSeparacionRepository;
 import com.model.aldasa.service.PlantillaVentaService;
+import com.model.aldasa.util.EstadoRequerimientoSeparacionType;
 
 @Service("plantillaVentaService")
 public class PlantillaVentaServiceImpl implements PlantillaVentaService{
@@ -53,6 +55,9 @@ public class PlantillaVentaServiceImpl implements PlantillaVentaService{
 	
 	@Autowired
 	private ConfiguracionComisionRepository configuracionComisionRepository;
+	
+	@Autowired
+	private RequerimientoSeparacionRepository requerimientoSeparacionRepository;
 	
 
 	@Override
@@ -106,6 +111,12 @@ public class PlantillaVentaServiceImpl implements PlantillaVentaService{
 	@Transactional
 	@Override
 	public PlantillaVenta saveAprobarPlantilla(PlantillaVenta plantilla, ConfiguracionComision configuracionComision, ComisionSupervisor comisionSupervisor) {
+		if(plantilla.getRequerimientoSeparacion() != null) {
+			plantilla.getRequerimientoSeparacion().setEstado(EstadoRequerimientoSeparacionType.TERMINADO.getDescripcion());
+			requerimientoSeparacionRepository.save(plantilla.getRequerimientoSeparacion());
+		}
+		
+		
 		plantilla.getLote().setStatus("Vendido");
 		plantilla.getLote().setPersonVenta(plantilla.getPerson()); 
 		plantilla.getLote().setMontoVenta(plantilla.getMontoVenta());

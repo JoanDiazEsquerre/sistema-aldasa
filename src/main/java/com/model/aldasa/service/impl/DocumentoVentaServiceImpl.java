@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.model.aldasa.entity.Contrato;
 import com.model.aldasa.entity.Cuota;
 import com.model.aldasa.entity.DetalleDocumentoVenta;
+import com.model.aldasa.entity.DetalleRequerimientoSeparacion;
 import com.model.aldasa.entity.DocumentoVenta;
 import com.model.aldasa.entity.Empresa;
 import com.model.aldasa.entity.Imagen;
@@ -24,6 +25,7 @@ import com.model.aldasa.entity.TipoDocumento;
 import com.model.aldasa.repository.ContratoRepository;
 import com.model.aldasa.repository.CuotaRepository;
 import com.model.aldasa.repository.DetalleDocumentoVentaRepository;
+import com.model.aldasa.repository.DetalleRequerimientoSeparacionRepository;
 import com.model.aldasa.repository.DocumentoVentaRepository;
 import com.model.aldasa.repository.ImagenRepository;
 import com.model.aldasa.repository.PlantillaVentaRepository;
@@ -32,6 +34,8 @@ import com.model.aldasa.repository.SerieDocumentoRepository;
 import com.model.aldasa.repository.VoucherRepository;
 import com.model.aldasa.service.DocumentoVentaService;
 import com.model.aldasa.util.EstadoContrato;
+import com.model.aldasa.util.EstadoPlantillaVentaType;
+import com.model.aldasa.util.EstadoRequerimientoSeparacionType;
 import com.model.aldasa.util.TipoProductoType;
 
 @Service("documentoVentaService")
@@ -54,6 +58,9 @@ public class DocumentoVentaServiceImpl implements DocumentoVentaService{
 
 	@Autowired
 	private RequerimientoSeparacionRepository requerimientoSeparacionRepository;
+	
+	@Autowired
+	private DetalleRequerimientoSeparacionRepository detalleRequerimientoSeparacionRepository;
 	
 	@Autowired
 	private PlantillaVentaRepository plantillaVentaRepository;
@@ -88,6 +95,7 @@ public class DocumentoVentaServiceImpl implements DocumentoVentaService{
 					List<PlantillaVenta> lstPlantilla = plantillaVentaRepository.findByEstadoAndLote("Aprobado", d.getCuota().getContrato().getLote());
 					if(!lstPlantilla.isEmpty()) {
 						for(PlantillaVenta p: lstPlantilla) {
+							p.setEstado(EstadoPlantillaVentaType.TERMINADO.getName());
 							p.setRealizoBoletaInicial(true);
 							p.setDocumentoVenta(entity); 
 							plantillaVentaRepository.save(p);
@@ -135,10 +143,24 @@ public class DocumentoVentaServiceImpl implements DocumentoVentaService{
 				
 			}
 			
-			if(d.getRequerimientoSeparacion()!=null) {
-				d.getRequerimientoSeparacion().setGeneraDocumento(true); 
-				d.getRequerimientoSeparacion().setDocumentoVenta(entity);
-				requerimientoSeparacionRepository.save(d.getRequerimientoSeparacion());
+			if(d.getDetalleRequerimientoSeparacion()!=null) {
+				d.getDetalleRequerimientoSeparacion().setBoleteoTotal("S"); 
+				d.getDetalleRequerimientoSeparacion().setDetalleDocumentoVenta(d);
+				detalleRequerimientoSeparacionRepository.save(d.getDetalleRequerimientoSeparacion());
+				
+				boolean encontrarPendienteBoleteo = false;
+				List<DetalleRequerimientoSeparacion> lstDetReq = detalleRequerimientoSeparacionRepository.findByEstadoAndRequerimientoSeparacion(true, d.getRequerimientoSeparacion());
+				for(DetalleRequerimientoSeparacion dt : lstDetReq) {
+					if(dt.getBoleteoTotal().equals("N")){
+						encontrarPendienteBoleteo = true;
+					}
+				}
+				
+				if(!encontrarPendienteBoleteo) {
+					d.getDetalleRequerimientoSeparacion().getRequerimientoSeparacion().setBoleteoTotal("S");
+					requerimientoSeparacionRepository.save(d.getDetalleRequerimientoSeparacion().getRequerimientoSeparacion());
+				}
+				
 			}
 			if(d.getCuotaPrepago()!=null) {
 				d.getCuotaPrepago().setPagoTotal("S");
@@ -244,34 +266,34 @@ public class DocumentoVentaServiceImpl implements DocumentoVentaService{
 	}
 
 	@Override
-	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumento(
+	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumentoAndUsuarioRegistroUsernameLike(
 			boolean estado, Sucursal sucursal, String razonSocial, String numero, String ruc, boolean envioSunat,
-			TipoDocumento tipoDocumento, Pageable pageable) {
+			TipoDocumento tipoDocumento, String username, Pageable pageable) {
 		// TODO Auto-generated method stub
-		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumento(estado, sucursal, razonSocial, numero, ruc, envioSunat, tipoDocumento, pageable);
+		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumentoAndUsuarioRegistroUsernameLike(estado, sucursal, razonSocial, numero, ruc, envioSunat, tipoDocumento, username ,pageable);
 	}
 
 	@Override
-	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumento(
+	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumentoAndUsuarioRegistroUsernameLike(
 			boolean estado, Sucursal sucursal, String razonSocial, String numero, String ruc,
-			TipoDocumento tipoDocumento, Pageable pageable) {
+			TipoDocumento tipoDocumento, String username,Pageable pageable) {
 		// TODO Auto-generated method stub
-		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumento(estado, sucursal, razonSocial, numero, ruc, tipoDocumento, pageable);
+		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumentoAndUsuarioRegistroUsernameLike(estado, sucursal, razonSocial, numero, ruc, tipoDocumento, username, pageable);
 	}
 
 	@Override
-	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLike(boolean estado,
-			Sucursal sucursal, String razonSocial, String numero, String ruc, Pageable pageable) {
+	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndUsuarioRegistroUsernameLike(boolean estado,
+			Sucursal sucursal, String razonSocial, String numero, String ruc, String username, Pageable pageable) {
 		// TODO Auto-generated method stub
-		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLike(estado, sucursal, razonSocial, numero, ruc, pageable);
+		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndUsuarioRegistroUsernameLike(estado, sucursal, razonSocial, numero, ruc,username, pageable);
 	}
 
 	@Override
-	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunat(
-			boolean estado, Sucursal sucursal, String razonSocial, String numero, String ruc, boolean envioSunat,
+	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndUsuarioRegistroUsernameLike(
+			boolean estado, Sucursal sucursal, String razonSocial, String numero, String ruc, boolean envioSunat, String username,
 			Pageable pageable) {
 		// TODO Auto-generated method stub
-		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunat(estado, sucursal, razonSocial, numero, ruc, envioSunat, pageable);
+		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndUsuarioRegistroUsernameLike(estado, sucursal, razonSocial, numero, ruc, envioSunat, username, pageable);
 	}
 
 	@Override
@@ -496,6 +518,38 @@ public class DocumentoVentaServiceImpl implements DocumentoVentaService{
 		
 		// TODO Auto-generated method stub
 		return entity;
+	}
+
+	@Override
+	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndFechaEmisionAndUsuarioRegistroUsernameLike(
+			boolean estado, Sucursal sucursal, String razonSocial, String numero, String ruc, Date fechaEmision,
+			String username, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndFechaEmisionAndUsuarioRegistroUsernameLike(estado, sucursal, razonSocial, numero, ruc, fechaEmision, username, pageable);
+	}
+
+	@Override
+	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumentoAndFechaEmisionAndUsuarioRegistroUsernameLike(
+			boolean estado, Sucursal sucursal, String razonSocial, String numero, String ruc,
+			TipoDocumento tipoDocumento, Date fechaEmision, String username, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumentoAndFechaEmisionAndUsuarioRegistroUsernameLike(estado, sucursal, razonSocial, numero, ruc, tipoDocumento, fechaEmision, username, pageable);
+	}
+
+	@Override
+	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndFechaEmisionAndUsuarioRegistroUsernameLike(
+			boolean estado, Sucursal sucursal, String razonSocial, String numero, String ruc, boolean envioSunat,
+			Date fechaEmision, String username, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndFechaEmisionAndUsuarioRegistroUsernameLike(estado, sucursal, razonSocial, numero, ruc, envioSunat, fechaEmision, username, pageable);
+	}
+
+	@Override
+	public Page<DocumentoVenta> findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumentoAndFechaEmisionAndUsuarioRegistroUsernameLike(
+			boolean estado, Sucursal sucursal, String razonSocial, String numero, String ruc, boolean envioSunat,
+			TipoDocumento tipoDocumento, Date fechaEmision, String username, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return documentoVentaRepository.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumentoAndFechaEmisionAndUsuarioRegistroUsernameLike(estado, sucursal, razonSocial, numero, ruc, envioSunat, tipoDocumento, fechaEmision, username, pageable);
 	}
 
 	

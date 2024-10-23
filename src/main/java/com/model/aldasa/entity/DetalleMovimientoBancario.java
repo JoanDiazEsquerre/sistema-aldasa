@@ -49,6 +49,10 @@ public class DetalleMovimientoBancario {
 	
 	private boolean estado;
 	
+	@ManyToOne
+	@JoinColumn(name="idimagen")
+	private Imagen imagen;
+	
 	public DetalleMovimientoBancario() {
 		
 	}
@@ -140,8 +144,16 @@ public class DetalleMovimientoBancario {
 	public void setTipoMovimiento(TipoMovimiento tipoMovimiento) {
 		this.tipoMovimiento = tipoMovimiento;
 	}
+	public Imagen getImagen() {
+		return imagen;
+	}
+	public void setImagen(Imagen imagen) {
+		this.imagen = imagen;
+	}
 	
 	
+	
+
 	@Override
     public boolean equals(Object other) {
         return (other instanceof DetalleMovimientoBancario) && (id != null)

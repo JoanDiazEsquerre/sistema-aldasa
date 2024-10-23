@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
 import com.model.aldasa.entity.DetalleMovimientoBancario;
+import com.model.aldasa.entity.Imagen;
 import com.model.aldasa.entity.MovimientoBancario;
 
 public interface DetalleMovimientoBancarioService {
@@ -17,6 +18,8 @@ public interface DetalleMovimientoBancarioService {
 	Optional<DetalleMovimientoBancario> findById(Integer id);
 	DetalleMovimientoBancario save(DetalleMovimientoBancario entity);
 	void delete(DetalleMovimientoBancario entity);
+	
+	DetalleMovimientoBancario findByEstadoAndImagen(boolean estado, Imagen imagen);
 	
 	//TODOS
 	Page<DetalleMovimientoBancario> findByEstadoAndMovimientoBancario(boolean estado, MovimientoBancario movimientoBancario, Pageable pageable);

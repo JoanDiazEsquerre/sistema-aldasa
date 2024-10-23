@@ -48,7 +48,7 @@ public class Cuota {
 	private boolean original;
 	
 	private boolean prepago;
-	
+
 	@ManyToOne
 	@JoinColumn(name="idcuotaref")
 	private Cuota cuotaRef;

@@ -32,6 +32,21 @@
                 <p:commandButton value="Descargar" rendered="#{navegacionBean.usuarioLogin.profile.id eq 1}" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" actionListener="#{contratoBean.procesarExcel}" icon="pi pi-file-excel" styleClass="ui-button-success" style="margin-left:20px">
 		           <p:fileDownload value="#{contratoBean.fileDes}"/> 
 		      	</p:commandButton>
+		      	
+		      	<h:panelGrid columns="2">
+		      		<h:outputLabel value="Buscar por persona: " />
+					<p:autoComplete  scrollHeight="500" styleClass="ui-autocompV" value="#{contratoBean.busquedaPersona}" converter="#{contratoBean.conversorPerson}" completeMethod="#{contratoBean.completePersonSurnames}"  
+					     var="pros" itemLabel="#{pros.surnames.concat(' ')}#{pros.names}" itemValue="#{pros}" forceSelection="true" >
+						<p:column width="400px">
+					   		<h:outputLabel value="#{pros.surnames} #{pros.names}" /> 
+					   	</p:column>
+					   	<p:column width="400px">
+					   		<h:outputLabel value="#{pros.dni}" /> 
+					   	</p:column> 	
+					   	
+					   	<p:ajax update="idTableContrato" />				   	
+					</p:autoComplete>
+		      	</h:panelGrid>
 				
 				<p:dataTable var="contrato" id="idTableContrato" value="#{contratoBean.lstContratoLazy}" widgetVar="contratoTable" rowIndexVar="row" paginator="true" rows="15" size="small"
 					emptyMessage="No se encontraron contratos." style="width: 200%"	paginatorPosition="bottom" rowKey="#{contrato.id}"  selectionMode="single" 
@@ -53,7 +68,7 @@
 					<p:column headerText="Proyecto" style="text-align:center; width:150px">
 						<f:facet name="header">
 							Proyecto
-				        	<p:selectOneMenu value="#{contratoBean.projectFilter}" converter="#{contratoBean.conversorProject}" style="margin:5px; width:100%" >
+				        	<p:selectOneMenu value="#{contratoBean.projectFilter}" converter="#{contratoBean.conversorProject}" style="margin:5px; width:100%" disabled="#{contratoBean.busquedaPersona ne null}" >
 								<f:selectItem itemLabel="[-TODOS-]" value="#{null}"/>
 								<f:selectItems value="#{contratoBean.lstProject}" var="project" itemLabel="#{project.name}" itemValue="#{project}"/>
 								<p:ajax update="idTableContrato" />
@@ -123,8 +138,16 @@
 						<h:outputText value="#{contrato.personVenta.surnames} #{contrato.personVenta.names}"/>
 					</p:column>
 					
-					<p:column headerText="Persona Venta 2" filterMatchMode="contains" width="200px">
+					<p:column headerText="DNI Persona 1" filterMatchMode="contains" width="100px" sortBy="#{contrato.personVenta.dni}" filterBy="#{contrato.personVenta.dni}">
+						<h:outputText value="#{contrato.personVenta.dni}"/>
+					</p:column>
+					
+					<p:column headerText="Persona Venta 2" filterMatchMode="contains" width="200px" sortBy="#{contrato.personVenta2.surnames}" filterBy="#{contrato.personVenta2.surnames}">
 						<h:outputText  value="#{contrato.personVenta2.surnames} #{contrato.personVenta2.names}"/>
+					</p:column>
+					
+					<p:column headerText="DNI Persona 2" filterMatchMode="contains" width="100px" sortBy="#{contrato.personVenta2.dni}" filterBy="#{contrato.personVenta2.dni}">
+						<h:outputText value="#{contrato.personVenta2.dni}"/>
 					</p:column>
 					
 					<p:column headerText="Persona Venta 3" filterMatchMode="contains" width="200px">
@@ -625,20 +648,31 @@
 		<h:form id="formCronogramaPagoDialog">
 			
 			<h:panelGrid columns="2"> 
-				<h:outputText value="Total Cuota S.I.:" style="font-weight: bold;"/> 
+				<h:outputText value="Total Cuota S.I.:" style="font-weight: bold; color: #007d4c"/> 
 				<h:outputText value="#{contratoBean.sumaCuotaSI}"> 
 					<f:convertNumber type="currency" currencySymbol=""/>
 				</h:outputText> 
 				
-				<h:outputText value="Total Interés:" style="font-weight: bold;"/> 
+				<h:outputText value="Total Interés:" style="font-weight: bold; color : #007d4c"/> 
 				<h:outputText value="#{contratoBean.sumaInteres}"> 
 					<f:convertNumber type="currency" currencySymbol=""/>
 				</h:outputText>
 				
-				<h:outputText value="Total Cuota Total:" style="font-weight: bold;"/> 
+				<h:outputText />
+				<h:outputText />
+				
+				<h:outputText value="Total Cuota Total:" style="font-weight: bold; color: #007d4c;"/> 
 				<h:outputText value="#{contratoBean.sumaCuotaTotal}"> 
 					<f:convertNumber type="currency" currencySymbol=""/>
 				</h:outputText> 
+			</h:panelGrid>
+			
+			<h:panelGrid columns="2" style="margin-top: 20px"> 
+				<h:outputText value="Total Saldo Capital:" style="font-weight: bold; color: #007d4c;"/> 
+				<h:outputText value="#{contratoBean.totalSaldoCapital}"> 
+					<f:convertNumber type="currency" currencySymbol=""/> 
+				</h:outputText> 
+				
 			</h:panelGrid>
 							
 					 
@@ -931,7 +965,8 @@
 	<p:confirmDialog id="resolverContra" message="¿Está seguro de Resolver el cotrato?" header="Confirmación"
                       severity="alert" widgetVar="resolverContra" appendTo="@(body)">
         <h:form >
-            <p:commandButton value="SI" onstart="PF('blockUIWidgetResolverContrato').block();" oncomplete="PF('blockUIWidgetResolverContrato').unblock();PF('resolverContra').hide()"  action="#{contratoBean.resolverContrato}" update=":form:tabView:idTableContrato"/>
+            <p:commandButton value="SI" onstart="PF('blockUIWidgetResolverContrato').block();" oncomplete="PF('blockUIWidgetResolverContrato').unblock();PF('resolverContra').hide()"  
+            action="#{contratoBean.resolverContrato}" update=":form:tabView:idTableContrato"/>
             <p:commandButton value="NO" oncomplete="PF('resolverContra').hide()"/>
         </h:form>
     </p:confirmDialog>

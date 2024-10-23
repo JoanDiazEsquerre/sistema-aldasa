@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.model.aldasa.entity.CuentaBancaria;
+import com.model.aldasa.entity.DetalleRequerimientoSeparacion;
 import com.model.aldasa.entity.Lote;
 import com.model.aldasa.entity.PlantillaVenta;
 import com.model.aldasa.entity.RequerimientoSeparacion;
@@ -41,9 +42,9 @@ public class VoucherTempServiceImpl implements VoucherTempService {
 	}
 
 	@Override
-	public List<VoucherTemp> findByRequerimientoSeparacionAndEstado(RequerimientoSeparacion req, boolean status) {
+	public List<VoucherTemp> findByDetalleRequerimientoSeparacionRequerimientoSeparacionAndEstado(RequerimientoSeparacion req, boolean status) {
 		// TODO Auto-generated method stub
-		return voucherTempRepository.findByRequerimientoSeparacionAndEstado(req, status); 
+		return voucherTempRepository.findByDetalleRequerimientoSeparacionRequerimientoSeparacionAndEstado(req, status); 
 	}
 
 	@Override
@@ -80,6 +81,13 @@ public class VoucherTempServiceImpl implements VoucherTempService {
 			CuentaBancaria cuentaBancaria, boolean estado) {
 		// TODO Auto-generated method stub
 		return voucherTempRepository.findByRequerimientoSeparacionAndMontoAndTipoTransaccionAndNumeroOperacionAndFechaOperacionAndCuentaBancariaAndEstado(req, monto, tipoTransaccion, numTransaccion, fecha, cuentaBancaria, estado);
+	}
+
+	@Override
+	public List<VoucherTemp> findByDetalleRequerimientoSeparacionAndEstado(DetalleRequerimientoSeparacion detReq,
+			boolean status) {
+		// TODO Auto-generated method stub
+		return voucherTempRepository.findByDetalleRequerimientoSeparacionAndEstado(detReq, status); 
 	}
 	
 

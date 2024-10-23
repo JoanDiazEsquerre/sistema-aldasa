@@ -151,60 +151,67 @@
 		            </h:panelGrid>
 				
 				</p:tab>
-				<p:tab title="Permisos" > 
-				
-					<h:panelGrid columns="4"> 
-					
+				<p:tab title="Permisos" >
+
+					<h:panelGrid columns="4">
+
 						<h:outputLabel value="Modificar Cronograma:" />
-		                <p:selectOneMenu value="#{userBean.userSelected.modificarCronograma}" style="margin:10px" >
-		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
-		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
-		                </p:selectOneMenu>
-		                
-		                <h:outputLabel value="Aprobar Plantilla Venta:" />
-		                <p:selectOneMenu value="#{userBean.userSelected.aprobarPlantillaVenta}" style="margin:10px" >
-		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
-		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
-		                </p:selectOneMenu>
-		                
-		                <h:outputLabel value="Descargar Reporte Ventas:" />
-		                <p:selectOneMenu value="#{userBean.userSelected.descargarReporteVenta}" style="margin:10px" >
-		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
-		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
-		                </p:selectOneMenu>
-		                
-		                <h:outputLabel value="Modificar voucher:" />
-		                <p:selectOneMenu value="#{userBean.userSelected.modificarVoucher}" style="margin:10px" >
-		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
-		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
-		                </p:selectOneMenu>
-		                
-		                <h:outputLabel value="Aprobar Requerimiento Separación:" />
-		                <p:selectOneMenu value="#{userBean.userSelected.aprobarRequerimientoSeparacion}" style="margin:10px" >
-		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
-		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
-		                </p:selectOneMenu>
-		                
-		                <h:outputLabel value="Aprobar Orden Compra:" />
-		                <p:selectOneMenu value="#{userBean.userSelected.aprobarOrdenCompra}" style="margin:10px" >
-		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
-		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
-		                </p:selectOneMenu>
-		                
-		                 <h:outputLabel value="Modo Lectura Mantenimiento Voucher:" />
-		                <p:selectOneMenu value="#{userBean.userSelected.modoLecturaMantVoucher}" style="margin:10px" >
-		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
-		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
-		                </p:selectOneMenu>
-		                
-		                 <h:outputLabel value="Modificar Tipo Mov. Cargo:" />
-		                <p:selectOneMenu value="#{userBean.userSelected.modificarMovimientoCargo}" style="margin:10px" >
-		                    <f:selectItem itemLabel="NO" itemValue="#{false}"/>
-		                    <f:selectItem itemLabel="SI" itemValue="#{true}"/>
-		                </p:selectOneMenu>
-		                
-		             </h:panelGrid>
-				
+						<p:selectOneMenu value="#{userBean.userSelected.modificarCronograma}"
+							style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel value="Aprobar Plantilla Venta:" />
+						<p:selectOneMenu value="#{userBean.userSelected.aprobarPlantillaVenta}" style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel value="Descargar Reporte Ventas:" />
+						<p:selectOneMenu value="#{userBean.userSelected.descargarReporteVenta}" style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel value="Modificar voucher:" />
+						<p:selectOneMenu value="#{userBean.userSelected.modificarVoucher}" style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel value="Aprobar Requerimiento Separación:" />
+						<p:selectOneMenu value="#{userBean.userSelected.aprobarRequerimientoSeparacion}" style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel value="Aprobar Orden Compra:" />
+						<p:selectOneMenu value="#{userBean.userSelected.aprobarOrdenCompra}" style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel value="Modo Lectura Mantenimiento Voucher:" />
+						<p:selectOneMenu value="#{userBean.userSelected.modoLecturaMantVoucher}" style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+
+						<h:outputLabel value="Modificar Tipo Mov. Cargo:" />
+						<p:selectOneMenu value="#{userBean.userSelected.modificarMovimientoCargo}" style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+						
+						<h:outputLabel value="Verificar Datos Voucher Documento Venta:" />
+						<p:selectOneMenu value="#{userBean.userSelected.verificarDatosVoucher}" style="margin:10px">
+							<f:selectItem itemLabel="NO" itemValue="#{false}" />
+							<f:selectItem itemLabel="SI" itemValue="#{true}" />
+						</p:selectOneMenu>
+
+					</h:panelGrid>
+
 				</p:tab>
 	        </p:tabView>
             

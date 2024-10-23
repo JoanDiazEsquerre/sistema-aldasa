@@ -26,14 +26,16 @@ public class DetalleRequerimientoSeparacion {
 	
 	private BigDecimal monto;
 	
-	@Column(name="pagototal")
-	private String pagoTotal;
+	@Column(name="boleteototal")
+	private String boleteoTotal;
 	
-	private boolean estado;
+	private boolean estado, principal;
 	
 	private Date fecha;
 
-	
+	@ManyToOne
+	@JoinColumn(name="iddetalledocumentoventa")
+	private DetalleDocumentoVenta detalleDocumentoVenta;
 	
 	
 	
@@ -55,11 +57,11 @@ public class DetalleRequerimientoSeparacion {
 	public void setMonto(BigDecimal monto) {
 		this.monto = monto;
 	}
-	public String getPagoTotal() {
-		return pagoTotal;
+	public String getBoleteoTotal() {
+		return boleteoTotal;
 	}
-	public void setPagoTotal(String pagoTotal) {
-		this.pagoTotal = pagoTotal;
+	public void setBoleteoTotal(String boleteoTotal) {
+		this.boleteoTotal = boleteoTotal;
 	}
 	public boolean isEstado() {
 		return estado;
@@ -72,6 +74,18 @@ public class DetalleRequerimientoSeparacion {
 	}
 	public void setFecha(Date fecha) {
 		this.fecha = fecha;
+	}
+	public boolean isPrincipal() {
+		return principal;
+	}
+	public void setPrincipal(boolean principal) {
+		this.principal = principal;
+	}
+	public DetalleDocumentoVenta getDetalleDocumentoVenta() {
+		return detalleDocumentoVenta;
+	}
+	public void setDetalleDocumentoVenta(DetalleDocumentoVenta detalleDocumentoVenta) {
+		this.detalleDocumentoVenta = detalleDocumentoVenta;
 	}
 	
 }

@@ -156,6 +156,7 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	private Team team;
 	private Project projectFilter, proyectoCambio;
 	private Lote loteCambio;
+	private DetalleRequerimientoSeparacion detalleRequerimientoSeparacionSelected;
 	
 	private String estado = EstadoRequerimientoSeparacionType.PENDIENTE.getDescripcion();
 	private String tipoTransaccion="";
@@ -198,24 +199,50 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 		iniciarDatosRequerimiento();
 	}
 	
-	public void eliminarDetalleRequerimiento(DetalleRequerimientoSeparacion detalle) {
+	public void eliminarDetalleRequerimiento(DetalleRequerimientoSeparacion detalle) { 
 		List<ImagenRequerimientoSeparacion> lstImagen = imagenRequerimientoSeparacionService.findByDetalleRequerimientoSeparacionAndEstado(detalle, true);
-		
-		if(!lstImagen.isEmpty()) {
-			for(ImagenRequerimientoSeparacion imagen : lstImagen) {
+
+		if (!lstImagen.isEmpty()) {
+			for (ImagenRequerimientoSeparacion imagen : lstImagen) {
 				imagen.setEstado(false);
 				imagenRequerimientoSeparacionService.save(imagen);
+				
+				
+				File archivo = new File(navegacionBean.getSucursalLogin().getEmpresa().getRutaVoucher() + imagen.getNombre());
+		        
+		        if (archivo.exists()) {
+		        	archivo.delete();
+		        } 
+			}
+
+			detalle.setEstado(false);
+			detalleRequerimientoSeparacionService.save(detalle);
+			
+			detalle.getRequerimientoSeparacion().setMonto(detalle.getRequerimientoSeparacion().getMonto().subtract(detalle.getMonto()));
+			requerimientoSeparacionService.save(detalle.getRequerimientoSeparacion()); 
+			
+			boolean encontrarPendienteBoleteo = false;
+			List<DetalleRequerimientoSeparacion> lstDetReq = detalleRequerimientoSeparacionService.findByEstadoAndRequerimientoSeparacion(true, detalle.getRequerimientoSeparacion());
+			for(DetalleRequerimientoSeparacion dt : lstDetReq) {
+				if(dt.getBoleteoTotal().equals("N")){
+					encontrarPendienteBoleteo = true;
+				}
 			}
 			
-			detalle.setEstado(false); 
-			detalleRequerimientoSeparacionService.save(detalle);
+			if(!encontrarPendienteBoleteo) {
+				detalle.getRequerimientoSeparacion().setBoleteoTotal("S");
+				requerimientoSeparacionService.save(detalle.getRequerimientoSeparacion());
+			}
+			
+			Optional<RequerimientoSeparacion> actualizado = requerimientoSeparacionService.findById(detalle.getRequerimientoSeparacion().getId());
+			requerimientoSeparacionSelected = actualizado.get();
 			
 			addInfoMessage("Se eliminó correctamente el detalle");
 			verVoucher();
-		}else {
+		} else {
 			addErrorMessage("No se puede eliminar el detalle.");
 		}
-		
+
 	}
 	
 	public void saveDetalleRequerimientoSeparacion() {
@@ -237,15 +264,16 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 		DetalleRequerimientoSeparacion newDetalle =  new DetalleRequerimientoSeparacion();
 		newDetalle.setRequerimientoSeparacion(requerimientoSeparacionSelected);
 		newDetalle.setMonto(montoAgregar);
-		newDetalle.setPagoTotal("N");
+		newDetalle.setBoleteoTotal("N");
 		newDetalle.setEstado(true);
 		newDetalle.setFecha(new Date());
+		newDetalle.setPrincipal(false);
 		
 		newDetalle = detalleRequerimientoSeparacionService.save(newDetalle);
 		if(newDetalle != null) {
 			
-			requerimientoSeparacionSelected.setMontoAdicional(requerimientoSeparacionSelected.getMontoAdicional().add(montoAgregar));
-			requerimientoSeparacionSelected.setPagoTotal("N");
+			requerimientoSeparacionSelected.setMonto(requerimientoSeparacionSelected.getMonto().add(montoAgregar));
+			requerimientoSeparacionSelected.setBoleteoTotal("N");
 			requerimientoSeparacionService.save(requerimientoSeparacionSelected);
 			
 			
@@ -522,24 +550,31 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 		if(busqueda != null) {
 			addErrorMessage("El voucher ya se registró a datos temporales.");
 		}else {
-			busqueda = new VoucherTemp();
-			busqueda.setRequerimientoSeparacion(requerimientoSeparacionSelected);
-			busqueda.setMonto(monto);
-			busqueda.setTipoTransaccion(tipoTransaccion);
-			busqueda.setNumeroOperacion(numeroTransaccion);
-			busqueda.setFechaOperacion(fechaOperacion);
-			busqueda.setCuentaBancaria(cuentaBancariaSelected);
-			busqueda.setEstado(true);
-			voucherTempService.save(busqueda);
-			listarDatosTemporales();
-			addInfoMessage("El voucher se añadió a datos temporales correctamente");
+			if(detalleRequerimientoSeparacionSelected == null) {
+				addErrorMessage("Debes seleccionar un detalle para asignar el voucher temporal.");
+			}else {
+				busqueda = new VoucherTemp();
+				busqueda.setRequerimientoSeparacion(requerimientoSeparacionSelected); 
+				busqueda.setDetalleRequerimientoSeparacion(detalleRequerimientoSeparacionSelected);
+				busqueda.setMonto(monto);
+				busqueda.setTipoTransaccion(tipoTransaccion);
+				busqueda.setNumeroOperacion(numeroTransaccion);
+				busqueda.setFechaOperacion(fechaOperacion);
+				busqueda.setCuentaBancaria(cuentaBancariaSelected);
+				busqueda.setEstado(true);
+				voucherTempService.save(busqueda);
+				listarDatosTemporales();
+				addInfoMessage("El voucher se añadió a datos temporales correctamente");
+			}
+			
+			
 			
 		}
 	}
 	
 
 	public void listarDatosTemporales() {
-		lstVoucherTemporal = voucherTempService.findByRequerimientoSeparacionAndEstado(requerimientoSeparacionSelected, true);
+		lstVoucherTemporal = voucherTempService.findByDetalleRequerimientoSeparacionRequerimientoSeparacionAndEstado(requerimientoSeparacionSelected, true);
 	}
 	
 	public void validarAnulacion() {
@@ -680,6 +715,13 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 			requerimientoSeparacionSelected.getLote().setStatus(EstadoLote.DISPONIBLE.getName());
 			loteService.save(requerimientoSeparacionSelected.getLote());
 		}
+		
+		List<DetalleRequerimientoSeparacion> lstDetalle =detalleRequerimientoSeparacionService.findByEstadoAndRequerimientoSeparacion(true, requerimientoSeparacionSelected);
+		for(DetalleRequerimientoSeparacion d : lstDetalle) {
+			d.setEstado(false);
+			detalleRequerimientoSeparacionService.save(d);
+		}
+		
 		addInfoMessage("Se anuló correctamente el requerimiento"); 
 	}
 	
@@ -857,8 +899,7 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 		requerimientoSeparacionNew.setPersonSupervisor(team.getPersonSupervisor());
 		requerimientoSeparacionNew.setEstado(EstadoRequerimientoSeparacionType.PENDIENTE.getDescripcion());
 		requerimientoSeparacionNew.setGeneraDocumento(false);
-		requerimientoSeparacionNew.setPagoTotal("N");
-		requerimientoSeparacionNew.setMontoAdicional(BigDecimal.ZERO); 
+		requerimientoSeparacionNew.setBoleteoTotal("N");
 		
 		requerimientoSeparacionNew= requerimientoSeparacionService.save(requerimientoSeparacionNew); 
 		
@@ -868,10 +909,11 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 		}else {
 			DetalleRequerimientoSeparacion newDetalle =  new DetalleRequerimientoSeparacion();
 			newDetalle.setRequerimientoSeparacion(requerimientoSeparacionNew);
-			newDetalle.setMonto(montoAgregar);
-			newDetalle.setPagoTotal("N");
+			newDetalle.setMonto(requerimientoSeparacionNew.getMonto()); 
+			newDetalle.setBoleteoTotal("N");
 			newDetalle.setEstado(true);
 			newDetalle.setFecha(new Date()); 
+			newDetalle.setPrincipal(true);
 			
 			newDetalle = detalleRequerimientoSeparacionService.save(newDetalle);
 			
@@ -1913,6 +1955,13 @@ public class RequerimientoSeparacionBean extends BaseBean implements Serializabl
 	public void setLstDetalleRequerimientoSeparacionSelected(
 			List<DetalleRequerimientoSeparacion> lstDetalleRequerimientoSeparacionSelected) {
 		this.lstDetalleRequerimientoSeparacionSelected = lstDetalleRequerimientoSeparacionSelected;
+	}
+	public DetalleRequerimientoSeparacion getDetalleRequerimientoSeparacionSelected() {
+		return detalleRequerimientoSeparacionSelected;
+	}
+	public void setDetalleRequerimientoSeparacionSelected(
+			DetalleRequerimientoSeparacion detalleRequerimientoSeparacionSelected) {
+		this.detalleRequerimientoSeparacionSelected = detalleRequerimientoSeparacionSelected;
 	}
 	
 

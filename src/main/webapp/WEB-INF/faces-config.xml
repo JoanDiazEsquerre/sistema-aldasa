@@ -898,6 +898,10 @@
 			<property-name>manzanaService</property-name> 
 			<value>#{manzanaService}</value> 
 		</managed-property>
+		<managed-property> 
+			<property-name>detalleRequerimientoSeparacionService</property-name> 
+			<value>#{detalleRequerimientoSeparacionService}</value>
+		</managed-property>
 	</managed-bean>
 	
 	<managed-bean>
@@ -992,6 +996,22 @@
 			<property-name>voucherTempService</property-name> 
 			<value>#{voucherTempService}</value>
 		</managed-property>
+		<managed-property>
+			<property-name>detalleRequerimientoSeparacionService</property-name>
+			<value>#{detalleRequerimientoSeparacionService}</value>
+		</managed-property>
+		<managed-property> 
+			<property-name>movimientoBancarioService</property-name> 
+			<value>#{movimientoBancarioService}</value>
+		</managed-property>
+		<managed-property>
+			<property-name>detalleMovimientoBancarioService</property-name>
+			<value>#{detalleMovimientoBancarioService}</value>
+		</managed-property>
+		<managed-property>
+			<property-name>tipoMovimientoService</property-name>
+			<value>#{tipoMovimientoService}</value>
+		</managed-property>
 	</managed-bean>
 	
 	<managed-bean>
@@ -1071,6 +1091,10 @@
 		<managed-property>
 			<property-name>navegacionBean</property-name>
 			<value>#{navegacionBean}</value>
+		</managed-property>
+		<managed-property>
+			<property-name>usuarioClienteService</property-name>
+			<value>#{usuarioClienteService}</value>
 		</managed-property>
 	</managed-bean>
 	
@@ -1348,6 +1372,14 @@
 		<managed-property>
 			<property-name>tipoMovimientoService</property-name>
 			<value>#{tipoMovimientoService}</value> 
+		</managed-property>
+		<managed-property>
+			<property-name>detalleDocumentoVentaService</property-name>
+			<value>#{detalleDocumentoVentaService}</value> 
+		</managed-property>
+		<managed-property>
+			<property-name>reportGenBo</property-name>
+			<value>#{reportGenBo}</value> 
 		</managed-property>
 	</managed-bean>
 	

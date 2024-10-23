@@ -47,6 +47,10 @@ public class DetalleDocumentoVenta{
 	private RequerimientoSeparacion requerimientoSeparacion;
 	
 	@ManyToOne
+	@JoinColumn(name="iddetallerequerimientoseparacion")
+	private DetalleRequerimientoSeparacion detalleRequerimientoSeparacion;
+	
+	@ManyToOne
 	@JoinColumn(name="idcuotaprepago")
 	private Cuota cuotaPrepago;
 	
@@ -152,6 +156,12 @@ public class DetalleDocumentoVenta{
 	}
 	public void setPrecioSinIgv(BigDecimal precioSinIgv) {
 		this.precioSinIgv = precioSinIgv;
+	}
+	public DetalleRequerimientoSeparacion getDetalleRequerimientoSeparacion() {
+		return detalleRequerimientoSeparacion;
+	}
+	public void setDetalleRequerimientoSeparacion(DetalleRequerimientoSeparacion detalleRequerimientoSeparacion) {
+		this.detalleRequerimientoSeparacion = detalleRequerimientoSeparacion;
 	}
 	
 	

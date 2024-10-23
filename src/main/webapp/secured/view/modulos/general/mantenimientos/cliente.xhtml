@@ -25,6 +25,12 @@
 					<span>Lista de Clientes</span>
 				</div>
 			</f:facet>
+			
+			<p:column sortBy="#{cliente.existeUsuario}" width="30px">
+	       		<p:commandButton icon="pi pi-user" styleClass="rounded-button ui-button-success" rendered="#{cliente.existeUsuario}"  />
+		           	
+	           	<p:commandButton icon="pi pi-times" styleClass="rounded-button ui-button-danger"  rendered="#{cliente.existeUsuario eq false}"/>
+            </p:column>
 		
 			<p:column style="width:42px;text-align: left">
 				<f:facet name="header">
@@ -89,6 +95,11 @@
 			</p:column>
 			
 		</p:dataTable>
+		
+		<p:contextMenu id="menuTable" for="idTableCliente" >
+            <p:menuitem value="Generar Usuario" action="#{clienteBean.generarUsuario}" update=":form:idTableCliente" icon="pi pi-wallet" onstart="PF('blockUIWidget').block();" oncomplete="PF('blockUIWidget').unblock();" />
+        </p:contextMenu>
+		        
 	
 	</h:form>
 	

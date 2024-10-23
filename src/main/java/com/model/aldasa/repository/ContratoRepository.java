@@ -22,8 +22,8 @@ public interface ContratoRepository extends PagingAndSortingRepository<Contrato,
 	List<Contrato> findByEstado(String estado);
 	
 	Page<Contrato> findByEstado(String status, Pageable pageable);
-	Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCuotaEspecialAndCompromisoPagoLike(String status, Sucursal sucursal, Project project, String manzana, String numLote, String personaVenta, boolean cuotaEspecial, String compromisoPago,Pageable pageable);
-	Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCompromisoPagoLike(String status, Sucursal sucursal, Project project, String manzana, String numLote, String personVenta, String compromisoPago, Pageable pageable);
+	Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCuotaEspecialAndCompromisoPagoLike(String status, Sucursal sucursal, Project project, String manzana, String numLote, String person, boolean cuotaEspecial, String compromisoPago, Pageable pageable);
+	Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCompromisoPagoLike(String status, Sucursal sucursal, Project project, String manzana, String numLote, String person, String compromisoPago, Pageable pageable);
 
 	
 	Page<Contrato> findByPersonVentaSurnamesLikeAndPersonVentaDniLikeAndEstadoAndCancelacionTotalAndLoteProjectSucursal(String personVenta, String dni, String estado, boolean cancelacionTotal, Sucursal sucursal,Pageable pageable);
@@ -48,6 +48,16 @@ public interface ContratoRepository extends PagingAndSortingRepository<Contrato,
 	
 	long countByEstadoAndCuotasAtrasadas(String estado, int cuotasAtrasadas);
 	long countByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPago(String estado, int cuotasAtrasadas, String compromisoPago);
+	
+	
+	@Query("SELECT c FROM Contrato c WHERE c.estado = :status AND c.lote.project.sucursal = :sucursal AND c.lote.manzana.name LIKE :manzana AND c.lote.numberLote LIKE :numLote AND (c.personVenta = :personVenta OR c.personVenta2 = :personVenta OR c.personVenta3 = :personVenta OR c.personVenta4 = :personVenta OR c.personVenta5 = :personVenta)")
+	Page<Contrato> findContratosByMultipleCriteria(
+		@Param("status") String status,
+		@Param("sucursal") Sucursal sucursal,
+	    @Param("manzana") String manzana,
+	    @Param("numLote") String numLote,
+	    @Param("personVenta") Person personVenta,
+	    Pageable pageable);
 	
 //	@Query(value = "SELECT DISTINCT cc.* FROM cuota c " +
 //	        "LEFT JOIN contrato cc ON cc.id = c.idContrato " +

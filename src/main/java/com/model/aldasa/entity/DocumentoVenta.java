@@ -182,8 +182,16 @@ public class DocumentoVenta {
 	@Column(name="enviosunatresponsecode")
 	private String envioSunatResponseCode;
 	
+	@Column(name="confirmardatovoucher")
+	private boolean confirmarDatoVoucher;
 	
+	@Column(name="fechaconfirmardatovoucher")
+	private Date fechaConfirmarDatoVoucher;
 
+	@ManyToOne
+	@JoinColumn(name="idusuarioconfirmardatovoucher")
+	private Usuario usuarioConfirmarDatoVoucher;
+	
 	public Integer getId() {
 		return id;
 	}
@@ -521,4 +529,23 @@ public class DocumentoVenta {
 	public void setEnvioSunatResponseCode(String envioSunatResponseCode) {
 		this.envioSunatResponseCode = envioSunatResponseCode;
 	}
+	public boolean isConfirmarDatoVoucher() {
+		return confirmarDatoVoucher;
+	}
+	public void setConfirmarDatoVoucher(boolean confirmarDatoVoucher) {
+		this.confirmarDatoVoucher = confirmarDatoVoucher;
+	}
+	public Date getFechaConfirmarDatoVoucher() {
+		return fechaConfirmarDatoVoucher;
+	}
+	public void setFechaConfirmarDatoVoucher(Date fechaConfirmarDatoVoucher) {
+		this.fechaConfirmarDatoVoucher = fechaConfirmarDatoVoucher;
+	}
+	public Usuario getUsuarioConfirmarDatoVoucher() {
+		return usuarioConfirmarDatoVoucher;
+	}
+	public void setUsuarioConfirmarDatoVoucher(Usuario usuarioConfirmarDatoVoucher) {
+		this.usuarioConfirmarDatoVoucher = usuarioConfirmarDatoVoucher;
+	}
+	
 }

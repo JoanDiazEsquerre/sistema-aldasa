@@ -13,6 +13,7 @@
 				<p:selectOneButton value="#{plantillaVentaBean.estadoPlantillaFilter}" unselectable="false">
 					<f:selectItem itemLabel="Pendientes" itemValue="Pendiente"/>
 					<f:selectItem itemLabel="Aprobados" itemValue="Aprobado"/>
+					<f:selectItem itemLabel="Terminados" itemValue="Terminado"/>
 					<f:selectItem itemLabel="Rechazados" itemValue="Rechazado"/>
 					<f:selectItem itemLabel="Anulados" itemValue="Anulado"/>
 					<p:ajax update=":form:tabView:idTablePlantillaVenta" />
@@ -150,12 +151,14 @@
 					<h:outputLabel value="Cliente:" />
 					<p:autoComplete  scrollHeight="500" styleClass="ui-autocompV" value="#{plantillaVentaBean.personCliente}" converter="#{plantillaVentaBean.conversorPerson}" completeMethod="#{plantillaVentaBean.completePerson}"  
 					     var="pros" itemLabel="#{pros.surnames.concat(' ')}#{pros.names}" itemValue="#{pros}" forceSelection="true" >
-					<p:column width="400px">
-					   	<h:outputLabel value="#{pros.surnames} #{pros.names}" /> 
-					   </p:column>
-					   <p:column width="400px">
-					   	<h:outputLabel value="#{pros.dni}" /> 
-					   </p:column> 
+						<p:column width="400px">
+					   		<h:outputLabel value="#{pros.surnames} #{pros.names}" /> 
+					   	</p:column>
+					   	<p:column width="400px">
+					   		<h:outputLabel value="#{pros.dni}" /> 
+					   	</p:column> 
+					   	
+					   	<p:ajax update="mensajeSeparacion2" listener="#{plantillaVentaBean.consultarSeparacionPorPersona}"/>
 					</p:autoComplete>
 					
 					<h:outputLabel for="optionTeam" value="Equipo:" />
@@ -226,6 +229,7 @@
 				</h:panelGrid>
 				
 				<h:panelGrid columns="1">
+					<p:outputLabel value="#{plantillaVentaBean.mensajeSeparacion2}" style="font-weight:bold; color: blue;" id="mensajeSeparacion2"/>
 					<p:outputLabel value="#{plantillaVentaBean.mensajeSeparacion}" style="font-weight:bold; color: red;" id="mensajeSeparacion"/>
 					<p:commandButton value="Guardar" action="#{plantillaVentaBean.validaDatosPlantilla()}" />
 				</h:panelGrid>

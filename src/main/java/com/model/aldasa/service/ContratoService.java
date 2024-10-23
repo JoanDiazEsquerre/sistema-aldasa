@@ -34,8 +34,8 @@ public interface ContratoService {
 	List<Contrato> findByEstadoAndFechaVentaYearAndFechaVentaMonth(String estado, int year, int month);
 	
 	Page<Contrato> findByEstado(String status, Pageable pageable);
-	Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCuotaEspecialAndCompromisoPagoLike(String status, Sucursal sucursal, Project project, String manzana, String numLote, String personVenta, boolean cuotaEspecial, String compromisoPago, Pageable pageable);
-	Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCompromisoPagoLike(String status, Sucursal sucursal, Project project, String manzana, String numLote, String personVenta, String compromisoPago, Pageable pageable);
+	Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCuotaEspecialAndCompromisoPagoLike(String status, Sucursal sucursal, Project project, String manzana, String numLote, String person, boolean cuotaEspecial, String compromisoPago, Pageable pageable);
+	Page<Contrato> findByEstadoAndLoteProjectSucursalAndLoteProjectAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndPersonVentaSurnamesLikeAndCompromisoPagoLike(String status, Sucursal sucursal, Project project, String manzana, String numLote, String person, String compromisoPago, Pageable pageable);
 
 	
 	Page<Contrato> findByPersonVentaSurnamesLikeAndPersonVentaDniLikeAndEstadoAndCancelacionTotalAndLoteProjectSucursal(String personVenta, String dni, String estado, boolean cancelacionTotal, Sucursal sucursal,Pageable pageable);
@@ -54,6 +54,9 @@ public interface ContratoService {
 	Page<Contrato> findByEstadoAndCuotasAtrasadasGreaterThanAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote, Project proyecto,Pageable pageable);
 	Page<Contrato> findByEstadoAndCuotasAtrasadasAndCompromisoPagoAndPersonVentaSurnamesLikeAndLoteManzanaNameLikeAndLoteNumberLoteLikeAndLoteProject(String estado, int cuotasAtrasadas, String compromisoPago,String personVenta, String manzana, String lote, Project proyecto, Pageable pageable);
 	
+	
+	Page<Contrato> findByCliente(String estado, Sucursal sucursal, String manzana, String lote, Person person, Pageable pageable);
+
 //	Page<Contrato> findByConMora(String fecha, String estadoContrato, int cuotasAtrasadas, Pageable pageable);
 //	Page<Contrato> findByAlDia(String fecha, String estadoContrato, int cuotasAtrasadas, Pageable pageable);
 	

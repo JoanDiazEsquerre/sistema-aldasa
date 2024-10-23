@@ -78,8 +78,8 @@
 						<h:outputText value="#{req.monto}" />
 					</p:column>
 					
-					<p:column headerText="Monto Adicional" sortBy="#{req.montoAdicional}" filterMatchMode="contains" style="text-align: center">
-						<h:outputText value="#{req.montoAdicional}" />
+					<p:column headerText="Boleteo total?" sortBy="#{req.boleteoTotal}" filterMatchMode="contains" style="text-align: center">
+						<h:outputText value="#{req.boleteoTotal eq 'N' ? 'NO' : 'SI'}" style="font-weight:bold;color:#{req.boleteoTotal eq 'N' ? 'red':'blue'}" />
 					</p:column>
 					
 					<p:column headerText="Asesor" sortBy="#{req.personAsesor.surnames}" filterBy="#{req.personAsesor.surnames}" filterMatchMode="contains">
@@ -117,7 +117,7 @@
 					</p:column>
 					
 					<p:column headerText="¿Realizó boleta?" sortBy="#{req.generaDocumento} " filterMatchMode="contains">
-						<h:outputText value="#{req.generaDocumento ? 'SI':'NO'}" style="font-weight:bold;color:#{plantilla.realizoContrato ? 'blue':'black'}" />
+						<h:outputText value="#{req.generaDocumento ? 'SI':'NO'}" style="font-weight:bold;color:#{req.generaDocumento ? 'blue':'black'}" />
 					</p:column>
 					<p:column headerText="Boleta/Factura" filterMatchMode="contains">
 						<h:outputText value="#{req.documentoVenta.serie}-#{req.documentoVenta.numero}" />
@@ -259,44 +259,37 @@
 						<h:outputLabel value="#{requerimientoSeparacionBean.requerimientoSeparacionSelected.observacion}" style="font-weight:bold; color: green"/> 
 					</h:panelGrid>
 					
-					<p:dataTable var="req" id="idTableDetalleSep" value="#{requerimientoSeparacionBean.lstDetalleRequerimientoSeparacionSelected}" rowIndexVar="row" paginator="true" size="small" 
-						emptyMessage="No se encontraron detalles de separación." paginatorPosition="bottom" rowKey="#{req.id}" 
-						selectionMode="single"> 
-												
 					
-						<f:facet name="header">
-							<div class="p-d-flex p-ai-center p-jc-between">
-								<span>Lista de Detalles del Requerimiento</span>
-							</div>
-						</f:facet>
-			
-						<p:column style="width:42px;">
-							<f:facet name="header">
-							N°
-							</f:facet>
-						</p:column>
-			
-						<p:column width="25px">
-			                   		#{row +1}
-			     		</p:column>
-			     	
-						<p:column headerText="Monto" filterMatchMode="contains" sortBy="#{req.monto}" style="text-align: center">
+					
+					<p:dataTable id="idTableDetalleSep" var="req" value="#{requerimientoSeparacionBean.lstDetalleRequerimientoSeparacionSelected}"
+                     selection="#{requerimientoSeparacionBean.detalleRequerimientoSeparacionSelected}" rowKey="#{req.id}" cellNavigation="true">
+            
+            			<p:column selectionMode="single" style="width:16px;text-align:center" />
+					
+								     	
+						<p:column headerText="Monto" style="text-align: center">
 							<h:outputText value="#{req.monto}" />
 						</p:column>
 						
-						<p:column headerText="Fecha" sortBy="#{req.fecha}" style="text-align: center" filterMatchMode="contains">
+						<p:column headerText="Fecha" style="text-align: center">
 							<h:outputText value="#{req.fecha}" > 
 								<f:convertDateTime pattern="dd/MM/yyyy" />
 							</h:outputText>
 							
 						</p:column>
 						
-						<p:column headerText="Pago Total" filterMatchMode="contains" sortBy="#{req.pagoTotal}" style="text-align: center">
-							<h:outputText value="#{req.pagoTotal eq 'S' ? 'SI' : 'NO'}" /> 
+						<p:column headerText="Realizó Boleta?" style="text-align: center">
+							<h:outputText value="#{req.boleteoTotal eq 'S' ? 'SI' : 'NO'}" /> 
+						</p:column>
+						
+						<p:column headerText="Numero Documento" style="text-align: center">
+							<h:outputText value="#{req.detalleDocumentoVenta.documentoVenta.serie}-#{req.detalleDocumentoVenta.documentoVenta.numero}" /> 
 						</p:column>
 						
 						<p:column>
-							<p:commandButton icon="pi pi-trash" styleClass="rounded-button ui-button-danger" ac/>xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+							<p:commandButton icon="pi pi-trash" styleClass="rounded-button ui-button-danger" action="#{requerimientoSeparacionBean.eliminarDetalleRequerimiento(req)}" 
+							update=":formPlantillaDialog:tabPlantilla:idDatosPlantilla :form:tabView:idTableReqsep :formPlantillaDialog:tabPlantilla:imagenLoad formPlantillaDialog:tabPlantilla:gridBotonesImagen :formPlantillaDialog:tabPlantilla:idTableDetalleSep" 
+							rendered="#{req.boleteoTotal eq 'N' or req.principal}"/>
 						</p:column>		
 					</p:dataTable> 
 					
@@ -423,7 +416,7 @@
 					<h:panelGrid columns="4">
 						<h:outputLabel value="Monto:" />
 						<p:inputNumber decimalSeparator="." thousandSeparator=","  value="#{requerimientoSeparacionBean.montoAgregar}" id="montoAdicional"/>
-						<p:commandButton value="Guardar" action="#{requerimientoSeparacionBean.saveDetalleRequerimientoSeparacion}" update=":formPlantillaDialog:tabPlantilla:idTableDetalleSep :formPlantillaDialog:tabPlantilla:gridBotonesImagen :formPlantillaDialog:tabPlantilla:montoAdicional" />
+						<p:commandButton value="Guardar" action="#{requerimientoSeparacionBean.saveDetalleRequerimientoSeparacion}" update=":formPlantillaDialog:tabPlantilla:idDatosPlantilla :form:tabView:idTableReqsep :formPlantillaDialog:tabPlantilla:idTableDetalleSep :formPlantillaDialog:tabPlantilla:gridBotonesImagen :formPlantillaDialog:tabPlantilla:montoAdicional" />
 						
 						<p:fileUpload value="#{requerimientoSeparacionBean.file1Add}" mode="simple" skinSimple="true" accept=".jpg,.jpeg,.png"/>
 					</h:panelGrid>

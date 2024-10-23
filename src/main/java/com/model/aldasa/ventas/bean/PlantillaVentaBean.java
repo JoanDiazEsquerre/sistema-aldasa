@@ -104,6 +104,7 @@ import com.model.aldasa.service.VoucherService;
 import com.model.aldasa.service.VoucherTempService;
 import com.model.aldasa.util.BaseBean;
 import com.model.aldasa.util.EstadoContrato;
+import com.model.aldasa.util.EstadoRequerimientoSeparacionType;
 import com.model.aldasa.util.NumeroALetra;
 import com.model.aldasa.util.Perfiles;
 import com.model.aldasa.util.TipoProductoType;
@@ -186,7 +187,6 @@ public class PlantillaVentaBean extends BaseBean {
 	private List<Person> lstPersonAsesor = new ArrayList<>();
 	private List<VoucherTemp> lstVoucherTemporal;
 
-	private RequerimientoSeparacion requerimientoBusqueda;
 	private PlantillaVenta plantillaVentaSelected;
 	private CuentaBancaria cuentaBancariaSelected;
 	private Project proyectoPlantilla;	
@@ -194,9 +194,10 @@ public class PlantillaVentaBean extends BaseBean {
 	private Lote lotePlantilla;
 	private Team team;
 	private Person personCliente, personAsesor;
+	private RequerimientoSeparacion requerimientoBusqueda = null;
 	
 	
-	private String estadoPlantillaFilter = "Pendiente", mensajeSeparacion="", observacion;
+	private String estadoPlantillaFilter = "Pendiente", mensajeSeparacion="",mensajeSeparacion2="", observacion;
 	private String imagen1, imagen2, imagen3, imagen4, imagen5, imagen6, imagen7, imagen8, imagen9, imagen10, imagen11, imagen12, imagen13, imagen14, imagen15;
 	private BigDecimal monto, montoPlantilla, interesPlantilla, inicialPlantilla;
 	private Date fechaOperacion = new Date() ;
@@ -276,11 +277,33 @@ public class PlantillaVentaBean extends BaseBean {
 		requerimientoBusqueda = null;
 		mensajeSeparacion="";
 		if(lotePlantilla != null) {
-			requerimientoBusqueda = requerimientoSeparacionService.findAllByLoteAndEstado(lotePlantilla, "Aprobado");
+			
+			requerimientoBusqueda = requerimientoSeparacionService.findAllByLoteAndEstado(lotePlantilla, EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion());
 			if(requerimientoBusqueda!=null) {
-				mensajeSeparacion = "El lote seleccionado tiene una separacion de "+ requerimientoBusqueda.getMonto() +" soles.";
+				mensajeSeparacion = "- El lote seleccionado tiene una separacion de "+ requerimientoBusqueda.getMonto() +" soles. ";
 			}
 		}
+		
+	}
+	
+	public void consultarSeparacionPorPersona() {
+		mensajeSeparacion2="";
+		
+		if(personCliente != null) {
+			List<RequerimientoSeparacion> lstReq = requerimientoSeparacionService.findByPersonId(personCliente.getId());
+			
+			for(RequerimientoSeparacion req : lstReq) {
+				if(req.getEstado().equals(EstadoRequerimientoSeparacionType.PENDIENTE.getDescripcion()) || req.getEstado().equals(EstadoRequerimientoSeparacionType.EN_PROCESO.getDescripcion()) || 
+						req.getEstado().equals(EstadoRequerimientoSeparacionType.SIN_ASIGNAR.getDescripcion()) || req.getEstado().equals(EstadoRequerimientoSeparacionType.VENCIDO.getDescripcion())) {
+					
+					mensajeSeparacion2 =mensajeSeparacion2.concat("- El cliente tiene separacion del lote: "+ req.getLote().getManzana().getName()+"-" + req.getLote().getNumberLote()+" "+ req.getLote().getProject().getName()+ " '"+req.getEstado().toUpperCase() + "' / ");
+					
+				}
+				
+				
+			}
+		}
+		
 	}
 	
 	public void validarAnulacion() {
@@ -757,11 +780,14 @@ public class PlantillaVentaBean extends BaseBean {
 			addErrorMessage("No se pudo guardar.");
 			return;
 		}else {
+			mensajeSeparacion = "";
+			mensajeSeparacion2 = "";
 			subirImagenes(plantilla.getId() + "", plantilla);
 			addInfoMessage("Se guardo correctamente.");
 			iniciarDatosPlantilla();
 			
 		}
+		
 		
 		PrimeFaces.current().executeScript("PF('savePlantillaVenta').hide();"); 
 		
@@ -1733,6 +1759,12 @@ public class PlantillaVentaBean extends BaseBean {
 	}
 	public void setDetalleComisionesService(DetalleComisionesService detalleComisionesService) {
 		this.detalleComisionesService = detalleComisionesService;
+	}
+	public String getMensajeSeparacion2() {
+		return mensajeSeparacion2;
+	}
+	public void setMensajeSeparacion2(String mensajeSeparacion2) {
+		this.mensajeSeparacion2 = mensajeSeparacion2;
 	}
 
 	

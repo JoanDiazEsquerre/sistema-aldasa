@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -47,16 +48,19 @@ import com.model.aldasa.entity.Contrato;
 import com.model.aldasa.entity.CuentaBancaria;
 import com.model.aldasa.entity.Cuota;
 import com.model.aldasa.entity.DetalleDocumentoVenta;
+import com.model.aldasa.entity.DetalleMovimientoBancario;
+import com.model.aldasa.entity.DetalleRequerimientoSeparacion;
 import com.model.aldasa.entity.DocumentoVenta;
 import com.model.aldasa.entity.Identificador;
 import com.model.aldasa.entity.Imagen;
 import com.model.aldasa.entity.MotivoNota;
+import com.model.aldasa.entity.MovimientoBancario;
 import com.model.aldasa.entity.Person;
 import com.model.aldasa.entity.Producto;
 import com.model.aldasa.entity.Project;
-import com.model.aldasa.entity.RequerimientoSeparacion;
 import com.model.aldasa.entity.SerieDocumento;
 import com.model.aldasa.entity.TipoDocumento;
+import com.model.aldasa.entity.TipoMovimiento;
 import com.model.aldasa.entity.TipoOperacion;
 import com.model.aldasa.entity.Usuario;
 import com.model.aldasa.entity.VoucherTemp;
@@ -68,16 +72,20 @@ import com.model.aldasa.service.ContratoService;
 import com.model.aldasa.service.CuentaBancariaService;
 import com.model.aldasa.service.CuotaService;
 import com.model.aldasa.service.DetalleDocumentoVentaService;
+import com.model.aldasa.service.DetalleMovimientoBancarioService;
+import com.model.aldasa.service.DetalleRequerimientoSeparacionService;
 import com.model.aldasa.service.DocumentoVentaService;
 import com.model.aldasa.service.IdentificadorService;
 import com.model.aldasa.service.ImagenService;
 import com.model.aldasa.service.MotivoNotaService;
+import com.model.aldasa.service.MovimientoBancarioService;
 import com.model.aldasa.service.PersonService;
 import com.model.aldasa.service.ProductoService;
 import com.model.aldasa.service.ProjectService;
 import com.model.aldasa.service.RequerimientoSeparacionService;
 import com.model.aldasa.service.SerieDocumentoService;
 import com.model.aldasa.service.TipoDocumentoService;
+import com.model.aldasa.service.TipoMovimientoService;
 import com.model.aldasa.service.TipoOperacionService;
 import com.model.aldasa.service.VoucherTempService;
 import com.model.aldasa.util.BaseBean;
@@ -85,9 +93,6 @@ import com.model.aldasa.util.EstadoContrato;
 import com.model.aldasa.util.NumeroALetra;
 import com.model.aldasa.util.TipoProductoType;
 import com.model.aldasa.ventas.jrdatasource.DataSourceDocumentoVenta;
-
-
-
 
 @ManagedBean
 @ViewScoped
@@ -158,14 +163,27 @@ public class DocumentoVentaBean extends BaseBean {
 	@ManagedProperty(value = "#{voucherTempService}")
 	private VoucherTempService voucherTempService;
 	
+	@ManagedProperty(value = "#{detalleRequerimientoSeparacionService}")
+	private DetalleRequerimientoSeparacionService detalleRequerimientoSeparacionService;
+	
+	@ManagedProperty(value = "#{movimientoBancarioService}")
+	private MovimientoBancarioService movimientoBancarioService;
+	
+	@ManagedProperty(value = "#{detalleMovimientoBancarioRepository}")
+	private DetalleMovimientoBancarioService detalleMovimientoBancarioService;
+	
+	@ManagedProperty(value = "#{tipoMovimientoService}")
+	private TipoMovimientoService tipoMovimientoService;
+	
 	private boolean estado = true;
 	private Boolean estadoSunat;
 
 	private LazyDataModel<DocumentoVenta> lstDocumentoVentaLazy;
 	private LazyDataModel<Cuota> lstCuotaLazy;
-	private LazyDataModel<RequerimientoSeparacion> lstRequerimientoLazy;
+	private LazyDataModel<DetalleRequerimientoSeparacion> lstDetalleRequerimientoLazy;
 	private LazyDataModel<Cuota> lstPrepagoLazy;
 	private LazyDataModel<Contrato> lstContratosPendientesLazy;
+	private LazyDataModel<DetalleMovimientoBancario> lstDetalleMovimientoBancLazy;
 
 	
 	private List<SerieDocumento> lstSerieDocumento;
@@ -190,12 +208,13 @@ public class DocumentoVentaBean extends BaseBean {
 	private List<Project> lstProject;
 	private List<Producto> lstProducto;
 	private List<CuentaBancaria> lstCuentaBancaria = new ArrayList<>();
+	private List<TipoMovimiento> lstTipoMovEntrada;
 	
 	private DocumentoVenta documentoVentaSelected ;
 	private SerieDocumento serieDocumentoSelected ;
 	private SerieDocumento serieNotaDocumentoSelected ;
 	private Cuota cuotaSelected ;
-	private RequerimientoSeparacion requerimientoSelected ;
+	private DetalleRequerimientoSeparacion detalleRequerimientoSelected ;
 	private Cuota prepagoSelected ;
 	private Cliente clienteSelected;
 	private Contrato contratoPendienteSelected;
@@ -208,6 +227,7 @@ public class DocumentoVentaBean extends BaseBean {
 	private Person personSelected;
 	private Project projectFilter;
 	private Imagen imagenSelected;
+	private DetalleMovimientoBancario detalleMovimientoSelected;
 
 
 	private DocumentoVenta documentoVentaNew;
@@ -218,6 +238,7 @@ public class DocumentoVentaBean extends BaseBean {
 	private Usuario usuarioLogin = new Usuario();
 	private CuentaBancaria ctaBanc1, ctaBanc2, ctaBanc3, ctaBanc4, ctaBanc5, ctaBanc6, ctaBanc7, ctaBanc8, ctaBanc9, ctaBanc10, ctaBanc11, ctaBanc12, ctaBanc13, ctaBanc14, ctaBanc15, cuentaVoucherDialog;
 	
+	private Date fechaDetalleFilter, fechaEmisionFilter;
 	private Date fechaEmision = new Date() ;
 	private Date fechaEmisionNotaVenta = new Date() ;
 	private Date fechaImag1, fechaImag2, fechaImag3, fechaImag4, fechaImag5, fechaImag6, fechaImag7, fechaImag8, fechaImag9, fechaImag10, fechaImag11, fechaImag12, fechaImag13, fechaImag14, fechaImag15, fechaEnvioSunat ;
@@ -235,7 +256,8 @@ public class DocumentoVentaBean extends BaseBean {
 	private String motivo="";
 	private String motivoSunat="";
 	private String razonSocialText, direccionText, email1Text, email2Text, email3Text;
-
+	private String mesBusquedaMov, anioBusquedaMov, ctaBancBusquedaMov;
+	
 	private boolean pagoTotalPrepago = false;
 	private boolean habilitarBoton = true;
 	private boolean habilitarMontoPrepago = false;
@@ -327,7 +349,108 @@ public class DocumentoVentaBean extends BaseBean {
 		lstProject= projectService.findByStatusAndSucursalOrderByNameAsc(true, navegacionBean.getSucursalLogin());
 		lstProducto = productoService.findByEstado(true);
 		lstCuentaBancaria=cuentaBancariaService.findByEstado(true);
+		
+		lstTipoMovEntrada = tipoMovimientoService.findByEstadoAndTipoOrderByNombreAsc(true, "E");
 	}
+	
+	public void saveIdentificacionVoucher() {
+		if(detalleMovimientoSelected.getTipoMovimiento() == null) {
+			addErrorMessage("Seleccionar un tipo de movimiento.");
+			return;
+		}
+		
+		if (detalleMovimientoSelected.getObservacion().isEmpty()) {
+			addErrorMessage("Debes ingresar una observación.");
+			return;
+		}
+		
+		
+		detalleMovimientoSelected.setImagen(imagenSelected);
+		detalleMovimientoBancarioService.save(detalleMovimientoSelected);
+		
+		addInfoMessage("Se identificó correctamente el voucher."); 
+		
+		PrimeFaces.current().executeScript("PF('dialogIdentificar').hide();"); 
+	}
+	
+	public void validarIdentificacion() {
+		if(imagenSelected == null) {
+			addErrorMessage("Seleccionar una imagen.");
+			return;
+		}
+		
+		if(detalleMovimientoSelected == null) {
+			addErrorMessage("Seleccionar una detalle de movimiento.");
+			return;
+		}
+		
+		
+		
+		if(detalleMovimientoSelected.getImporte().compareTo(BigDecimal.ZERO) <=0) {
+			addErrorMessage("Solo se pueden identificar Abonos.");
+			return;
+		}
+		
+		if(detalleMovimientoSelected.getImagen() != null) {
+			addErrorMessage("El detalle seleccionado ya de identificó.");
+			return;
+		}
+		
+//		DetalleMovimientoBancario buscarAsignado = detalleMovimientoBancarioService.findByEstadoAndImagen(true, imagenSelected);
+//		if(buscarAsignado != null) {
+//			addErrorMessage("El voucher ya se identificó.");
+//			return;
+//		}
+		
+		
+		Optional<Imagen> imagenBusqueda = imagenService.findById(imagenSelected.getId());
+		if(imagenBusqueda != null) {
+			if(detalleMovimientoSelected.getImporte().compareTo(imagenBusqueda.get().getMonto()) != 0) {
+				addErrorMessage("El monto del detalle seleccionado no coincide con el monto del voucher.");
+				return;
+			}
+		}
+		
+		detalleMovimientoSelected.setTipoMovimiento(null);
+		detalleMovimientoSelected.setObservacion("Cliente: "+ documentoVentaSelected.getRazonSocial()+", enlazado con el documento " + documentoVentaSelected.getSerie()+"-"+documentoVentaSelected.getNumero());
+		
+		
+		PrimeFaces.current().executeScript("PF('dialogIdentificar').show();"); 
+	}
+	
+	public void eliminarIdentificacion() {
+		if(detalleMovimientoSelected.getImagen()==null) {
+			addErrorMessage("No se puede eliminar porque no esta identificado.");
+			return;
+		}
+		
+		if(!detalleMovimientoSelected.getImagen().getId().equals(imagenSelected.getId())) {
+			addErrorMessage("No se puede eliminar porque la identificación no corresponde a la imagen seleccionada.");
+			return;
+		}
+		
+		detalleMovimientoSelected.setImagen(null);
+		detalleMovimientoSelected.setTipoMovimiento(null);
+		detalleMovimientoSelected.setObservacion("");
+		detalleMovimientoBancarioService.save(detalleMovimientoSelected);
+		
+		addInfoMessage("Se eliminó la identificación correctamente."); 
+	}
+	
+	public void confirmarDatosVoucherDocumento() {
+		
+		enviarDocumentoSunat();
+		
+		documentoVentaSelected.setConfirmarDatoVoucher(true);
+		documentoVentaSelected.setFechaConfirmarDatoVoucher(new Date());
+		documentoVentaSelected.setUsuarioConfirmarDatoVoucher(navegacionBean.getUsuarioLogin()); 
+		documentoVentaService.save(documentoVentaSelected);
+		
+		addInfoMessage("Se validaron correctamente los datos de los voucher del documento de venta.");
+		
+		PrimeFaces.current().executeScript("PF('voucherDocumentoDialog').hide();"); 
+	}
+	
 	
 	public void seleccionarPersona() {
 		if(personaNaturalCliente) {
@@ -434,6 +557,9 @@ public class DocumentoVentaBean extends BaseBean {
 			imagenSelected.setTipoTransaccion(tipoTransaccionDialog);
 			imagenSelected.setPorRegularizar(cuentaVoucherDialog.getSucursal().getId().equals(documentoVentaSelected.getSucursal().getId())?"NO":"SI");
 			imagenService.save(imagenSelected);
+			
+			obtenerDatosVoucher(imagenSelected.getNombre()); 
+			
 			addInfoMessage("Se guardó correctamente el voucher.");
 		}
 	}
@@ -762,8 +888,7 @@ public class DocumentoVentaBean extends BaseBean {
         return num;
 		
 	}
-	
-	
+		
 	public void menorarImagen() {
 		if(numMuestraImagen !=1) {
 			numMuestraImagen--;
@@ -804,7 +929,7 @@ public class DocumentoVentaBean extends BaseBean {
 		doc.setIgv(documentoVentaSelected.getIgv());
 		doc.setTotal(documentoVentaSelected.getTotal());
 		doc.setFechaRegistro(new Date());
-		doc.setUsuarioRegistro(documentoVentaSelected.getUsuarioRegistro());
+		doc.setUsuarioRegistro(navegacionBean.getUsuarioLogin()); 
 		doc.setEstado(true);
 		doc.setAnticipos(documentoVentaSelected.getAnticipos());
 		doc.setOpGravada(documentoVentaSelected.getOpGravada());
@@ -877,11 +1002,76 @@ public class DocumentoVentaBean extends BaseBean {
 				ctaBancDialog = imagenSelected.getCuentaBancaria().getBanco().getAbreviatura()+" "+ imagenSelected.getCuentaBancaria().getNumero();
 			}
 			
+			int anio= imagenSelected.getFecha().getMonth()+1;
+			switch (anio) {
+			case 1:
+				mesBusquedaMov = "ENERO";
+				break;
+			case 2:
+				mesBusquedaMov = "FEBRERO";
+				break;
+			case 3:
+				mesBusquedaMov = "MARZO";
+				break;
+			case 4:
+				mesBusquedaMov = "ABRIL";
+				break;
+			case 5:
+				mesBusquedaMov = "MAYO";
+				break;
+			case 6:
+				mesBusquedaMov = "JUNIO";
+				break;
+			case 7:
+				mesBusquedaMov = "JULIO";
+				break;
+			case 8:
+				mesBusquedaMov = "AGOSTO";
+				break;
+			case 9:
+				mesBusquedaMov = "SEPTIEMBRE";
+				break;
+			case 10:
+				mesBusquedaMov = "OCTUBRE";
+				break;
+			case 11:
+				mesBusquedaMov = "NOVIEMBRE";
+				break;
+			case 12:
+				mesBusquedaMov = "DICIEMBRE";
+				break;
+	
+			}
+			
+			
+			anioBusquedaMov = sdfYear.format(imagenSelected.getFecha());
+			
+			String moneda = cuentaVoucherDialog.getMoneda() == "D" ? "Dól" : "Sol";
+			ctaBancBusquedaMov = cuentaVoucherDialog.getBanco().getAbreviatura()+" : "+ cuentaVoucherDialog.getNumero()+" ("+ moneda+") "+ cuentaVoucherDialog.getSucursal().getPrenombre();
+			
+			MovimientoBancario busquedaMovimiento = movimientoBancarioService.findByEstadoAndMesAndAnioAndCuentaBancaria(true, mesBusquedaMov, anioBusquedaMov, cuentaVoucherDialog); 
+			lstDetalleMovimientoBancLazy = null;
+			if(busquedaMovimiento != null) {
+				fechaDetalleFilter = fechaVoucherDialog;
+				
+				iniciarLazyDetalle(busquedaMovimiento); 
+			}
+			
+			
 		}
 	}
 	
 	public void verVoucher() {
+		listarDetalleDocumentoVenta();
+		
+		
 		imagenSelected = null;
+		mesBusquedaMov = "";
+		anioBusquedaMov = "";
+		ctaBancBusquedaMov = "";
+		fechaDetalleFilter = null;
+		lstDetalleMovimientoBancLazy = null;
+		
 		if(documentoVentaSelected.getTipoDocumento().getAbreviatura().equals("B") || documentoVentaSelected.getTipoDocumento().getAbreviatura().equals("F")) {
 			fechaVoucherDialog = null;
 			montoVoucherDialog=null;
@@ -967,6 +1157,80 @@ public class DocumentoVentaBean extends BaseBean {
 		}
 		
 		
+	}
+	
+	public void iniciarLazyDetalle(MovimientoBancario movimientoBancarioSelected) {
+
+		lstDetalleMovimientoBancLazy = new LazyDataModel<DetalleMovimientoBancario>() {
+			private List<DetalleMovimientoBancario> datasource;
+
+            @Override
+            public void setRowIndex(int rowIndex) {
+                if (rowIndex == -1 || getPageSize() == 0) {
+                    super.setRowIndex(-1);
+                } else {
+                    super.setRowIndex(rowIndex % getPageSize());
+                }
+            }
+
+            @Override
+            public DetalleMovimientoBancario getRowData(String rowKey) {
+                int intRowKey = Integer.parseInt(rowKey);
+                for (DetalleMovimientoBancario profile : datasource) {
+                    if (profile.getId() == intRowKey) {
+                        return profile;
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public String getRowKey(DetalleMovimientoBancario profile) {
+                return String.valueOf(profile.getId());
+            }
+
+			@Override
+			public List<DetalleMovimientoBancario> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
+               
+//				String mes = "%" + (filterBy.get("mes") != null ? filterBy.get("mes").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
+//				String anio = "%" + (filterBy.get("anio") != null ? filterBy.get("anio").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
+				
+
+                Sort sort=Sort.by("id").descending();
+                if(sortBy!=null) {
+                	for (Map.Entry<String, SortMeta> entry : sortBy.entrySet()) {
+                	   if(entry.getValue().getOrder().isAscending()) {
+                		   sort = Sort.by(entry.getKey()).descending();
+                	   }else {
+                		   sort = Sort.by(entry.getKey()).ascending();
+                		   
+                	   }
+                	}
+                }          
+                Pageable pageable = PageRequest.of(first/pageSize, pageSize,sort);
+               
+                Page<DetalleMovimientoBancario> pageProfile=null;
+               
+                
+            	if(fechaDetalleFilter == null) {
+                	pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancario(true, movimientoBancarioSelected, pageable);
+				}else {
+					fechaDetalleFilter.setHours(0);
+					fechaDetalleFilter.setMinutes(0);
+					fechaDetalleFilter.setSeconds(0);
+					
+					pageProfile= detalleMovimientoBancarioService.findByEstadoAndMovimientoBancarioAndFechaOperacion(true, movimientoBancarioSelected, fechaDetalleFilter, pageable);
+				}
+                
+                
+
+                
+                
+                
+                setRowCount((int) pageProfile.getTotalElements());
+                return datasource = pageProfile.getContent();
+            }
+		};
 	}
 	
 	
@@ -1482,6 +1746,19 @@ public class DocumentoVentaBean extends BaseBean {
 		
 		calcularTotales();
 		
+		
+	}
+	
+	public void updateAmortizacionNota() {
+		BigDecimal total = BigDecimal.ZERO;
+		
+		for(DetalleDocumentoVenta detalle : lstDetalleDocumentoVentaSelected) {
+			detalle.setImporteVenta(detalle.getInteres().add(detalle.getAmortizacion()).subtract(detalle.getAdelanto())); 
+			total = total.add(detalle.getImporteVenta());
+		}
+		
+		documentoVentaSelected.setSubTotal(total);
+		documentoVentaSelected.setTotal(total); 
 		
 	}
 	
@@ -2044,7 +2321,7 @@ public class DocumentoVentaBean extends BaseBean {
 		
 		DocumentoVenta documento = documentoVentaService.save(documentoVenta, lstDetalleDocumentoVenta, serieDocumentoSelected); 
 		if(documento != null) {
-			int envio =enviarDocumentoSunat(documento, lstDetalleDocumentoVenta);
+//			int envio =enviarDocumentoSunat(documento, lstDetalleDocumentoVenta);
 			
 			lstDetalleDocumentoVenta.clear();// claer es limpiar en ingles prueba
 			clienteSelected=null;
@@ -2060,7 +2337,8 @@ public class DocumentoVentaBean extends BaseBean {
 			email3Text = "";
 			incluirIgv=false;
 			
-			String addMensaje = envio>0?"Se envio correctamente a SUNAT":"No se pudo enviar a SUNAT";
+			String addMensaje = "";
+//			String addMensaje = envio>0?"Se envio correctamente a SUNAT":"No se pudo enviar a SUNAT";
 			addInfoMessage("Se guardó el documento correctamente. "+addMensaje);
 			
 		}else {
@@ -2069,9 +2347,7 @@ public class DocumentoVentaBean extends BaseBean {
 		}
 		
 	}
-	
-	
-	
+
 	public void setearInfoVoucher() {
 		fechaImag1=null;fechaImag2=null;fechaImag3=null;fechaImag4=null;fechaImag5=null;fechaImag6=null;fechaImag7=null;fechaImag8=null;fechaImag9=null;fechaImag10=null;
 		
@@ -2773,13 +3049,13 @@ public class DocumentoVentaBean extends BaseBean {
 		
 		if(!lstDetalleDocumentoVenta.isEmpty()) {
 			for(DetalleDocumentoVenta d:lstDetalleDocumentoVenta) {
-				if(d.getRequerimientoSeparacion() != null) {
-					if(requerimientoSelected.getId()==d.getRequerimientoSeparacion().getId()) {
+				if(d.getDetalleRequerimientoSeparacion() != null) {
+					if(detalleRequerimientoSelected.getId()==d.getDetalleRequerimientoSeparacion().getId()) {
 						addErrorMessage("Ya seleccionó el voucher");			
 						return;
 					}
 					
-					if(!requerimientoSelected.getPerson().getId().equals(d.getRequerimientoSeparacion().getPerson().getId())) {
+					if(!detalleRequerimientoSelected.getRequerimientoSeparacion().getPerson().getId().equals(d.getDetalleRequerimientoSeparacion().getRequerimientoSeparacion().getPerson().getId())) {
 						addErrorMessage("El voucher debe ser de la misma persona.");
 						return;
 					}
@@ -2790,7 +3066,7 @@ public class DocumentoVentaBean extends BaseBean {
 
 		}
 		
-		List<VoucherTemp> lstVoucherTemp = voucherTempService.findByRequerimientoSeparacionEstadoAndRequerimientoSeparacionLoteAndEstado("Aprobado", requerimientoSelected.getLote(), true);
+		List<VoucherTemp> lstVoucherTemp = voucherTempService.findByDetalleRequerimientoSeparacionAndEstado(detalleRequerimientoSelected , true);
 		if(!lstVoucherTemp.isEmpty()) {
 			numMuestraImagen = lstVoucherTemp.size();
 			int cont = 1;
@@ -2873,9 +3149,9 @@ public class DocumentoVentaBean extends BaseBean {
 		
 		clienteSelected=null;
 		if(tipoDocumentoSelected.getAbreviatura().equals("B")) {
-			clienteSelected = clienteService.findByPersonAndEstadoAndPersonaNatural(requerimientoSelected.getPerson(), true, true);
+			clienteSelected = clienteService.findByPersonAndEstadoAndPersonaNatural(detalleRequerimientoSelected.getRequerimientoSeparacion().getPerson(), true, true);
 		}else {
-			clienteSelected = clienteService.findByPersonAndEstadoAndPersonaNatural(requerimientoSelected.getPerson(), true, false);
+			clienteSelected = clienteService.findByPersonAndEstadoAndPersonaNatural(detalleRequerimientoSelected.getRequerimientoSeparacion().getPerson(), true, false);
 		}
 		onChangeCliente();
 		
@@ -2885,12 +3161,12 @@ public class DocumentoVentaBean extends BaseBean {
 		detalle.setProducto(productoVoucher);
 //		detalle.setDescripcion("PAGO DE SEPARACIÓN POR LA VENTA DE UN LOTE DE TERRENO CON N° "+ requerimientoSelected.getLote().getNumberLote() +" MZ - "+ requerimientoSelected.getLote().getManzana().getName() +" , UBICADO EN " + requerimientoSelected.getLote().getProject().getName());
 		detalle.setDescripcion("PAGO DE SEPARACIÓN POR LA VENTA DE UN LOTE DE TERRENO.");
-		detalle.setAmortizacion(requerimientoSelected.getMonto());
+		detalle.setAmortizacion(detalleRequerimientoSelected.getMonto());
 		detalle.setInteres(BigDecimal.ZERO);
 		detalle.setAdelanto(BigDecimal.ZERO);
-		detalle.setImporteVenta(requerimientoSelected.getMonto());
+		detalle.setImporteVenta(detalleRequerimientoSelected.getMonto());
 		detalle.setCuota(null);
-		detalle.setRequerimientoSeparacion(requerimientoSelected);
+		detalle.setDetalleRequerimientoSeparacion(detalleRequerimientoSelected);
 		detalle.setCuotaPrepago(null);
 		detalle.setEstado(true);
 		detalle.setImporteVentaSinIgv(BigDecimal.ZERO);
@@ -2911,7 +3187,7 @@ public class DocumentoVentaBean extends BaseBean {
 						return;
 					}
 					
-					if(prepagoSelected.getContrato().getPersonVenta().getId() != d.getCuotaPrepago().getContrato().getPersonVenta().getId()) {
+					if(!prepagoSelected.getContrato().getPersonVenta().getId().equals(d.getCuotaPrepago().getContrato().getPersonVenta().getId())) {
 						addErrorMessage("El prepago debe ser de la misma persona.");
 						return;
 					}
@@ -3096,6 +3372,7 @@ public class DocumentoVentaBean extends BaseBean {
 				String razonSocial = "%" + (filterBy.get("razonSocial") != null ? filterBy.get("razonSocial").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
 				String numero = "%" + (filterBy.get("numero") != null ? filterBy.get("numero").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
 				String ruc = "%" + (filterBy.get("ruc") != null ? filterBy.get("ruc").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
+				String username = "%" + (filterBy.get("usuarioRegistro.username") != null ? filterBy.get("usuarioRegistro.username").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
 
                 Sort sort=Sort.by("fechaEmision").descending();
                 if(sortBy!=null) {
@@ -3112,19 +3389,41 @@ public class DocumentoVentaBean extends BaseBean {
                
                 Page<DocumentoVenta> pageDocumentoVenta=null;
                
-                if(estadoSunat==null) {
-                	if(tipoDocumentoFilter==null) {
-                        pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc, pageable);
-                	}else {
-                        pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumento(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc, tipoDocumentoFilter, pageable);
-                	}
+                if(fechaEmisionFilter == null) {
+                	if(estadoSunat==null) {
+                    	if(tipoDocumentoFilter==null) {
+                            pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndUsuarioRegistroUsernameLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc, username, pageable);
+                    	}else {
+                            pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumentoAndUsuarioRegistroUsernameLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc, tipoDocumentoFilter, username,pageable);
+                    	}
+                    }else {
+                    	if(tipoDocumentoFilter==null) {
+                            pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndUsuarioRegistroUsernameLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc,estadoSunat, username,pageable);
+                    	}else {
+                    		pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumentoAndUsuarioRegistroUsernameLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc,estadoSunat, tipoDocumentoFilter, username,pageable);
+                    	}
+                    }
                 }else {
-                	if(tipoDocumentoFilter==null) {
-                        pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunat(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc,estadoSunat, pageable);
-                	}else {
-                		pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumento(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc,estadoSunat, tipoDocumentoFilter, pageable);
-                	}
+                	fechaEmisionFilter.setHours(0);
+                	fechaEmisionFilter.setMinutes(0);
+					fechaEmisionFilter.setSeconds(0);
+                	
+					if(estadoSunat==null) {
+                    	if(tipoDocumentoFilter==null) {
+                            pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndFechaEmisionAndUsuarioRegistroUsernameLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc, fechaEmisionFilter, username, pageable);
+                    	}else {
+                            pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndTipoDocumentoAndFechaEmisionAndUsuarioRegistroUsernameLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc, tipoDocumentoFilter,fechaEmisionFilter, username, pageable);
+                    	}
+                    }else {
+                    	if(tipoDocumentoFilter==null) {
+                            pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndFechaEmisionAndUsuarioRegistroUsernameLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc,estadoSunat,fechaEmisionFilter, username, pageable);
+                    	}else {
+                    		pageDocumentoVenta= documentoVentaService.findByEstadoAndSucursalAndRazonSocialLikeAndNumeroLikeAndRucLikeAndEnvioSunatAndTipoDocumentoAndFechaEmisionAndUsuarioRegistroUsernameLike(estado, navegacionBean.getSucursalLogin(), razonSocial, numero, ruc,estadoSunat, tipoDocumentoFilter,fechaEmisionFilter, username, pageable);
+                    	}
+                    }
                 }
+                
+                
                 
                 setRowCount((int) pageDocumentoVenta.getTotalElements());
                 return datasource = pageDocumentoVenta.getContent();
@@ -3185,10 +3484,10 @@ public class DocumentoVentaBean extends BaseBean {
                
                 Page<Cuota> pageCuota=null;
                 if(projectFilter != null) {
-                    pageCuota= cuotaService.findByPagoTotalAndEstadoAndContratoPersonVentaSurnamesLikeAndContratoPersonVentaDniLikeAndContratoLoteProjectNameAndContratoLoteProjectSucursalAndContratoLoteNumberLoteLikeAndContratoLoteManzanaNameLike("N", true, names, dni, projectFilter.getName(), navegacionBean.getSucursalLogin(),numLote,manzana,pageable);
+                    pageCuota= cuotaService.findByPagoTotalAndEstadoAndContratoPersonVentaSurnamesLikeAndContratoPersonVentaDniLikeAndContratoLoteProjectNameAndContratoLoteProjectSucursalAndContratoLoteNumberLoteLikeAndContratoLoteManzanaNameLikeAndContratoEstado("N", true, names, dni, projectFilter.getName(), navegacionBean.getSucursalLogin(),numLote,manzana, EstadoContrato.ACTIVO.getName(), pageable);
 
 				}else {
-                    pageCuota= cuotaService.findByPagoTotalAndEstadoAndContratoPersonVentaSurnamesLikeAndContratoPersonVentaDniLikeAndContratoLoteProjectSucursalAndContratoLoteNumberLoteLikeAndContratoLoteManzanaNameLike("N", true, names, dni,navegacionBean.getSucursalLogin(),numLote,manzana, pageable);
+                    pageCuota= cuotaService.findByPagoTotalAndEstadoAndContratoPersonVentaSurnamesLikeAndContratoPersonVentaDniLikeAndContratoLoteProjectSucursalAndContratoLoteNumberLoteLikeAndContratoLoteManzanaNameLikeAndContratoEstado("N", true, names, dni, navegacionBean.getSucursalLogin(), numLote, manzana, EstadoContrato.ACTIVO.getName(), pageable);
 
 				}
                 
@@ -3201,8 +3500,8 @@ public class DocumentoVentaBean extends BaseBean {
 		
 	public void iniciarLazyRequerimiento() {
 
-		lstRequerimientoLazy = new LazyDataModel<RequerimientoSeparacion>() {
-			private List<RequerimientoSeparacion> datasource;
+		lstDetalleRequerimientoLazy = new LazyDataModel<DetalleRequerimientoSeparacion>() {
+			private List<DetalleRequerimientoSeparacion> datasource;
 
             @Override
             public void setRowIndex(int rowIndex) {
@@ -3214,9 +3513,9 @@ public class DocumentoVentaBean extends BaseBean {
             }
 
             @Override
-            public RequerimientoSeparacion getRowData(String rowKey) {
+            public DetalleRequerimientoSeparacion getRowData(String rowKey) {
                 int intRowKey = Integer.parseInt(rowKey);
-                for (RequerimientoSeparacion requerimientoSeparacion : datasource) {
+                for (DetalleRequerimientoSeparacion requerimientoSeparacion : datasource) {
                     if (requerimientoSeparacion.getId() == intRowKey) {
                         return requerimientoSeparacion;
                     }
@@ -3225,12 +3524,12 @@ public class DocumentoVentaBean extends BaseBean {
             }
 
             @Override
-            public String getRowKey(RequerimientoSeparacion requerimientoSeparacion) {
+            public String getRowKey(DetalleRequerimientoSeparacion requerimientoSeparacion) {
                 return String.valueOf(requerimientoSeparacion.getId());
             }
 
 			@Override
-			public List<RequerimientoSeparacion> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
+			public List<DetalleRequerimientoSeparacion> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
                
 //				String names = "%" + (filterBy.get("person.surnames") != null ? filterBy.get("person.surnames").getFilterValue().toString().trim().replaceAll(" ", "%") : "") + "%";
 
@@ -3247,7 +3546,7 @@ public class DocumentoVentaBean extends BaseBean {
                 }        
                 Pageable pageable = PageRequest.of(first/pageSize, pageSize,sort);
                
-                Page<RequerimientoSeparacion> pageVoucher= requerimientoSeparacionService.findAllByEstadoAndLoteProjectSucursalAndGeneraDocumento("Aprobado", navegacionBean.getSucursalLogin(), false, pageable);
+                Page<DetalleRequerimientoSeparacion> pageVoucher= detalleRequerimientoSeparacionService.findByEstadoAndRequerimientoSeparacionLoteProjectSucursalAndBoleteoTotal(true , navegacionBean.getSucursalLogin(), "N", pageable);
                 
                 setRowCount((int) pageVoucher.getTotalElements());
                 return datasource = pageVoucher.getContent();
@@ -3842,6 +4141,34 @@ public class DocumentoVentaBean extends BaseBean {
         };
     }
 	
+	public Converter getConversorTipoMovimiento() {
+        return new Converter() {
+            @Override
+            public Object getAsObject(FacesContext context, UIComponent component, String value) {
+                if (value.trim().equals("") || value == null || value.trim().equals("null")) {
+                    return null;
+                } else {
+                	TipoMovimiento c = null;
+            		for (TipoMovimiento si : lstTipoMovEntrada) {
+                        if (si.getId().toString().equals(value)) {
+                            c = si;
+                        }
+            		}
+                    return c;
+                }
+            }
+
+            @Override
+            public String getAsString(FacesContext context, UIComponent component, Object value) {
+                if (value == null || value.equals("")) {
+                    return "";
+                } else {
+                    return ((TipoMovimiento) value).getId() + "";
+                }
+            }
+        };
+    }
+	
 	public List<Cliente> completeCliente(String query) {
         List<Cliente> lista = new ArrayList<>();
         for (Cliente c : lstCliente) {
@@ -3950,13 +4277,12 @@ public class DocumentoVentaBean extends BaseBean {
 	public void setCuotaSelected(Cuota cuotaSelected) {
 		this.cuotaSelected = cuotaSelected;
 	}
-	public RequerimientoSeparacion getRequerimientoSelected() {
-		return requerimientoSelected;
+	public DetalleRequerimientoSeparacion getDetalleRequerimientoSelected() {
+		return detalleRequerimientoSelected;
 	}
-	public void setRequerimientoSelected(RequerimientoSeparacion requerimientoSelected) {
-		this.requerimientoSelected = requerimientoSelected;
+	public void setDetalleRequerimientoSelected(DetalleRequerimientoSeparacion detalleRequerimientoSelected) {
+		this.detalleRequerimientoSelected = detalleRequerimientoSelected;
 	}
-
 	public String getTipoPago() {
 		return tipoPago;
 	}
@@ -4089,13 +4415,6 @@ public class DocumentoVentaBean extends BaseBean {
 	public void setRequerimientoSeparacionService(RequerimientoSeparacionService requerimientoSeparacionService) {
 		this.requerimientoSeparacionService = requerimientoSeparacionService;
 	}
-	public LazyDataModel<RequerimientoSeparacion> getLstRequerimientoLazy() {
-		return lstRequerimientoLazy;
-	}
-	public void setLstRequerimientoLazy(LazyDataModel<RequerimientoSeparacion> lstRequerimientoLazy) {
-		this.lstRequerimientoLazy = lstRequerimientoLazy;
-	}
-
 	public String getNumero() {
 		return numero;
 	}
@@ -5327,47 +5646,115 @@ public class DocumentoVentaBean extends BaseBean {
 	public void setFile15(UploadedFile file15) {
 		this.file15 = file15;
 	}
-
 	public String getImagen11() {
 		return imagen11;
 	}
-
 	public void setImagen11(String imagen11) {
 		this.imagen11 = imagen11;
 	}
-
 	public String getImagen12() {
 		return imagen12;
 	}
-
 	public void setImagen12(String imagen12) {
 		this.imagen12 = imagen12;
 	}
-
 	public String getImagen13() {
 		return imagen13;
 	}
-
 	public void setImagen13(String imagen13) {
 		this.imagen13 = imagen13;
 	}
-
 	public String getImagen14() {
 		return imagen14;
 	}
-
 	public void setImagen14(String imagen14) {
 		this.imagen14 = imagen14;
 	}
-
 	public String getImagen15() {
 		return imagen15;
 	}
-
 	public void setImagen15(String imagen15) {
 		this.imagen15 = imagen15;
 	}
-	
-	
+	public DetalleRequerimientoSeparacionService getDetalleRequerimientoSeparacionService() {
+		return detalleRequerimientoSeparacionService;
+	}
+	public void setDetalleRequerimientoSeparacionService(
+			DetalleRequerimientoSeparacionService detalleRequerimientoSeparacionService) {
+		this.detalleRequerimientoSeparacionService = detalleRequerimientoSeparacionService;
+	}
+	public LazyDataModel<DetalleRequerimientoSeparacion> getLstDetalleRequerimientoLazy() {
+		return lstDetalleRequerimientoLazy;
+	}
+	public void setLstDetalleRequerimientoLazy(LazyDataModel<DetalleRequerimientoSeparacion> lstDetalleRequerimientoLazy) {
+		this.lstDetalleRequerimientoLazy = lstDetalleRequerimientoLazy;
+	}
+	public String getMesBusquedaMov() {
+		return mesBusquedaMov;
+	}
+	public void setMesBusquedaMov(String mesBusquedaMov) {
+		this.mesBusquedaMov = mesBusquedaMov;
+	}
+	public String getAnioBusquedaMov() {
+		return anioBusquedaMov;
+	}
+	public void setAnioBusquedaMov(String anioBusquedaMov) {
+		this.anioBusquedaMov = anioBusquedaMov;
+	}
+	public String getCtaBancBusquedaMov() {
+		return ctaBancBusquedaMov;
+	}
+	public void setCtaBancBusquedaMov(String ctaBancBusquedaMov) {
+		this.ctaBancBusquedaMov = ctaBancBusquedaMov;
+	}
+	public MovimientoBancarioService getMovimientoBancarioService() {
+		return movimientoBancarioService;
+	}
+	public void setMovimientoBancarioService(MovimientoBancarioService movimientoBancarioService) {
+		this.movimientoBancarioService = movimientoBancarioService;
+	}
+	public DetalleMovimientoBancarioService getDetalleMovimientoBancarioService() {
+		return detalleMovimientoBancarioService;
+	}
+	public void setDetalleMovimientoBancarioService(DetalleMovimientoBancarioService detalleMovimientoBancarioService) {
+		this.detalleMovimientoBancarioService = detalleMovimientoBancarioService;
+	}
+	public LazyDataModel<DetalleMovimientoBancario> getLstDetalleMovimientoBancLazy() {
+		return lstDetalleMovimientoBancLazy;
+	}
+	public void setLstDetalleMovimientoBancLazy(LazyDataModel<DetalleMovimientoBancario> lstDetalleMovimientoBancLazy) {
+		this.lstDetalleMovimientoBancLazy = lstDetalleMovimientoBancLazy;
+	}
+	public Date getFechaDetalleFilter() {
+		return fechaDetalleFilter;
+	}
+	public void setFechaDetalleFilter(Date fechaDetalleFilter) {
+		this.fechaDetalleFilter = fechaDetalleFilter;
+	}
+	public DetalleMovimientoBancario getDetalleMovimientoSelected() {
+		return detalleMovimientoSelected;
+	}
+	public void setDetalleMovimientoSelected(DetalleMovimientoBancario detalleMovimientoSelected) {
+		this.detalleMovimientoSelected = detalleMovimientoSelected;
+	}
+	public TipoMovimientoService getTipoMovimientoService() {
+		return tipoMovimientoService;
+	}
+	public void setTipoMovimientoService(TipoMovimientoService tipoMovimientoService) {
+		this.tipoMovimientoService = tipoMovimientoService;
+	}
+	public List<TipoMovimiento> getLstTipoMovEntrada() {
+		return lstTipoMovEntrada;
+	}
+	public void setLstTipoMovEntrada(List<TipoMovimiento> lstTipoMovEntrada) {
+		this.lstTipoMovEntrada = lstTipoMovEntrada;
+	}
+	public Date getFechaEmisionFilter() {
+		return fechaEmisionFilter;
+	}
+	public void setFechaEmisionFilter(Date fechaEmisionFilter) {
+		this.fechaEmisionFilter = fechaEmisionFilter;
+	}
 
+	
 }

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.model.aldasa.entity.DetalleMovimientoBancario;
+import com.model.aldasa.entity.Imagen;
 import com.model.aldasa.entity.MovimientoBancario;
 import com.model.aldasa.repository.DetalleMovimientoBancarioRepository;
 import com.model.aldasa.service.DetalleMovimientoBancarioService;
@@ -210,6 +211,12 @@ public class DetalleMovimientoBancarioServiceImpl implements DetalleMovimientoBa
 	public Page<DetalleMovimientoBancario> findByEstadoAndMovimientoBancarioAndFechaOperacionAndImporteLessThanAndObservacionOrTipoMovimientoIsNull(boolean estado, int idMovimientoBancario, String fechaOperacion, Pageable pageable) {
 		// TODO Auto-generated method stub
 		return detalleMovimientoBancarioRepository.findByEstadoAndMovimientoBancarioAndFechaOperacionAndImporteLessThanAndObservacionOrTipoMovimientoIsNull(estado, idMovimientoBancario, fechaOperacion, pageable);
+	}
+
+	@Override
+	public DetalleMovimientoBancario findByEstadoAndImagen(boolean estado, Imagen imagen) {
+		// TODO Auto-generated method stub
+		return detalleMovimientoBancarioRepository.findByEstadoAndImagen(estado, imagen); 
 	}
 
 

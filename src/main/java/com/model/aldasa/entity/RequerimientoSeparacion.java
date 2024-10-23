@@ -53,15 +53,12 @@ public class RequerimientoSeparacion {
 	
 	private BigDecimal monto;
 	
-	@Column(name="montoadicional")
-	private BigDecimal montoAdicional;
-	
-	@Column(name="pagototal")
-	private String pagoTotal;
+	@Column(name="boleteototal")
+	private String boleteoTotal;
 	
 	@ManyToOne
 	@JoinColumn(name="idcontrato")
-	private Contrato idContrato;
+	private Contrato contrato; 
 	
 	@Column(name="generadocumento")
 	private boolean generaDocumento;
@@ -188,23 +185,17 @@ public class RequerimientoSeparacion {
 	public void setFechaVencimiento(Date fechaVencimiento) {
 		this.fechaVencimiento = fechaVencimiento;
 	}
-	public BigDecimal getMontoAdicional() {
-		return montoAdicional;
+	public String getBoleteoTotal() {
+		return boleteoTotal;
 	}
-	public void setMontoAdicional(BigDecimal montoAdicional) {
-		this.montoAdicional = montoAdicional;
+	public void setBoleteoTotal(String boleteoTotal) {
+		this.boleteoTotal = boleteoTotal;
 	}
-	public String getPagoTotal() {
-		return pagoTotal;
+	public Contrato getContrato() {
+		return contrato;
 	}
-	public void setPagoTotal(String pagoTotal) {
-		this.pagoTotal = pagoTotal;
-	}
-	public Contrato getIdContrato() {
-		return idContrato;
-	}
-	public void setIdContrato(Contrato idContrato) {
-		this.idContrato = idContrato;
+	public void setContrato(Contrato contrato) {
+		this.contrato = contrato;
 	}
 	public Sucursal getSucursal() {
 		return sucursal;

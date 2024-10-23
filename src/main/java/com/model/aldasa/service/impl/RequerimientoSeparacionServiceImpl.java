@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.model.aldasa.entity.Contrato;
 import com.model.aldasa.entity.Lote;
 import com.model.aldasa.entity.Project;
 import com.model.aldasa.entity.Prospection;
@@ -94,6 +95,18 @@ public class RequerimientoSeparacionServiceImpl implements RequerimientoSeparaci
 	public List<RequerimientoSeparacion> findByLote(Lote lote) {
 		// TODO Auto-generated method stub
 		return requerimientoSeparacionRepository.findByLote(lote);
+	}
+
+	@Override
+	public List<RequerimientoSeparacion> findByPersonId(Integer idPerson) {
+		// TODO Auto-generated method stub
+		return requerimientoSeparacionRepository.findByPersonId(idPerson); 
+	}
+
+	@Override
+	public RequerimientoSeparacion findByContrato(Contrato contrato) {
+		// TODO Auto-generated method stub
+		return requerimientoSeparacionRepository.findByContrato(contrato); 
 	}
 
 

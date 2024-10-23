@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,7 @@ import org.springframework.data.domain.Sort;
 import com.model.aldasa.entity.Contrato;
 import com.model.aldasa.entity.CuentaBancaria;
 import com.model.aldasa.entity.Cuota;
+import com.model.aldasa.entity.DetalleDocumentoVenta;
 import com.model.aldasa.entity.DetalleMovimientoBancario;
 import com.model.aldasa.entity.Lote;
 import com.model.aldasa.entity.Manzana;
@@ -41,9 +43,12 @@ import com.model.aldasa.entity.MovimientoBancario;
 import com.model.aldasa.entity.ObservacionContrato;
 import com.model.aldasa.entity.Producto;
 import com.model.aldasa.entity.Project;
+import com.model.aldasa.entity.Sucursal;
 import com.model.aldasa.entity.TipoMovimiento;
 import com.model.aldasa.general.bean.NavegacionBean;
+import com.model.aldasa.reporteBo.ReportGenBo;
 import com.model.aldasa.service.CuentaBancariaService;
+import com.model.aldasa.service.DetalleDocumentoVentaService;
 import com.model.aldasa.service.DetalleMovimientoBancarioService;
 import com.model.aldasa.service.LoteService;
 import com.model.aldasa.service.ManzanaService;
@@ -52,7 +57,9 @@ import com.model.aldasa.service.ProjectService;
 import com.model.aldasa.service.TipoMovimientoService;
 import com.model.aldasa.util.BaseBean;
 import com.model.aldasa.util.EstadoContrato;
+import com.model.aldasa.util.NumeroALetra;
 import com.model.aldasa.util.UtilXls;
+import com.model.aldasa.ventas.jrdatasource.DataSourceDocumentoVenta;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -97,6 +104,12 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	@ManagedProperty(value = "#{tipoMovimientoService}")
 	private TipoMovimientoService tipoMovimientoService;
 	
+	@ManagedProperty(value = "#{detalleDocumentoVentaService}")
+	private DetalleDocumentoVentaService detalleDocumentoVentaService;
+	
+	@ManagedProperty(value = "#{reportGenBo}")
+	private ReportGenBo reportGenBo;
+	
 	
 	private LazyDataModel<MovimientoBancario> lstMovimientoBancLazy;
 	private LazyDataModel<DetalleMovimientoBancario> lstDetalleMovimientoBancLazy;
@@ -107,6 +120,7 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	private List<Project> lstProyectos;
 	private List<Manzana> lstManzanas;
 	private List<Lote> lstLotes;
+	private List<DetalleDocumentoVenta> lstDetalleDocumentoVentaSelected; 
 	
 	private MovimientoBancario movimientoBancarioSelected;
 	private Project proyectoMov;	
@@ -115,9 +129,11 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	private CuentaBancaria cuentaBancariaFilter;
 	
 	private boolean estado = true;
-	private String tituloDialog, busquedaPor;
+	private String tituloDialog, busquedaPor, montoLetra;
 	private BigDecimal saldoFinalMovimiento, dineroActualCuenta, dineroTemporalCuenta, totalAbonoIdent, totalCargoIdent, totalAbonoSinIdent, totalCargoSinIdent;
 	private Date fechaDetalleFilter;
+	
+	private NumeroALetra numeroALetra = new  NumeroALetra();
 	
 	private UploadedFile file;
 	private StreamedContent fileFormato;
@@ -125,7 +141,11 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	
 	SimpleDateFormat sdfYear = new SimpleDateFormat("yyyy");
 	SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+	
 	SimpleDateFormat sdfQuery = new SimpleDateFormat("yyyy-mm-dd");
+	
+	private DataSourceDocumentoVenta dt; 
+	private Map<String, Object> parametros;
 	
 	@PostConstruct
 	public void init() {
@@ -138,6 +158,121 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 		lstTipoMovEntrada = tipoMovimientoService.findByEstadoAndTipoOrderByNombreAsc(true, "E");
 		lstTipoMovSalida = tipoMovimientoService.findByEstadoAndTipoOrderByNombreAsc(true, "S");
 		lstProyectos = projectService.findByStatusOrderByNameAsc(true);
+	}
+	
+	public void pdfDocumentoElectronico() {
+
+        if (lstDetalleDocumentoVentaSelected == null || lstDetalleDocumentoVentaSelected.isEmpty()) {
+            addInfoMessage("No hay datos para mostrar");
+        } else {
+        	
+        	dt = new DataSourceDocumentoVenta();
+            for (int i = 0; i < lstDetalleDocumentoVentaSelected.size(); i++) {
+               
+            	lstDetalleDocumentoVentaSelected.get(i).setDocumentoVenta(detalleMovimientoSelected.getImagen().getDocumentoVenta());
+                dt.addResumenDetalle(lstDetalleDocumentoVentaSelected.get(i));
+            }
+        	
+        	
+            parametros = new HashMap<String, Object>();
+            parametros.put("TOTALSTRING", montoLetra);
+            if (detalleMovimientoSelected.getImagen().getDocumentoVenta().getTipoDocumento().getAbreviatura().equals("B")) {
+            	 parametros.put("TIPOCOMPROBANTE", "BOLETA DE VENTA");
+            }else {
+            	parametros.put("TIPOCOMPROBANTE", detalleMovimientoSelected.getImagen().getDocumentoVenta().getTipoDocumento().getDescripcion().toUpperCase());
+            }   
+            
+            parametros.put("NOMBRECOMERCIAL", detalleMovimientoSelected.getImagen().getDocumentoVenta().getRazonSocial());
+            parametros.put("RUC", detalleMovimientoSelected.getImagen().getDocumentoVenta().getRuc());
+            parametros.put("DIRECCION", detalleMovimientoSelected.getImagen().getDocumentoVenta().getDireccion());
+            parametros.put("NOMBRECOMERCIAL", detalleMovimientoSelected.getImagen().getDocumentoVenta().getRazonSocial());
+            parametros.put("FECHAEMISION", sdf.format(detalleMovimientoSelected.getImagen().getDocumentoVenta().getFechaEmision()));
+            parametros.put("TIPOMONEDA", detalleMovimientoSelected.getImagen().getDocumentoVenta().getTipoMoneda().equals("S")?"Soles":"Dólares");
+            parametros.put("OBSERVACION", detalleMovimientoSelected.getImagen().getDocumentoVenta().getObservacion());
+            parametros.put("CONDICIONPAGO", detalleMovimientoSelected.getImagen().getDocumentoVenta().getTipoPago());
+            
+            
+            parametros.put("ANTICIPOS", detalleMovimientoSelected.getImagen().getDocumentoVenta().getAnticipos());
+
+            
+            String fecha = sdf.format(detalleMovimientoSelected.getImagen().getDocumentoVenta().getFechaEmision());
+            parametros.put("OPGRAVADA", detalleMovimientoSelected.getImagen().getDocumentoVenta().getOpGravada());
+            parametros.put("OPEXONERADA", detalleMovimientoSelected.getImagen().getDocumentoVenta().getOpExonerada());
+            parametros.put("OPINAFECTA", detalleMovimientoSelected.getImagen().getDocumentoVenta().getOpInafecta());
+            parametros.put("OPGRATUITA", detalleMovimientoSelected.getImagen().getDocumentoVenta().getOpGratuita());
+            parametros.put("DESCUENTOS", detalleMovimientoSelected.getImagen().getDocumentoVenta().getDescuentos());
+            parametros.put("ISC", detalleMovimientoSelected.getImagen().getDocumentoVenta().getIsc());
+            parametros.put("IGV", detalleMovimientoSelected.getImagen().getDocumentoVenta().getIgv());
+            parametros.put("OTROSCARGOS", detalleMovimientoSelected.getImagen().getDocumentoVenta().getOtrosCargos());
+            parametros.put("OTROSTRIBUTOS", detalleMovimientoSelected.getImagen().getDocumentoVenta().getOtrosTributos());
+            parametros.put("IMPORTETOTAL", detalleMovimientoSelected.getImagen().getDocumentoVenta().getTotal());
+            parametros.put("QR", navegacionBean.getSucursalLogin().getRuc() + "|" + detalleMovimientoSelected.getImagen().getDocumentoVenta().getTipoDocumento().getCodigo() + "|" + 
+	    		detalleMovimientoSelected.getImagen().getDocumentoVenta().getSerie() + "|" + detalleMovimientoSelected.getImagen().getDocumentoVenta().getNumero() + "|" + "0" + "|" + detalleMovimientoSelected.getImagen().getDocumentoVenta().getTotal() + "|" + 
+	    		fecha + "|" + (detalleMovimientoSelected.getImagen().getDocumentoVenta().getTipoDocumento().getAbreviatura().equals("B")?"1":"6") + "|" + detalleMovimientoSelected.getImagen().getDocumentoVenta().getRuc() + "|");
+
+
+
+            String bar = navegacionBean.getSucursalLogin().getRuc().trim() + "|" + detalleMovimientoSelected.getImagen().getDocumentoVenta().getSerie()+"-"+detalleMovimientoSelected.getImagen().getDocumentoVenta().getNumero() + "|" + detalleMovimientoSelected.getImagen().getDocumentoVenta().getFechaEmision();
+            parametros.put("BARCODESTRING", bar);
+            parametros.put("RUCEMPRESA", navegacionBean.getSucursalLogin().getRuc());
+            
+            if(detalleMovimientoSelected.getImagen().getDocumentoVenta().getDocumentoVentaRef()!=null) {
+            	parametros.put("TIPODOCUMENTOREF", "DOCUMENTO RELACIONADO:");
+            	parametros.put("DOCUMENTOREF", detalleMovimientoSelected.getImagen().getDocumentoVenta().getDocumentoVentaRef().getSerie() + "-"+detalleMovimientoSelected.getImagen().getDocumentoVenta().getDocumentoVentaRef().getNumero());
+            }else if(detalleMovimientoSelected.getImagen().getDocumentoVenta().getNumeroNotaCredito() != null) {
+            	if(!detalleMovimientoSelected.getImagen().getDocumentoVenta().getNumeroNotaCredito().equals("")) {
+            		parametros.put("TIPODOCUMENTOREF", "NOTA DE CRÉDITO:");
+                	parametros.put("DOCUMENTOREF", detalleMovimientoSelected.getImagen().getDocumentoVenta().getNumeroNotaCredito());
+            	}
+            }else if(detalleMovimientoSelected.getImagen().getDocumentoVenta().getNumeroNotaDebito() != null) {
+            	if(!detalleMovimientoSelected.getImagen().getDocumentoVenta().getNumeroNotaDebito().equals("")) {
+            		parametros.put("TIPODOCUMENTOREF", "NOTA DE DÉBITO:");
+                	parametros.put("DOCUMENTOREF", detalleMovimientoSelected.getImagen().getDocumentoVenta().getNumeroNotaDebito());
+            	}
+            }else {
+            	parametros.put("TIPODOCUMENTOREF", "");
+            	parametros.put("DOCUMENTOREF", "");
+            }
+            
+            
+            
+            parametros.put("RUTAIMAGEN", getRutaGrafico(obtenerRutaLogo(detalleMovimientoSelected.getImagen().getDocumentoVenta().getSucursal()))); 
+            
+            String path = "secured/view/modulos/ventas/reportes/jasper/repDocumentoFacturaElectronica.jasper"; 
+            reportGenBo.exportByFormatNotConnectDb(dt, path, "pdf", parametros, "DOCUMENTO " , "hh");
+            dt = null;
+            parametros = null;
+       
+
+        }
+    }
+	
+	public String obtenerRutaLogo(Sucursal sucursalLogin) {
+		String rutaLogo = "";
+		if(sucursalLogin.getId().toString().equals("1")) {
+			
+			rutaLogo = "/recursos/images/LOGO.png";
+		}else if(sucursalLogin.getId().toString().equals("2")){
+			rutaLogo = "/recursos/images/LOGO_ABARCA.png";
+		}else if(sucursalLogin.getId().toString().equals("3")) {
+			rutaLogo = "/recursos/images/LOGO_CONSORCIO.png";
+		}else {
+			rutaLogo = "/recursos/images/LOGO_ALDASA_BIENES_RAICES.png";
+		}
+		
+		return rutaLogo;
+	}
+	
+	public void listarDetalleDocumentoVenta(DetalleMovimientoBancario detalleMov) {
+		if(detalleMov.getImagen()==null) {
+			addErrorMessage("Este movimiento no esta enlazado con una boleta.");
+			return;
+		}
+		
+		montoLetra = numeroALetra.Convertir(detalleMov.getImagen().getDocumentoVenta().getTotal()+"", true, "SOLES");
+		lstDetalleDocumentoVentaSelected = detalleDocumentoVentaService.findByDocumentoVentaAndEstado(detalleMov.getImagen().getDocumentoVenta(), true);
+		
+		PrimeFaces.current().executeScript("PF('docVentDialog').show();"); 
 	}
 	
 	public void calcularMontosIdentificados() {
@@ -587,6 +722,12 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	}
 	
 	public void saveMovimientoBancario() {
+		MovimientoBancario busqueda = movimientoBancarioService.findByEstadoAndMesAndAnioAndCuentaBancaria(true, movimientoBancarioSelected.getMes(), movimientoBancarioSelected.getAnio(), movimientoBancarioSelected.getCuentaBancaria());
+		if(busqueda != null) {
+			addErrorMessage("Ya se ha registrado un movimiento bancario con el mes, año y cuenta bancaria.");
+			return;
+		}
+		
 		if(movimientoBancarioSelected.getSaldoInicial()==null) {
 			addErrorMessage("Ingresar un saldo Inicial");
 			return;
@@ -599,6 +740,11 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 			
 		}
 		movimientoBancarioSelected.setEstado(true);
+		
+		
+		
+		
+		
 		movimientoBancarioService.save(movimientoBancarioSelected);
 		PrimeFaces.current().executeScript("PF('movimientoDialog').hide();"); 
 		addInfoMessage("Se guardó correctamente");
@@ -1221,6 +1367,54 @@ public class MovimientoBancarioBean extends BaseBean implements Serializable {
 	}
 	public void setTotalCargoSinIdent(BigDecimal totalCargoSinIdent) {
 		this.totalCargoSinIdent = totalCargoSinIdent;
+	}
+	public DetalleDocumentoVentaService getDetalleDocumentoVentaService() {
+		return detalleDocumentoVentaService;
+	}
+	public void setDetalleDocumentoVentaService(DetalleDocumentoVentaService detalleDocumentoVentaService) {
+		this.detalleDocumentoVentaService = detalleDocumentoVentaService;
+	}
+	public List<DetalleDocumentoVenta> getLstDetalleDocumentoVentaSelected() {
+		return lstDetalleDocumentoVentaSelected;
+	}
+	public void setLstDetalleDocumentoVentaSelected(List<DetalleDocumentoVenta> lstDetalleDocumentoVentaSelected) {
+		this.lstDetalleDocumentoVentaSelected = lstDetalleDocumentoVentaSelected;
+	}
+	public String getMontoLetra() {
+		return montoLetra;
+	}
+	public void setMontoLetra(String montoLetra) {
+		this.montoLetra = montoLetra;
+	}
+	public NumeroALetra getNumeroALetra() {
+		return numeroALetra;
+	}
+	public void setNumeroALetra(NumeroALetra numeroALetra) {
+		this.numeroALetra = numeroALetra;
+	}
+	public SimpleDateFormat getSdfQuery() {
+		return sdfQuery;
+	}
+	public void setSdfQuery(SimpleDateFormat sdfQuery) {
+		this.sdfQuery = sdfQuery;
+	}
+	public ReportGenBo getReportGenBo() {
+		return reportGenBo;
+	}
+	public void setReportGenBo(ReportGenBo reportGenBo) {
+		this.reportGenBo = reportGenBo;
+	}
+	public DataSourceDocumentoVenta getDt() {
+		return dt;
+	}
+	public void setDt(DataSourceDocumentoVenta dt) {
+		this.dt = dt;
+	}
+	public Map<String, Object> getParametros() {
+		return parametros;
+	}
+	public void setParametros(Map<String, Object> parametros) {
+		this.parametros = parametros;
 	}
 	
 	

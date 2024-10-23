@@ -289,10 +289,168 @@
 					<p:commandButton title="ASIGNAR LOTE" icon="pi pi-search-plus" action="#{movimientoBancarioBean.modificarLoteDetalle}" update=":formLote" styleClass="rounded-button ui-button-success"  oncomplete="PF('loteDialog').show()" >
 						<f:setPropertyActionListener value="#{detalle}" target="#{movimientoBancarioBean.detalleMovimientoSelected}" />
 					</p:commandButton>
+					
+					<p:commandButton title="Ver Documento" icon="pi pi-book" action="#{movimientoBancarioBean.listarDetalleDocumentoVenta(detalle)}" update="formDocumentoVentaDialog" styleClass="rounded-button ui-button-secondary"  >
+						<f:setPropertyActionListener value="#{detalle}" target="#{movimientoBancarioBean.detalleMovimientoSelected}" />
+					</p:commandButton>
+					
+					
+					<p:commandButton id="botton" title="Ver Imagen" icon="pi pi-image" update="imagenLoad" process="@this" styleClass="rounded-button ui-button-help" >
+						<f:setPropertyActionListener value="#{detalle.imagen.nombre}" target="#{loadImageDocumentoBean.nombreArchivo}"  />
+					</p:commandButton>
+					<p:overlayPanel for="botton" dismissable="false" showCloseIcon="true" style="width:550px">
+						<h:commandLink value="Descargar Imagen" action="#{fileDownloadBean.downloadFile(navegacionBean.sucursalLogin.empresa.rutaDocumentoVenta.concat(detalle.imagen.nombre))}" style="font-size: 20px;color: #3399ff;" />
+							
+			        	<p:graphicImage width="500px"  value="#{loadImageDocumentoBean.image}" style="float: left;" id="imagenLoad" cache="false"/>
+			        </p:overlayPanel>
+					
 				</p:column>
 						
 			</p:dataTable>
 			
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog height="670px" modal="true" dynamic="true" closeOnEscape="true" id="dialogDocumentoVenta" header="DOCUMENTO DE VENTA" widgetVar="docVentDialog" resizable="false" closable="true"
+		appendTo="@(body)" style="background-color:green;" width="80%" >
+		<h:form id="formDocumentoVentaDialog">
+
+			<h:panelGrid width="100%" columns="2" styleClass="companyHeaderGrid"> 
+			
+				<p:graphicImage  value="#{movimientoBancarioBean.obtenerRutaLogo(movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.sucursal)}"  library="demo" style="width:150px"/>	
+
+	        	<h:panelGrid columns="1" style="float:right" >	
+	        		<h:panelGrid columns="1" >	
+	        			<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.tipoDocumento.abreviatura eq 'B'?'BOLETA': movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.tipoDocumento.abreviatura eq 'F'?'FACTURA': movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.tipoDocumento.abreviatura eq 'C'?'NOTA DE CRÉDITO': 'NOTA DE DÉBITO'} N° #{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.serie}-#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.numero}" style="width : 100px;color:#337CFF;font-size: 20px;"/>				
+					</h:panelGrid>
+					<h:panelGrid columns="2" >	
+						<h:outputText value="Fecha Emisión:" style="float:right"/>
+		        		<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.fechaEmision}" style="float:right" > 
+		        			<f:convertDateTime pattern="dd/MM/yyyy" />
+		        		</h:outputText>
+					</h:panelGrid>
+					
+				</h:panelGrid>
+			</h:panelGrid>
+			
+			<h:panelGrid columns="2" styleClass="companyHeaderGrid">
+	
+				<h:outputText value="Ruc:" />
+	        	<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.ruc}" />
+				
+				<h:outputText value="Cliente:" />
+	        	<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.razonSocial}" />
+	
+				<h:outputText value="Dirección:" />
+	        	<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.direccion}" />
+	
+				<h:outputText value="Tipo Pago:" />
+	        	<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.tipoPago}"  />
+	        	
+	        	<h:outputText value="Moneda:" />
+	        	<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.tipoMoneda eq 'S'?'Soles':'Dólares'}"  />
+	        	
+	        	<h:outputText value="Observación:" />
+	        	<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.observacion}"  />
+	        	
+	        	<h:outputText value="Correo 1:" />
+	        	<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.cliente.email1Fe}"  />
+	        	 
+		        <h:outputText value="Correo 2:" />
+		        <h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.cliente.email2Fe}"  />
+		       
+		        <h:outputText value="Correo 3:" />
+		        <h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.cliente.email3Fe}"  />
+		        
+		        <h:outputText value="Documento Referencia:" rendered="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.documentoVentaRef ne null}"/>
+		        <p:outputLabel value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.documentoVentaRef.serie}-#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.documentoVentaRef.numero}" rendered="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.documentoVentaRef ne null}"/>
+	
+				<h:outputText value="Número Nota Crédito:" rendered="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.numeroNotaCredito ne null}"/>
+		        <p:outputLabel value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.numeroNotaCredito}" rendered="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.numeroNotaCredito ne null}"/>
+	
+				<h:outputText value="Número Nota Débito:" rendered="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.numeroNotaDebito ne null}"/>
+		        <p:outputLabel value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.numeroNotaDebito}" rendered="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.numeroNotaDebito ne null}"/>
+	
+			</h:panelGrid>   
+				
+			<h:panelGrid>
+		
+				<p:dataTable var="det" id="idTableDetalleDocumento" value="#{movimientoBancarioBean.lstDetalleDocumentoVentaSelected}"  rowIndexVar="row" paginator="true" rows="15" size="small"
+				emptyMessage="No se encontraron detalles de documento de venta." style="width:100%" paginatorPosition="bottom" rowKey="#{det.id}">
+	
+					<p:column headerText="Cantidad" filterMatchMode="contains" style="text-align:center">
+						<h:outputText value="1"/>
+					</p:column>
+					
+					<p:column headerText="Descripción" filterMatchMode="contains" style="text-align:center;width:400px" >
+						<h:outputText value="#{det.descripcion}"  style="width:400px"/>
+					</p:column>
+	
+					<p:column headerText="Amortización" filterMatchMode="contains" style="text-align:center">
+						<h:outputText value="#{det.amortizacion}"> 
+							<f:convertNumber type="currency" currencySymbol=""/>
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Interés" filterMatchMode="contains" style="text-align:center">
+						<h:outputText value="#{det.interes}"> 
+							<f:convertNumber type="currency" currencySymbol=""/>
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Adelanto" filterMatchMode="contains" style="text-align:center">
+						<h:outputText value="#{det.adelanto}"> 
+							<f:convertNumber type="currency" currencySymbol=""/>
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="Importe de Venta(**)" filterMatchMode="contains" style="text-align:center">
+						<h:outputText value="#{det.importeVenta}"> 
+							<f:convertNumber type="currency" currencySymbol=""/>
+						</h:outputText>
+					</p:column>
+			
+				</p:dataTable>
+	
+			</h:panelGrid>
+			
+			<h:panelGrid style="width:50%;float:left;" columns="1" >	
+				<h:panelGrid  columns="2" styleClass="companyHeaderGrid">
+				
+					<h:outputText value="Son:" />
+	         		<h:outputText value="#{movimientoBancarioBean.montoLetra}" />
+	
+				</h:panelGrid>
+	
+			</h:panelGrid>
+				
+			<h:panelGrid style="width:50%;float:right;" columns="1" >	
+				<h:panelGrid style="float:right"  columns="3" styleClass="companyHeaderGrid">
+				
+					<h:outputText value="Sub-Total:" />
+					<h:outputText value="S/" />	         		
+	         		<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.subTotal}"> 
+						<f:convertNumber type="currency" currencySymbol=""/>
+					</h:outputText>
+				
+					<h:outputText value="Igv:" />
+					<h:outputText value="S/" />		
+	         		<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.igv}"> 
+						<f:convertNumber type="currency" currencySymbol=""/>
+					</h:outputText>
+	
+					<h:outputText value="Total:" style="color:blue"/>
+					<h:outputText value="S/" style="color:blue"/>	         		
+	         		<h:outputText value="#{movimientoBancarioBean.detalleMovimientoSelected.imagen.documentoVenta.total}" style="color:blue"> 
+						<f:convertNumber type="currency" currencySymbol=""/>
+					</h:outputText>
+	
+				</h:panelGrid>
+			</h:panelGrid>
+			
+			<h:panelGrid columns="2" >
+				<p:commandButton value="Descargar" icon="pi pi-file-pdf" action="#{documentoVentaBean.pdfDocumentoElectronico()}" ajax="false" />
+			</h:panelGrid>  
 		</h:form>
 	</p:dialog>
 	
@@ -309,7 +467,7 @@
 		   <p:commandButton value="VER" icon="pi pi-search" onstart="PF('blockUIWidgetDialogImportar').block();" oncomplete="PF('blockUIWidgetDialogImportar').unblock();" action="#{movimientoBancarioBean.handleFileUpload}" update="formImportarMov" style="margin-left: 10px"/>
 		   <p:commandButton value="GUARDAR" icon="pi pi-save" action="#{movimientoBancarioBean.importarDetallesMovimientos}" style="margin-left: 10px" onstart="PF('blockUIWidgetDialogImportar').block();" oncomplete="PF('blockUIWidgetDialogImportar').unblock();" update="idTableDetalleMigracion"/>
            <p:commandButton value="LIMPIAR" icon="pi pi-trash" onstart="PF('blockUIWidgetDialogImportar').block();" oncomplete="PF('blockUIWidgetDialogImportar').unblock();" action="#{movimientoBancarioBean.limpiarListaImportacion}" style="margin-left: 10px" update="formImportarMov"/>
-           <p:commandButton  value="DESCARGAR" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop); PF('blockUIWidgetGeneral').block();" actionListener="#{movimientoBancarioBean.procesarExcelFormato}" icon="pi pi-file-excel" styleClass="mr-2" style="margin-left: 10px">
+           <p:commandButton  value="DESCARGAR FORMATO" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop); PF('blockUIWidgetGeneral').block();" actionListener="#{movimientoBancarioBean.procesarExcelFormato}" icon="pi pi-file-excel" styleClass="mr-2" style="margin-left: 10px">
 	           <p:fileDownload value="#{movimientoBancarioBean.fileFormato}"/> 
 	      	</p:commandButton>
 	      	
